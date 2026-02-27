@@ -12,7 +12,7 @@ Three phases deliver the complete product. Phase 1 builds the raw document corpu
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Data Corpus** - Scraper infrastructure and government site adapters harvesting real documents into DO Spaces, deployed on a Droplet with automated cron scheduling
+- [x] **Phase 1: Data Corpus** - Scraper infrastructure and government site adapters harvesting real documents into DO Spaces, deployed on a Droplet with automated cron scheduling *(completed 2026-02-28)*
 - [ ] **Phase 2: Indexing Pipeline** - LlamaIndex pipeline parsing, embedding, and storing document chunks in Supabase pgvector
 - [ ] **Phase 3: Product** - RAG API with citations and language detection plus Next.js chat UI with auth, citations, and conversation history
 
@@ -29,7 +29,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Crawl state is tracked so a partial run can resume without re-fetching completed sites
   5. Scraper and indexer are runnable on the DigitalOcean Droplet with Python environment, dependencies, and credentials in place — a manual `python scraper.py` completes successfully
   6. A cron job on the Droplet triggers the scraper automatically at 9:00 AM MYT (UTC+8) every 3 days with no manual intervention required
-**Plans**: TBD
+**Plans**:
+- [x] 01-01: Scaffold scraper package, config contracts, and Supabase schema migration
+- [x] 01-02: Implement shared scraper core (HTTP/dedup/state/Spaces) and adapter framework
+- [x] 01-03: Build 5 government site adapters with smoke crawl validation
+- [x] 01-04: Provision droplet runtime, cron automation, and operations runbook
 
 ### Phase 2: Indexing Pipeline
 **Goal**: All documents in DO Spaces are parsed, chunked, embedded, and searchable via vector similarity in Supabase
@@ -61,6 +65,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Corpus | 0/TBD | Not started | - |
+| 1. Data Corpus | 4/4 | Complete | 2026-02-28 |
 | 2. Indexing Pipeline | 0/TBD | Not started | - |
 | 3. Product | 0/TBD | Not started | - |

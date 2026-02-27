@@ -7,9 +7,9 @@
 
 ### Scraper
 
-- [ ] **SCRP-01**: Core scraper infrastructure is in place — shared HTTP client, SHA256-based deduplication, crawl state tracking, and DO Spaces upload
-- [ ] **SCRP-02**: Site adapter framework exists — `adapters/<site_slug>.py` pattern with a base class providing shared logic (HTTP, dedup, state, upload)
-- [ ] **SCRP-03**: At least 5 government site adapters are implemented and producing real documents (HTML, PDF, DOCX, or XLSX)
+- [x] **SCRP-01**: Core scraper infrastructure is in place — shared HTTP client, SHA256-based deduplication, crawl state tracking, and DO Spaces upload
+- [x] **SCRP-02**: Site adapter framework exists — `adapters/<site_slug>.py` pattern with a base class providing shared logic (HTTP, dedup, state, upload)
+- [x] **SCRP-03**: At least 5 government site adapters are implemented and producing real documents (HTML, PDF, DOCX, or XLSX)
 
 ### Indexer
 
@@ -34,12 +34,12 @@
 
 ### Database Schema
 
-- [ ] **DB-01**: Supabase schema includes: `documents` (chunks + embeddings + metadata), `conversations`, `messages`, `citations` tables correctly defined and migrated
+- [x] **DB-01**: Supabase schema includes: `documents` (chunks + embeddings + metadata), `conversations`, `messages`, `citations` tables correctly defined and migrated
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: Scraper and indexer are deployed and runnable on a DigitalOcean Droplet (Python environment, dependencies installed, credentials configured)
-- [ ] **INFRA-02**: Cron job is configured on the Droplet to run the scraper automatically at 9:00 AM MYT (UTC+8) every 3 days with no manual intervention
+- [x] **INFRA-01**: Scraper and indexer are deployed and runnable on a DigitalOcean Droplet (Python environment, dependencies installed, credentials configured)
+- [x] **INFRA-02**: Cron job is configured on the Droplet to run the scraper automatically at 9:00 AM MYT (UTC+8) every 3 days with no manual intervention
 
 ## v2 Requirements
 
@@ -78,12 +78,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DB-01 | Phase 1 | Pending |
-| SCRP-01 | Phase 1 | Pending |
-| SCRP-02 | Phase 1 | Pending |
-| SCRP-03 | Phase 1 | Pending |
-| INFRA-01 | Phase 1 | Pending |
-| INFRA-02 | Phase 1 | Pending |
+| DB-01 | Phase 1 | Complete |
+| SCRP-01 | Phase 1 | Complete |
+| SCRP-02 | Phase 1 | Complete |
+| SCRP-03 | Phase 1 | Complete |
+| INFRA-01 | Phase 1 | Complete |
+| INFRA-02 | Phase 1 | Complete |
 | INDX-01 | Phase 2 | Pending |
 | INDX-02 | Phase 2 | Pending |
 | INDX-03 | Phase 2 | Pending |
