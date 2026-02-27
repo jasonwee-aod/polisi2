@@ -1,0 +1,19 @@
+[Unit]
+Description=Polisi scraper manual runner
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=polisi
+Group=polisi
+WorkingDirectory=/opt/polisigpt/repo
+EnvironmentFile=/opt/polisigpt/.env
+ExecStart=/opt/polisigpt/.venv/bin/python scraper/scripts/preflight_check.py
+ExecStart=/opt/polisigpt/.venv/bin/python scraper/scripts/smoke_crawl.py --sites mof,moe,jpa,moh,dosm --max-docs 1 --dry-run
+ExecStart=/opt/polisigpt/.venv/bin/python -m polisi_scraper.runner --sites mof,moe,jpa,moh,dosm --max-docs 100
+StandardOutput=append:/opt/polisigpt/logs/scraper.log
+StandardError=append:/opt/polisigpt/logs/scraper.log
+
+[Install]
+WantedBy=multi-user.target
