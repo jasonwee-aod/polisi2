@@ -36,12 +36,16 @@
 
 - [ ] **DB-01**: Supabase schema includes: `documents` (chunks + embeddings + metadata), `conversations`, `messages`, `citations` tables correctly defined and migrated
 
+### Infrastructure
+
+- [ ] **INFRA-01**: Scraper and indexer are deployed and runnable on a DigitalOcean Droplet (Python environment, dependencies installed, credentials configured)
+- [ ] **INFRA-02**: Cron job is configured on the Droplet to run the scraper automatically at 9:00 AM MYT (UTC+8) every 3 days with no manual intervention
+
 ## v2 Requirements
 
 ### Scraper Expansion
 
 - **SCRP-04**: Additional site adapters beyond the initial 5 (expand to all 30-40 target government websites)
-- **SCRP-05**: Cron job scheduling runs automatically every 3 days at 9:00 AM MYT with no manual intervention
 
 ### User Experience
 
@@ -74,28 +78,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCRP-01 | Phase ? | Pending |
-| SCRP-02 | Phase ? | Pending |
-| SCRP-03 | Phase ? | Pending |
-| INDX-01 | Phase ? | Pending |
-| INDX-02 | Phase ? | Pending |
-| INDX-03 | Phase ? | Pending |
-| INDX-04 | Phase ? | Pending |
-| API-01 | Phase ? | Pending |
-| API-02 | Phase ? | Pending |
-| API-03 | Phase ? | Pending |
-| API-04 | Phase ? | Pending |
-| FE-01 | Phase ? | Pending |
-| FE-02 | Phase ? | Pending |
-| FE-03 | Phase ? | Pending |
-| FE-04 | Phase ? | Pending |
-| DB-01 | Phase ? | Pending |
+| DB-01 | Phase 1 | Pending |
+| SCRP-01 | Phase 1 | Pending |
+| SCRP-02 | Phase 1 | Pending |
+| SCRP-03 | Phase 1 | Pending |
+| INFRA-01 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
+| INDX-01 | Phase 2 | Pending |
+| INDX-02 | Phase 2 | Pending |
+| INDX-03 | Phase 2 | Pending |
+| INDX-04 | Phase 2 | Pending |
+| API-01 | Phase 3 | Pending |
+| API-02 | Phase 3 | Pending |
+| API-03 | Phase 3 | Pending |
+| API-04 | Phase 3 | Pending |
+| FE-01 | Phase 3 | Pending |
+| FE-02 | Phase 3 | Pending |
+| FE-03 | Phase 3 | Pending |
+| FE-04 | Phase 3 | Pending |
 
 **Coverage:**
-- v1 requirements: 16 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 16 ⚠️
+- v1 requirements: 18 total
+- Mapped to phases: 18
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after initial definition*
+*Last updated: 2026-02-28 — traceability completed after roadmap creation*
