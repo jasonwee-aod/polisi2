@@ -1,0 +1,21 @@
+sites:
+  - slug: mof
+    adapter: MofAdapter
+    base_url: https://www.mof.gov.my
+    rate_limit_per_second: 0.5
+  - slug: moe
+    adapter: MoeAdapter
+    base_url: https://www.moe.gov.my
+    rate_limit_per_second: 0.5
+  - slug: jpa
+    adapter: JpaAdapter
+    base_url: https://docs.jpa.gov.my
+    rate_limit_per_second: 0.5
+  - slug: moh
+    adapter: MohAdapter
+    base_url: https://www.moh.gov.my
+    rate_limit_per_second: 0.5
+  - slug: dosm
+    adapter: DosmAdapter
+    base_url: https://www.dosm.gov.my
+    rate_limit_per_second: 0.5
