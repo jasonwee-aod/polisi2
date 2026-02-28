@@ -15,7 +15,7 @@
 
 - [x] **INDX-01**: LlamaIndex pipeline reads raw files from DO Spaces, parses documents (HTML, PDF, DOCX, XLSX), chunks them, and generates embeddings
 - [x] **INDX-02**: Embeddings are generated using OpenAI `text-embedding-3-large` for multilingual BM/EN support
-- [x] **INDX-03**: Chunks with embeddings and source metadata (title, URL, agency, date) are written to Supabase pgvector (`documents` table)
+- [ ] **INDX-03**: Chunks with embeddings and source metadata (title, URL, agency, date) are written to Supabase pgvector (`documents` table)
 - [x] **INDX-04**: Indexer is incremental — already-indexed documents are skipped, only new or changed files are processed
 
 ### API Backend
@@ -86,22 +86,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-02 | Phase 1 | Complete |
 | INDX-01 | Phase 2 | Complete |
 | INDX-02 | Phase 2 | Complete |
-| INDX-03 | Phase 2 | Complete |
+| INDX-03 | Phase 4 (gap closure) | Pending |
 | INDX-04 | Phase 2 | Complete |
-| API-01 | Phase 3 | Pending |
-| API-02 | Phase 3 | Pending |
-| API-03 | Phase 3 | Pending |
-| API-04 | Phase 3 | Pending |
-| FE-01 | Phase 3 | Pending |
-| FE-02 | Phase 3 | Pending |
-| FE-03 | Phase 3 | Pending |
-| FE-04 | Phase 3 | Pending |
+| API-01 | Phase 5 (gap closure) | Pending |
+| API-02 | Phase 4 (gap closure) | Pending |
+| API-03 | Phase 5 (gap closure) | Pending |
+| API-04 | Phase 5 (gap closure) | Pending |
+| FE-01 | Phase 5 (gap closure) | Pending |
+| FE-02 | Phase 5 (gap closure) | Pending |
+| FE-03 | Phase 4 (gap closure) | Pending |
+| FE-04 | Phase 5 (gap closure) | Pending |
 
 **Coverage:**
 - v1 requirements: 18 total
 - Mapped to phases: 18
 - Unmapped: 0
+- Pending (gap closure): 10 (INDX-03, API-01..04, FE-01..04)
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 — Phase 2 indexing requirements completed*
+*Last updated: 2026-03-01 — Gap closure phases 4-5 added; INDX-03 reset to pending; Phase 3 requirements reassigned to gap closure phases*
