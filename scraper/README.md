@@ -43,3 +43,24 @@ Core ingestion and indexing pipeline for PolisiGPT. The scraper crawls Malaysian
 - `INDEXER_SIMILARITY_LIMIT`
 
 See `.env.example` for the full runtime contract. Indexer startup should use `ScraperSettings.from_env(..., require_indexer=True)` so missing embedding or database credentials fail fast.
+
+## Indexer Commands
+
+Run a bounded indexer pass:
+
+```bash
+polisi-indexer --max-items 10
+```
+
+Inspect the configured runtime without embedding or persistence work:
+
+```bash
+polisi-indexer --dry-run --max-items 2
+```
+
+Run a BM or English retrieval smoke query after indexing:
+
+```bash
+python scripts/query_smoke.py --language bm
+python scripts/query_smoke.py --language en
+```
