@@ -54,6 +54,11 @@ export function MessageList({ messages, onCitationSelect }: MessageListProps) {
             {message.role === "user" ? "You" : "Polisi"}
           </div>
           <p style={{ margin: 0, lineHeight: 1.75 }}>{renderAnswer(message, onCitationSelect)}</p>
+          {message.role === "assistant" && message.citations.length > 0 ? (
+            <div style={{ marginTop: "0.75rem", color: "#4f6a5f", fontSize: "0.92rem" }}>
+              {message.citations.length} source{message.citations.length === 1 ? "" : "s"} available
+            </div>
+          ) : null}
         </article>
       ))}
     </div>
@@ -88,7 +93,8 @@ function renderAnswer(
           fontWeight: 700,
           verticalAlign: "super",
           fontSize: "0.8em",
-          padding: "0 0.1rem"
+          padding: "0 0.1rem",
+          textDecoration: "underline"
         }}
       >
         [{citation.index}]

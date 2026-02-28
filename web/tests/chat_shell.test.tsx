@@ -121,6 +121,7 @@ describe("chat shell", () => {
     fireEvent.click(screen.getByRole("button", { name: /citation 1/i }));
 
     expect(screen.getByText("Childcare Support")).toBeInTheDocument();
+    expect(screen.getByText("Source [1]")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /open original source/i })).toHaveAttribute(
       "href",
       "https://gov.example/childcare"

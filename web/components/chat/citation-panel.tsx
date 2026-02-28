@@ -24,6 +24,17 @@ export function CitationPanel({ citation, onClose }: CitationPanelProps) {
   return (
     <aside style={panelStyle}>
       <div style={{ display: "grid", gap: "0.85rem" }}>
+        <span
+          style={{
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            fontWeight: 700,
+            color: "#4f6a5f",
+            fontSize: "0.8rem"
+          }}
+        >
+          Source [{citation.index}]
+        </span>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
           <strong>{citation.title || citation.agency}</strong>
           <button type="button" onClick={onClose} style={ghostButton}>
@@ -31,7 +42,21 @@ export function CitationPanel({ citation, onClose }: CitationPanelProps) {
           </button>
         </div>
         <p style={mutedText}>{citation.agency}</p>
-        <p style={{ margin: 0, lineHeight: 1.6 }}>{citation.excerpt}</p>
+        {citation.published_at ? (
+          <p style={mutedText}>Published: {citation.published_at}</p>
+        ) : null}
+        <blockquote
+          style={{
+            margin: 0,
+            padding: "0.85rem 1rem",
+            borderRadius: "1rem",
+            background: "#f5f7f0",
+            lineHeight: 1.6,
+            borderLeft: "4px solid rgba(23, 58, 42, 0.35)"
+          }}
+        >
+          {citation.excerpt}
+        </blockquote>
         <a href={citation.source_url} rel="noreferrer" target="_blank" style={linkStyle}>
           Open original source
         </a>
