@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: active
-last_updated: "2026-02-28T22:52:29+08:00"
+last_updated: "2026-02-28T22:58:35+08:00"
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 12
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -18,23 +18,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** A user asks a question about Malaysian government policy and gets a direct, sourced answer — in their language — without having to search across 30+ fragmented government websites.
-**Current focus:** Phase 3 — Product
+**Current focus:** Phase 3 complete — ready for verification and milestone close-out
 
 ## Current Position
 
 Phase: 3 of 3 (Product)
-Plan: 3 of 4 in current phase
-Status: Phase 3 in progress
-Last activity: 2026-02-28 — Completed plan 03-03 RAG backend, streaming chat route, and conversation history APIs
+Plan: 4 of 4 in current phase
+Status: Phase 3 complete
+Last activity: 2026-02-28 — Completed plan 03-04 frontend chat integration, citations, and recent-first resume flow
 
-Progress: [█████████░] 92%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 19.6 min
-- Total execution time: 216 min
+- Total plans completed: 12
+- Average duration: 18.2 min
+- Total execution time: 218 min
 
 **By Phase:**
 
@@ -42,11 +42,11 @@ Progress: [█████████░] 92%
 |-------|-------|-------|----------|
 | 1 | 4 | 170 min | 42.5 min |
 | 2 | 4 | 29 min | 7.3 min |
-| 3 | 3 | 17 min | 5.7 min |
+| 3 | 4 | 19 min | 4.8 min |
 
 **Recent Trend:**
-- Last 8 plans: completed (01-04, 02-01, 02-02, 02-03, 02-04, 03-01, 03-02, 03-03)
-- Trend: stable execution with product foundations and backend behavior complete, leaving only frontend integration
+- Last 8 plans: completed (02-01, 02-02, 02-03, 02-04, 03-01, 03-02, 03-03, 03-04)
+- Trend: stable execution with all planned product work complete and ready for verification
 
 ## Accumulated Context
 
@@ -73,6 +73,8 @@ Recent decisions affecting current work:
 - Phase 3: Protected frontend pages should read the server session first while middleware keeps `/`, `/auth`, and `/chat` aligned on the same auth-first contract.
 - Phase 3: Backend chat streams NDJSON event envelopes and persists the final assistant payload plus citations before the completion event is emitted.
 - Phase 3: Conversation history APIs are recent-first and reload the exact persisted thread rather than reconstructing messages client-side.
+- Phase 3: The frontend navigates into `/chat/{conversationId}` as soon as a new streamed reply creates a persisted conversation, preserving same-thread continuity.
+- Phase 3: Citation markers open an in-app source panel that emphasizes title/agency and excerpt before linking to the original document.
 
 ### Pending Todos
 
@@ -81,10 +83,10 @@ None yet.
 ### Blockers/Concerns
 
 - Local API verification currently uses `python3.13` in `api/.venv313` because the pinned `pydantic` stack is not yet compatible with the workspace default Python 3.14.
-- Phase 3 still needs live Anthropic and Supabase credentials before end-to-end product behavior can be exercised beyond contract and shell tests.
+- End-to-end live verification still needs Anthropic, Supabase DB/auth, and web env credentials populated in the deployment/runtime environments.
 
 ## Session Continuity
 
-Last session: 2026-02-28 22:52 +08
-Stopped at: Plan 03-03 complete
-Resume file: .planning/phases/03-product/03-04-PLAN.md
+Last session: 2026-02-28 22:58 +08
+Stopped at: Phase 3 execution complete
+Resume file: .planning/phases/03-product/03-04-SUMMARY.md
