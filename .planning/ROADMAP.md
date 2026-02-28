@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Data Corpus** - Scraper infrastructure and government site adapters harvesting real documents into DO Spaces, deployed on a Droplet with automated cron scheduling *(completed 2026-02-28)*
 - [x] **Phase 2: Indexing Pipeline** - LlamaIndex pipeline parsing, embedding, and storing document chunks in Supabase pgvector *(completed 2026-02-28)*
 - [x] **Phase 3: Product** - RAG API with citations and language detection plus Next.js chat UI with auth, citations, and conversation history (completed 2026-02-28)
-- [ ] **Phase 4: Fix source_url Chain + Commit Smoke Fixes** - Fix source_url propagation from Spaces upload through manifest to Supabase, and commit existing CORS/async-Supabase smoke fixes *(Gap Closure)*
+- [x] **Phase 4: Fix source_url Chain + Commit Smoke Fixes** - Fix source_url propagation from Spaces upload through manifest to Supabase, and commit existing CORS/async-Supabase smoke fixes *(Gap Closure — completed 2026-03-01)*
 - [ ] **Phase 5: Verification Run & Housekeeping** - Retroactive Phase 2 and 3 VERIFICATION.md, REQUIREMENTS.md checkbox update, 429 fallback, and .env.example audit *(Gap Closure)*
 
 ## Phase Details
@@ -72,10 +72,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Goal:** source_url flows end-to-end from scrape through Spaces upload to Supabase chunk storage and citation rendering; all uncommitted smoke-fix changes are committed
 **Requirements:** INDX-03, API-02, FE-03
 **Gap Closure:** Closes gaps from v1.0 audit — source_url chain break (Phase 1→2 integration), Scrape→Index→Citation flow
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 04-01-PLAN.md — Commit smoke fixes + fix source_url chain in SpacesUploader/runner.py + make source_url nullable in API/frontend with citation fallback
+- [x] 04-01-PLAN.md — Commit smoke fixes + fix source_url chain in SpacesUploader/runner.py + make source_url nullable in API/frontend with citation fallback *(completed 2026-03-01)*
 
 ### Phase 5: Verification Run & Housekeeping
 **Goal:** All three milestone phases have VERIFICATION.md files, REQUIREMENTS.md reflects completed work, and the 429 rate-limit edge case is handled gracefully
@@ -96,5 +96,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. Data Corpus | 4/4 | Complete | 2026-02-28 |
 | 2. Indexing Pipeline | 4/4 | Complete | 2026-02-28 |
 | 3. Product | 4/4 | Complete | 2026-02-28 |
-| 4. Fix source_url Chain + Commit Smoke Fixes | 0/1 | Pending | — |
+| 4. Fix source_url Chain + Commit Smoke Fixes | 1/1 | Complete   | 2026-02-28 |
 | 5. Verification Run & Housekeeping | 0/2 | Pending | — |

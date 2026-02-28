@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: active
-last_updated: "2026-02-28T22:58:35+08:00"
+last_updated: "2026-03-01T17:52:45Z"
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 13
+  completed_plans: 13
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** A user asks a question about Malaysian government policy and gets a direct, sourced answer — in their language — without having to search across 30+ fragmented government websites.
-**Current focus:** Phase 3 complete — ready for verification and milestone close-out
+**Current focus:** Phase 4 plan 01 complete — source_url chain fixed, smoke fixes committed
 
 ## Current Position
 
-Phase: 3 of 3 (Product)
-Plan: 4 of 4 in current phase
-Status: Phase 3 complete
-Last activity: 2026-02-28 — Completed plan 03-04 frontend chat integration, citations, and recent-first resume flow
+Phase: 4 of 4 (Fix source_url Chain)
+Plan: 1 of 1 in current phase
+Status: Phase 4 plan 01 complete
+Last activity: 2026-03-01 — Completed plan 04-01: source_url chain fix, SpacesUploader metadata, nullable API models, CitationPanel fallback
 
 Progress: [██████████] 100%
 
@@ -43,10 +43,12 @@ Progress: [██████████] 100%
 | 1 | 4 | 170 min | 42.5 min |
 | 2 | 4 | 29 min | 7.3 min |
 | 3 | 4 | 19 min | 4.8 min |
+| 4 | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 8 plans: completed (02-01, 02-02, 02-03, 02-04, 03-01, 03-02, 03-03, 03-04)
-- Trend: stable execution with all planned product work complete and ready for verification
+- Last 9 plans: completed (02-01, 02-02, 02-03, 02-04, 03-01, 03-02, 03-03, 03-04, 04-01)
+- Trend: stable execution with source_url data chain fixed and smoke fixes committed
+| Phase 04-fix-source-url-chain P01 | 2 | 3 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -75,6 +77,12 @@ Recent decisions affecting current work:
 - Phase 3: Conversation history APIs are recent-first and reload the exact persisted thread rather than reconstructing messages client-side.
 - Phase 3: The frontend navigates into `/chat/{conversationId}` as soon as a new streamed reply creates a persisted conversation, preserving same-thread continuity.
 - Phase 3: Citation markers open an in-app source panel that emphasizes title/agency and excerpt before linking to the original document.
+- Phase 4: source_url is stored as S3 object Metadata so the manifest can read it back via obj.metadata.get("source_url").
+- Phase 4: CitationRecord.source_url is str | None = None (Pydantic) / string | null (TypeScript) for graceful degradation.
+- Phase 4: Citation fallback renders plain [N] span with no anchor — no "Source unavailable" message per user decision.
+- [Phase 04-fix-source-url-chain]: source_url stored as S3 object Metadata dict key so manifest can read it back via obj.metadata.get('source_url')
+- [Phase 04-fix-source-url-chain]: CitationRecord.source_url is str | None = None in Pydantic / string | null in TypeScript for graceful degradation on legacy rows
+- [Phase 04-fix-source-url-chain]: Citation fallback renders plain [N] span with no anchor, no 'Source unavailable' message per user decision
 
 ### Pending Todos
 
@@ -87,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-28 22:58 +08
-Stopped at: Phase 3 execution complete
-Resume file: .planning/phases/03-product/03-04-SUMMARY.md
+Last session: 2026-03-01 17:52 UTC
+Stopped at: Completed 04-01-PLAN.md
+Resume file: .planning/phases/04-fix-source-url-chain/04-01-SUMMARY.md
