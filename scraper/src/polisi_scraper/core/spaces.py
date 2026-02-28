@@ -46,15 +46,24 @@ class SpacesUploader:
         )
         return self._client
 
-    def upload_bytes(self, data: bytes, object_key: str, content_type: str | None = None) -> str:
+    def upload_bytes(
+        self,
+        data: bytes,
+        object_key: str,
+        content_type: str | None = None,
+        metadata: dict[str, str] | None = None,
+    ) -> str:
         client = self._ensure_client()
         guessed = content_type or mimetypes.guess_type(object_key)[0] or "application/octet-stream"
-        client.put_object(
-            Bucket=self._config.bucket,
-            Key=object_key,
-            Body=data,
-            ContentType=guessed,
-        )
+        kwargs: dict = {
+            "Bucket": self._config.bucket,
+            "Key": object_key,
+            "Body": data,
+            "ContentType": guessed,
+        }
+        if metadata:
+            kwargs["Metadata"] = metadata
+        client.put_object(**kwargs)
         return object_key
 
 

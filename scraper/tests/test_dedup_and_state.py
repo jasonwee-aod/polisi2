@@ -31,7 +31,7 @@ class FakeAdapter(BaseSiteAdapter):
 class FakeUploader:
     uploaded: list[str]
 
-    def upload_bytes(self, data: bytes, object_key: str, content_type: str | None = None) -> str:
+    def upload_bytes(self, data: bytes, object_key: str, content_type: str | None = None, metadata: dict[str, str] | None = None) -> str:
         self.uploaded.append(object_key)
         return object_key
 

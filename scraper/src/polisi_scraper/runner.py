@@ -128,7 +128,14 @@ def _run_single_adapter(
             storage_path = record.storage_path(changed_on=changed_on)
 
             if not dry_run:
-                uploader.upload_bytes(payload, storage_path)
+                source_url_meta: dict[str, str] = {}
+                if record.source_url:
+                    source_url_meta = {"source_url": record.source_url}
+                uploader.upload_bytes(
+                    payload,
+                    storage_path,
+                    metadata=source_url_meta if source_url_meta else None,
+                )
 
             state_store.mark_processed(adapter.slug, candidate.document_url, sha256, storage_path)
             state_store.set_checkpoint(
