@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: active
-last_updated: "2026-02-28T06:20:00+08:00"
+last_updated: "2026-02-28T21:24:00+08:00"
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 8
+  completed_plans: 5
 ---
 
 # Project State
@@ -23,28 +23,29 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 2 of 3 (Indexing Pipeline)
-Plan: 0 of TBD in current phase
-Status: Phase 1 complete, ready to plan Phase 2
-Last activity: 2026-02-28 — Executed Phase 1 plans 01-01 through 01-04, verification passed
+Plan: 2 of 4 in current phase
+Status: Phase 2 in progress after manifest/runtime foundation
+Last activity: 2026-02-28 — Executed plan 02-01 for indexer runtime, manifest loading, and incremental skip contracts
 
-Progress: [███░░░░░░░] 33%
+Progress: [████░░░░░░] 42%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 42.5 min
-- Total execution time: 170 min
+- Total plans completed: 5
+- Average duration: 36.6 min
+- Total execution time: 183 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 4 | 170 min | 42.5 min |
+| 2 | 1 | 13 min | 13 min |
 
 **Recent Trend:**
-- Last 4 plans: completed (01-01, 01-02, 01-03, 01-04)
-- Trend: stable execution with all plan summaries and verification completed
+- Last 5 plans: completed (01-01, 01-02, 01-03, 01-04, 02-01)
+- Trend: stable execution with Phase 2 foundation established
 
 ## Accumulated Context
 
@@ -56,6 +57,8 @@ Recent decisions affecting current work:
 - Phase 1: Standardized document object keys to `gov-my/{agency}/{year-month}/filename.ext` with date suffix for changed content.
 - Phase 1: Shared scraper pipeline uses SQLite-backed checkpoints and SHA256 dedup before upload.
 - Phase 1: Operational runs require preflight checks and cron schedule `0 1 */3 * *` (9:00 AM MYT).
+- Phase 2: Indexer startup should require OpenAI and direct Supabase DB credentials explicitly via `require_indexer=True`.
+- Phase 2: Unchanged-index detection is based on `storage_path + version_token`, preferring sha256 metadata, then VersionId, then ETag.
 
 ### Pending Todos
 
@@ -63,10 +66,10 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 2 indexing plans are not created yet (`INDX-01` to `INDX-04` still pending).
+- Parser, embedding, and persistence layers are still pending for plans 02-02 through 02-04.
 
 ## Session Continuity
 
-Last session: 2026-02-28 06:20 +08
-Stopped at: Phase 1 execution complete and verified; transition to Phase 2 planning
-Resume file: .planning/phases/01-data-corpus/01-VERIFICATION.md
+Last session: 2026-02-28 21:24 +08
+Stopped at: Plan 02-01 complete; next target is parser/chunking implementation in 02-02
+Resume file: .planning/phases/02-indexing-pipeline/02-01-SUMMARY.md
