@@ -35,8 +35,8 @@ export default function ChatLandingPage() {
       >
         <strong>BM ready</strong>
         <p style={{ margin: 0, color: "#4f6a5f" }}>
-          Example prompts: "Apakah bantuan zakat untuk pelajar IPT?" or "What childcare
-          subsidies are available for working parents?"
+          Example prompts: &quot;Apakah bantuan zakat untuk pelajar IPT?&quot; or
+          &quot;What childcare subsidies are available for working parents?&quot;
         </p>
       </div>
     </section>
