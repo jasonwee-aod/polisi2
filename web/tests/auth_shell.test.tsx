@@ -70,9 +70,7 @@ describe("auth shell", () => {
       </AppShell>
     );
 
-    expect(
-      screen.getByText(/ask in BM or English\. Answers stay grounded to government documents\./i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/protected workspace for grounded malaysian policy questions\./i)).toBeInTheDocument();
     expect(screen.getByText("Conversation area")).toBeInTheDocument();
     expect(screen.getByText("citizen@example.com")).toBeInTheDocument();
   });

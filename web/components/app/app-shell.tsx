@@ -64,7 +64,7 @@ export function AppShell({
         <div style={{ display: "grid", gap: "0.15rem" }}>
           <strong style={{ fontSize: "1.1rem" }}>Polisi</strong>
           <span style={{ color: "#4f6a5f", fontSize: "0.95rem" }}>
-            Ask in BM or English. Answers stay grounded to government documents.
+            Protected workspace for grounded Malaysian policy questions.
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -98,7 +98,7 @@ export function AppShell({
           border: "1px solid rgba(20, 35, 29, 0.08)"
         }}
       >
-        {children}
+        <div style={{ width: "100%", maxWidth: "56rem" }}>{children}</div>
       </main>
     </div>
   );
