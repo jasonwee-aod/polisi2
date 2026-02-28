@@ -72,14 +72,49 @@ def test_current_user_dependency_rejects_missing_or_invalid_tokens() -> None:
         "test-secret",
         algorithm="HS256",
     )
-    valid = client.post("/api/chat", headers={"Authorization": f"Bearer {valid_token}"})
+    valid = client.post(
+        "/api/chat",
+        headers={"Authorization": f"Bearer {valid_token}"},
+        json={"question": "Apakah bantuan pendidikan tersedia?", "create_conversation": True},
+    )
 
     assert missing.status_code == 401
     assert missing.json()["detail"] == "Missing bearer token"
     assert invalid.status_code == 401
     assert invalid.json()["detail"] == "Invalid bearer token"
     assert valid.status_code == 200
-    assert valid.json() == {
-        "status": "not-implemented",
-        "user_id": "2f16f1d4-6eaf-4a76-89c7-93a09c639e6f",
-    }
+    valid_body = valid.json()
+    assert valid_body["language"] == "en"
+    assert valid_body["answer"] == "Not implemented yet.[1]"
+    assert valid_body["citations"][0]["index"] == 1
+
+
+def test_openapi_exposes_chat_citation_and_history_models() -> None:
+    os.environ["SUPABASE_URL"] = "https://example.supabase.co"
+    os.environ["SUPABASE_DB_URL"] = "postgresql://postgres:postgres@localhost:5432/postgres"
+
+    from polisi_api.main import create_app
+
+    app = create_app(
+        Settings.from_env(
+            {
+                "SUPABASE_URL": "https://example.supabase.co",
+                "SUPABASE_DB_URL": "postgresql://postgres:postgres@localhost:5432/postgres",
+                "SUPABASE_JWT_SECRET": "test-secret",
+            }
+        )
+    )
+
+    openapi = app.openapi()
+    schemas = openapi["components"]["schemas"]
+
+    assert "ChatRequest" in schemas
+    assert "CitationRecord" in schemas
+    assert "AssistantResponse" in schemas
+    assert "ConversationSummary" in schemas
+    assert "ConversationDetail" in schemas
+    assert "StreamingEventEnvelope" in schemas
+    assert schemas["ChatRequest"]["properties"]["question"]["type"] == "string"
+    assert schemas["CitationRecord"]["properties"]["index"]["minimum"] == 1
+    assert schemas["AssistantResponse"]["properties"]["language"]["enum"] == ["ms", "en"]
+    assert "messages" in schemas["ConversationDetail"]["properties"]
