@@ -60,7 +60,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Every answer contains inline superscript citation numbers (e.g., [1]) and clicking one opens the original source document URL in a new browser tab
   4. User can view a sidebar list of past conversation sessions and click any to resume it with full message history
   5. A question with no matching documents returns a graceful "no information found" response rather than a hallucinated answer
-**Plans**: TBD
+**Plans**:
+- [ ] 03-01: Scaffold the Python API foundation, auth boundary, and typed chat/history contracts
+- [ ] 03-02: Scaffold the Next.js app shell and Supabase auth-first user flow
+- [ ] 03-03: Implement the RAG backend with streaming, citations, language handling, and persistence
+- [ ] 03-04: Integrate the chat UI, citation side panel, and recent-first conversation history
 
 ## Progress
 
@@ -71,4 +75,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Data Corpus | 4/4 | Complete | 2026-02-28 |
 | 2. Indexing Pipeline | 4/4 | Complete | 2026-02-28 |
-| 3. Product | 0/TBD | Not started | - |
+| 3. Product | 0/4 | Planned | - |
