@@ -2,11 +2,17 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+import os
 
+from fastapi.testclient import TestClient
+
+from polisi_api.auth import AuthenticatedUser, get_current_user
+from polisi_api.chat.repository import InMemoryChatRepository
 from polisi_api.chat.prompting import PromptPackage
 from polisi_api.chat.retrieval import RetrievedChunk
 from polisi_api.chat.service import ChatService, TextGenerator
 from polisi_api.config import Settings
+from polisi_api.dependencies import get_chat_service
 
 
 @dataclass
@@ -95,3 +101,58 @@ async def run_chat_service_paths() -> None:
     assert weak_reply.response.kind == "limited-support"
     assert weak_reply.response.language == "en"
     assert weak_reply.response.answer.startswith("The retrieved document support is limited")
+
+
+def test_streaming_chat_persists_messages_and_citations() -> None:
+    asyncio.run(run_streaming_chat_persistence())
+
+
+async def run_streaming_chat_persistence() -> None:
+    os.environ["SUPABASE_URL"] = "https://example.supabase.co"
+    os.environ["SUPABASE_DB_URL"] = "postgresql://postgres:postgres@localhost:5432/postgres"
+    from polisi_api.main import create_app
+
+    question = "Apakah bantuan pendidikan untuk pelajar IPT?"
+    repository = InMemoryChatRepository()
+    service = ChatService(
+        settings=build_settings(),
+        retriever=FakeRetriever(
+            responses={question: [chunk("Bantuan Pendidikan", "KPM", question, 0.8)]}
+        ),
+        generator=FakeGenerator(
+            replies={question: "Bantuan pendidikan IPT disediakan melalui skim bantuan pelajar [1]."}
+        ),
+        repository=repository,
+    )
+    app = create_app(build_settings())
+    app.dependency_overrides[get_chat_service] = lambda: service
+    app.dependency_overrides[get_current_user] = lambda: AuthenticatedUser(
+        user_id="8bd9d241-8380-4dd7-a1a8-a664e1d74c8f",
+        email="citizen@example.com",
+        role="authenticated",
+        claims={"sub": "8bd9d241-8380-4dd7-a1a8-a664e1d74c8f"},
+    )
+    client = TestClient(app)
+
+    with client.stream(
+        "POST",
+        "/api/chat",
+        json={"question": question, "create_conversation": True},
+    ) as response:
+        payload_lines = [line for line in response.iter_lines() if line]
+
+    assert response.status_code == 200
+    assert len(payload_lines) >= 4
+    assert any('"event":"message-delta"' in line for line in payload_lines)
+    detail = repository.list_conversations(
+        user_id="8bd9d241-8380-4dd7-a1a8-a664e1d74c8f"
+    )[0]
+    conversation = repository.get_conversation_detail(
+        user_id="8bd9d241-8380-4dd7-a1a8-a664e1d74c8f",
+        conversation_id=str(detail.id),
+    )
+
+    assert detail.message_count == 2
+    assert conversation is not None
+    assert [message.role for message in conversation.messages] == ["user", "assistant"]
+    assert conversation.messages[1].citations[0].title == "Bantuan Pendidikan"

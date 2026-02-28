@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Protocol
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from anthropic import AsyncAnthropic
 
 from polisi_api.config import Settings
-from polisi_api.models import AssistantResponse, CitationRecord, LanguageCode
+from polisi_api.models import AssistantResponse, ChatRequest, CitationRecord
 
 from .detector import detect_language, needs_clarification
 from .prompting import (
@@ -19,6 +19,7 @@ from .prompting import (
     build_prompt,
     build_weak_support_prefix,
 )
+from .repository import ChatRepository
 from .retrieval import RetrievedChunk, Retriever
 
 
@@ -26,7 +27,7 @@ class TextGenerator(Protocol):
     async def generate(self, prompt: PromptPackage) -> str: ...
 
 
-@dataclass(frozen=True)
+@dataclass
 class GeneratedReply:
     response: AssistantResponse
     kind: str
@@ -59,10 +60,12 @@ class ChatService:
         settings: Settings,
         retriever: Retriever,
         generator: TextGenerator,
+        repository: ChatRepository | None = None,
     ) -> None:
         self._settings = settings
         self._retriever = retriever
         self._generator = generator
+        self._repository = repository
 
     async def generate_reply(self, *, question: str, conversation_id: str | None = None) -> GeneratedReply:
         language = detect_language(question)
@@ -119,6 +122,47 @@ class ChatService:
             kind=kind,
         )
         return GeneratedReply(response=response, kind=kind, retrieved_chunks=cited_chunks)
+
+    async def handle_chat(self, *, user_id: str, request: ChatRequest) -> GeneratedReply:
+        if self._repository is None:
+            raise RuntimeError("Chat repository is required for persisted chat handling")
+
+        provisional_language = detect_language(request.question)
+        conversation_id = self._repository.ensure_conversation(
+            user_id=user_id,
+            language=provisional_language,
+            title_seed=request.question,
+            conversation_id=str(request.conversation_id) if request.conversation_id else None,
+            create_new=request.create_conversation,
+        )
+        self._repository.add_message(
+            conversation_id=conversation_id,
+            role="user",
+            content=request.question,
+            language=provisional_language,
+        )
+
+        generated = await self.generate_reply(
+            question=request.question,
+            conversation_id=str(conversation_id),
+        )
+        assistant_message_id = self._repository.add_message(
+            conversation_id=conversation_id,
+            role="assistant",
+            content=generated.response.answer,
+            language=generated.response.language,
+        )
+        self._repository.add_citations(
+            message_id=assistant_message_id,
+            citations=generated.response.citations,
+        )
+        generated.response = generated.response.model_copy(
+            update={
+                "conversation_id": conversation_id,
+                "message_id": assistant_message_id,
+            }
+        )
+        return generated
 
     def _build_citations(self, chunks: list[RetrievedChunk]) -> list[CitationRecord]:
         citations: list[CitationRecord] = []

@@ -19,6 +19,7 @@ from polisi_api.models import (
     ConversationSummary,
     StreamingEventEnvelope,
 )
+from polisi_api.routes.chat import router as chat_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -48,32 +49,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "service": "polisi-api",
         }
 
-    @app.post(
-        "/api/chat",
-        response_model=AssistantResponse,
-        summary="Reserved chat contract endpoint",
-    )
-    async def chat_contract(
-        payload: ChatRequest,
-        user: AuthenticatedUser = Depends(get_current_user),
-    ) -> AssistantResponse:
-        conversation_id = payload.conversation_id or uuid4()
-        return AssistantResponse(
-            conversation_id=conversation_id,
-            message_id=uuid4(),
-            language=payload.language_hint or "en",
-            answer="Not implemented yet.[1]",
-            citations=[
-                CitationRecord(
-                    index=1,
-                    title="Contract Placeholder",
-                    agency="PolisiGPT",
-                    source_url=f"{runtime_settings.supabase_url}/contract-placeholder",
-                    excerpt="Reserved schema response before the Phase 3 chat implementation.",
-                )
-            ],
-            kind="answer",
-        )
+    app.include_router(chat_router)
 
     @app.get(
         "/api/contracts/chat-stream",
