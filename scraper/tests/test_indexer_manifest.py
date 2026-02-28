@@ -10,6 +10,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from polisi_scraper.config import ScraperSettings, SettingsError
 from polisi_scraper.indexer.manifest import SpacesCorpusManifest
+from polisi_scraper.indexer.state import InMemoryFingerprintStore
 
 
 BASE_ENV = {
@@ -93,3 +94,38 @@ def test_spaces_manifest_normalizes_storage_objects() -> None:
     assert objects[0].file_type == "html"
     assert objects[1].version_token == "etag-b"
     assert objects[1].metadata["source_url"] == "https://www.mof.gov.my/budget-2026.pdf"
+
+
+def test_pending_items_skip_existing_sha() -> None:
+    settings = ScraperSettings.from_env(BASE_ENV)
+    client = FakeSpacesClient(
+        [
+            {
+                "Contents": [
+                    {
+                        "Key": "gov-my/ministry-of-health/2026-02/guidelines.docx",
+                        "ETag": '"etag-guidelines"',
+                        "Metadata": {"sha256": "a" * 64},
+                    },
+                    {
+                        "Key": "gov-my/ministry-of-health/2026-02/report.xlsx",
+                        "ETag": '"etag-report"',
+                    },
+                ],
+                "IsTruncated": False,
+            }
+        ]
+    )
+    store = InMemoryFingerprintStore()
+    store.mark_indexed(
+        "gov-my/ministry-of-health/2026-02/guidelines.docx",
+        "a" * 64,
+        document_count=5,
+    )
+
+    manifest = SpacesCorpusManifest(settings, client=client)
+    pending = manifest.pending_items(store)
+
+    assert len(pending) == 1
+    assert pending[0].storage_path == "gov-my/ministry-of-health/2026-02/report.xlsx"
+    assert pending[0].file_type == "xlsx"
