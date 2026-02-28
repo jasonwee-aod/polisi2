@@ -6,7 +6,7 @@ type ChatConversationPageProps = {
 };
 
 export default async function ChatConversationPage({ params }: ChatConversationPageProps) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { session }
   } = await supabase.auth.getSession();

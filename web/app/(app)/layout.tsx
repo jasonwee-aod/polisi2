@@ -9,7 +9,7 @@ type AppLayoutProps = {
 };
 
 export default async function AppLayout({ children }: AppLayoutProps) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user }
   } = await supabase.auth.getUser();
