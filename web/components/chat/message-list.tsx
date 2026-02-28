@@ -35,24 +35,24 @@ export function MessageList({ messages, onCitationSelect }: MessageListProps) {
   return (
     <div style={{ display: "grid", gap: "1rem" }}>
       {messages.map((message) => (
-        <article
-          key={message.id}
-          style={{
-            justifySelf: message.role === "user" ? "end" : "stretch",
-            maxWidth: message.role === "user" ? "70%" : "100%",
-            borderRadius: "1.5rem",
-            padding: "1rem 1.1rem",
-            background: message.role === "user" ? "#173a2a" : "rgba(255, 255, 255, 0.88)",
-            color: message.role === "user" ? "#f7fbf7" : "#14231d",
-            border:
-              message.role === "user"
-                ? "none"
-                : "1px solid rgba(20, 35, 29, 0.08)"
-          }}
-        >
+        <article key={message.id} style={messageCardStyle(message)}>
           <div style={{ marginBottom: "0.5rem", fontWeight: 700 }}>
             {message.role === "user" ? "You" : "Polisi"}
           </div>
+          {message.role === "assistant" && getAssistantVariant(message.content) !== "standard" ? (
+            <div
+              style={{
+                marginBottom: "0.45rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                fontSize: "0.78rem",
+                fontWeight: 700,
+                color: "#4f6a5f"
+              }}
+            >
+              {assistantVariantLabel(getAssistantVariant(message.content))}
+            </div>
+          ) : null}
           <p style={{ margin: 0, lineHeight: 1.75 }}>{renderAnswer(message, onCitationSelect)}</p>
           {message.role === "assistant" && message.citations.length > 0 ? (
             <div style={{ marginTop: "0.75rem", color: "#4f6a5f", fontSize: "0.92rem" }}>
@@ -63,6 +63,56 @@ export function MessageList({ messages, onCitationSelect }: MessageListProps) {
       ))}
     </div>
   );
+}
+
+function messageCardStyle(message: ConversationMessage): React.CSSProperties {
+  const assistantVariant = message.role === "assistant" ? getAssistantVariant(message.content) : "standard";
+  return {
+    justifySelf: message.role === "user" ? "end" : "stretch",
+    maxWidth: message.role === "user" ? "70%" : "100%",
+    borderRadius: "1.5rem",
+    padding: "1rem 1.1rem",
+    background:
+      message.role === "user"
+        ? "#173a2a"
+        : assistantVariant === "limited"
+          ? "rgba(250, 246, 234, 0.95)"
+          : assistantVariant === "no-info"
+            ? "rgba(246, 242, 242, 0.95)"
+            : "rgba(255, 255, 255, 0.88)",
+    color: message.role === "user" ? "#f7fbf7" : "#14231d",
+    border:
+      message.role === "user"
+        ? "none"
+        : "1px solid rgba(20, 35, 29, 0.08)"
+  };
+}
+
+function getAssistantVariant(content: string): "standard" | "clarification" | "limited" | "no-info" {
+  const normalized = content.toLowerCase();
+  if (normalized.includes("specific policy") || normalized.includes("jelaskan dasar")) {
+    return "clarification";
+  }
+  if (normalized.includes("support is limited") || normalized.includes("sokongan dokumen")) {
+    return "limited";
+  }
+  if (normalized.includes("could not find enough support") || normalized.includes("tidak menemui maklumat")) {
+    return "no-info";
+  }
+  return "standard";
+}
+
+function assistantVariantLabel(variant: ReturnType<typeof getAssistantVariant>): string {
+  switch (variant) {
+    case "clarification":
+      return "Clarification requested";
+    case "limited":
+      return "Limited support";
+    case "no-info":
+      return "No indexed support";
+    default:
+      return "";
+  }
 }
 
 function renderAnswer(

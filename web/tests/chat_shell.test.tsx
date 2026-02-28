@@ -199,8 +199,11 @@ describe("chat shell", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/specific policy, benefit, or government agency/i)).toBeInTheDocument();
+      expect(screen.getByText(/clarification requested/i)).toBeInTheDocument();
       expect(screen.getByText(/document support is limited/i)).toBeInTheDocument();
+      expect(screen.getByText(/limited support/i)).toBeInTheDocument();
       expect(screen.getByText(/could not find enough support/i)).toBeInTheDocument();
+      expect(screen.getByText(/no indexed support/i)).toBeInTheDocument();
     });
   });
 });
