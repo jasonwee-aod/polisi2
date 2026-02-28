@@ -61,10 +61,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User can view a sidebar list of past conversation sessions and click any to resume it with full message history
   5. A question with no matching documents returns a graceful "no information found" response rather than a hallucinated answer
 **Plans**:
-- [ ] 03-01: Scaffold the Python API foundation, auth boundary, and typed chat/history contracts
-- [ ] 03-02: Scaffold the Next.js app shell and Supabase auth-first user flow
-- [ ] 03-03: Implement the RAG backend with streaming, citations, language handling, and persistence
-- [ ] 03-04: Integrate the chat UI, citation side panel, and recent-first conversation history
+- [x] 03-01: Scaffold the Python API foundation, auth boundary, and typed chat/history contracts
+- [x] 03-02: Scaffold the Next.js app shell and Supabase auth-first user flow
+- [x] 03-03: Implement the RAG backend with streaming, citations, language handling, and persistence
+- [x] 03-04: Integrate the chat UI, citation side panel, and recent-first conversation history
 
 ## Progress
 
