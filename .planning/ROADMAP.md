@@ -46,7 +46,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. All four document types (HTML, PDF, DOCX, XLSX) are parsed without errors
 **Plans**:
 - [x] 02-01: Scaffold indexer runtime, corpus manifest loading, and incremental state contracts
-- [ ] 02-02: Implement HTML/PDF/DOCX/XLSX parsing and chunk assembly
+- [x] 02-02: Implement HTML/PDF/DOCX/XLSX parsing and chunk assembly
 - [ ] 02-03: Wire embeddings, Supabase persistence, and retrieval smoke queries
 - [ ] 02-04: Operationalize end-to-end indexing on the droplet
 
@@ -70,5 +70,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Corpus | 4/4 | Complete | 2026-02-28 |
-| 2. Indexing Pipeline | 1/4 | In Progress |   |
+| 2. Indexing Pipeline | 2/4 | In Progress |   |
 | 3. Product | 0/TBD | Not started | - |

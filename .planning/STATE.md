@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: active
-last_updated: "2026-02-28T21:24:00+08:00"
+last_updated: "2026-02-28T21:29:00+08:00"
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 8
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -23,29 +23,29 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 2 of 3 (Indexing Pipeline)
-Plan: 2 of 4 in current phase
-Status: Phase 2 in progress after manifest/runtime foundation
-Last activity: 2026-02-28 — Executed plan 02-01 for indexer runtime, manifest loading, and incremental skip contracts
+Plan: 3 of 4 in current phase
+Status: Phase 2 in progress after parser/chunking implementation
+Last activity: 2026-02-28 — Executed plan 02-02 for multi-format parsing and chunk assembly
 
-Progress: [████░░░░░░] 42%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 36.6 min
-- Total execution time: 183 min
+- Total plans completed: 6
+- Average duration: 31.3 min
+- Total execution time: 188 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 4 | 170 min | 42.5 min |
-| 2 | 1 | 13 min | 13 min |
+| 2 | 2 | 18 min | 9 min |
 
 **Recent Trend:**
-- Last 5 plans: completed (01-01, 01-02, 01-03, 01-04, 02-01)
-- Trend: stable execution with Phase 2 foundation established
+- Last 6 plans: completed (01-01, 01-02, 01-03, 01-04, 02-01, 02-02)
+- Trend: stable execution with parsers and chunking added on top of the Phase 2 foundation
 
 ## Accumulated Context
 
@@ -59,6 +59,7 @@ Recent decisions affecting current work:
 - Phase 1: Operational runs require preflight checks and cron schedule `0 1 */3 * *` (9:00 AM MYT).
 - Phase 2: Indexer startup should require OpenAI and direct Supabase DB credentials explicitly via `require_indexer=True`.
 - Phase 2: Unchanged-index detection is based on `storage_path + version_token`, preferring sha256 metadata, then VersionId, then ETag.
+- Phase 2: All parser implementations emit `ParsedDocument` / `ParsedBlock`, and chunk metadata stores a `locators` array for later citation mapping.
 
 ### Pending Todos
 
@@ -66,10 +67,10 @@ None yet.
 
 ### Blockers/Concerns
 
-- Parser, embedding, and persistence layers are still pending for plans 02-02 through 02-04.
+- Embedding, persistence, runner, and droplet operationalization are still pending for plans 02-03 through 02-04.
 
 ## Session Continuity
 
-Last session: 2026-02-28 21:24 +08
-Stopped at: Plan 02-01 complete; next target is parser/chunking implementation in 02-02
-Resume file: .planning/phases/02-indexing-pipeline/02-01-SUMMARY.md
+Last session: 2026-02-28 21:29 +08
+Stopped at: Plan 02-02 complete; next target is schema, embeddings, and persistence in 02-03
+Resume file: .planning/phases/02-indexing-pipeline/02-02-SUMMARY.md
