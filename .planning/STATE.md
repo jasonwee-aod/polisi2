@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: active
-last_updated: "2026-02-28T22:45:13+08:00"
+last_updated: "2026-02-28T22:52:29+08:00"
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -23,18 +23,18 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 3 of 3 (Product)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: Phase 3 in progress
-Last activity: 2026-02-28 — Completed plan 03-02 web auth shell and protected /chat workspace
+Last activity: 2026-02-28 — Completed plan 03-03 RAG backend, streaming chat route, and conversation history APIs
 
-Progress: [████████░░] 83%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
-- Average duration: 21.2 min
-- Total execution time: 212 min
+- Total plans completed: 11
+- Average duration: 19.6 min
+- Total execution time: 216 min
 
 **By Phase:**
 
@@ -42,11 +42,11 @@ Progress: [████████░░] 83%
 |-------|-------|-------|----------|
 | 1 | 4 | 170 min | 42.5 min |
 | 2 | 4 | 29 min | 7.3 min |
-| 3 | 2 | 13 min | 6.5 min |
+| 3 | 3 | 17 min | 5.7 min |
 
 **Recent Trend:**
-- Last 8 plans: completed (01-03, 01-04, 02-01, 02-02, 02-03, 02-04, 03-01, 03-02)
-- Trend: stable execution with both product foundations complete and the phase moving into integrated behavior work
+- Last 8 plans: completed (01-04, 02-01, 02-02, 02-03, 02-04, 03-01, 03-02, 03-03)
+- Trend: stable execution with product foundations and backend behavior complete, leaving only frontend integration
 
 ## Accumulated Context
 
@@ -71,6 +71,8 @@ Recent decisions affecting current work:
 - Phase 3: Chat, citation, conversation history, and stream-event DTOs are fixed in OpenAPI before RAG behavior and frontend integration work begins.
 - Phase 3: The web app routes authenticated users directly into `/chat` and keeps `/auth` as one combined sign-in/sign-up surface.
 - Phase 3: Protected frontend pages should read the server session first while middleware keeps `/`, `/auth`, and `/chat` aligned on the same auth-first contract.
+- Phase 3: Backend chat streams NDJSON event envelopes and persists the final assistant payload plus citations before the completion event is emitted.
+- Phase 3: Conversation history APIs are recent-first and reload the exact persisted thread rather than reconstructing messages client-side.
 
 ### Pending Todos
 
@@ -83,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-28 22:45 +08
-Stopped at: Plan 03-02 complete
-Resume file: .planning/phases/03-product/03-03-PLAN.md
+Last session: 2026-02-28 22:52 +08
+Stopped at: Plan 03-03 complete
+Resume file: .planning/phases/03-product/03-04-PLAN.md
