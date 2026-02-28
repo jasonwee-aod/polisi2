@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: active
-last_updated: "2026-02-28T21:41:00+08:00"
+last_updated: "2026-02-28T22:17:00+08:00"
 progress:
   total_phases: 3
   completed_phases: 2
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 Phase: 3 of 3 (Product)
 Plan: 0 of TBD in current phase
 Status: Phase 2 complete; ready for Phase 3 planning
-Last activity: 2026-02-28 — Executed plan 02-04 and completed Phase 2 indexing pipeline
+Last activity: 2026-02-28 — Gathered Phase 3 product context for planning
 
 Progress: [███████░░░] 67%
 
@@ -63,6 +63,9 @@ Recent decisions affecting current work:
 - Phase 2: The `documents` table itself now acts as the successful-index fingerprint store via `(storage_path, version_token, chunk_index)` uniqueness.
 - Phase 2: Retrieval smoke checks should embed a BM/EN query and resolve results through `public.match_documents`.
 - Phase 2: Droplet operations should gate both scraper and indexer runs through component-aware preflight checks before live execution.
+- Phase 3: Answers should use a formal government-brief tone with inline claim-level citations and an in-app citation side panel.
+- Phase 3: The chat UX should follow familiar ChatGPT/Claude patterns with auth-first entry, recent-first conversation history, and full-thread resume behavior.
+- Phase 3: Answers should stream progressively, ask clarifying questions for broad prompts, and stay grounded to the indexed corpus even when retrieval support is weak.
 
 ### Pending Todos
 
@@ -74,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-28 21:41 +08
-Stopped at: Phase 2 complete; next target is Phase 3 product planning
-Resume file: .planning/phases/02-indexing-pipeline/02-04-SUMMARY.md
+Last session: 2026-02-28 22:17 +08
+Stopped at: Phase 3 context gathered
+Resume file: .planning/phases/03-product/03-CONTEXT.md
