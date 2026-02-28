@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import pathlib
 import sys
 
@@ -8,6 +9,7 @@ import pytest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from polisi_scraper.config import ScraperSettings, SettingsError
+from polisi_scraper.indexer.manifest import SpacesCorpusManifest
 
 
 BASE_ENV = {
@@ -19,6 +21,17 @@ BASE_ENV = {
     "DO_SPACES_REGION": "sgp1",
     "DO_SPACES_ENDPOINT": "https://sgp1.digitaloceanspaces.com",
 }
+
+
+class FakeSpacesClient:
+    def __init__(self, pages: list[dict[str, object]]) -> None:
+        self._pages = pages
+        self.calls = 0
+
+    def list_objects_v2(self, **kwargs: object) -> dict[str, object]:
+        page = self._pages[self.calls]
+        self.calls += 1
+        return page
 
 
 def test_indexer_settings_validation() -> None:
@@ -43,3 +56,40 @@ def test_indexer_settings_validation() -> None:
     assert settings.indexer_batch_size == 24
     assert settings.indexer_chunk_overlap == 300
     assert settings.openai_api_key == "openai-key"
+
+
+def test_spaces_manifest_normalizes_storage_objects() -> None:
+    settings = ScraperSettings.from_env(BASE_ENV)
+    client = FakeSpacesClient(
+        [
+            {
+                "Contents": [
+                    {
+                        "Key": "gov-my/ministry-of-finance/2026-02/budget-2026.pdf",
+                        "ETag": '"etag-b"',
+                        "Size": 2048,
+                        "LastModified": datetime(2026, 2, 28, 4, 0, tzinfo=timezone.utc),
+                        "Metadata": {"source_url": "https://www.mof.gov.my/budget-2026.pdf"},
+                    },
+                    {
+                        "Key": "gov-my/ministry-of-finance/2026-01/budget-2025.html",
+                        "ETag": '"etag-a"',
+                        "Size": 1024,
+                        "LastModified": datetime(2026, 2, 27, 4, 0, tzinfo=timezone.utc),
+                    },
+                ],
+                "IsTruncated": False,
+            }
+        ]
+    )
+
+    manifest = SpacesCorpusManifest(settings, client=client)
+    objects = manifest.list_objects()
+
+    assert [obj.storage_path for obj in objects] == [
+        "gov-my/ministry-of-finance/2026-01/budget-2025.html",
+        "gov-my/ministry-of-finance/2026-02/budget-2026.pdf",
+    ]
+    assert objects[0].file_type == "html"
+    assert objects[1].version_token == "etag-b"
+    assert objects[1].metadata["source_url"] == "https://www.mof.gov.my/budget-2026.pdf"
