@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from polisi_api.auth import AuthenticatedUser, get_current_user
 from polisi_api.config import Settings, get_settings
 
 
@@ -26,6 +27,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    if settings is not None:
+        app.dependency_overrides[get_settings] = lambda: runtime_settings
 
     @app.get("/healthz")
     async def healthz() -> dict[str, object]:
@@ -36,16 +39,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         }
 
     @app.post("/api/chat", summary="Reserved chat contract endpoint")
-    async def chat_contract() -> dict[str, str]:
-        return {"status": "not-implemented"}
+    async def chat_contract(
+        user: AuthenticatedUser = Depends(get_current_user),
+    ) -> dict[str, str]:
+        return {"status": "not-implemented", "user_id": user.user_id}
 
     @app.get("/api/conversations", summary="Reserved conversation list endpoint")
-    async def conversations_contract() -> list[dict[str, str]]:
+    async def conversations_contract(
+        user: AuthenticatedUser = Depends(get_current_user),
+    ) -> list[dict[str, str]]:
+        _ = user
         return []
 
     @app.get("/api/conversations/{conversation_id}", summary="Reserved conversation detail endpoint")
-    async def conversation_detail_contract(conversation_id: UUID) -> dict[str, str]:
-        return {"conversation_id": str(conversation_id), "status": "not-implemented"}
+    async def conversation_detail_contract(
+        conversation_id: UUID,
+        user: AuthenticatedUser = Depends(get_current_user),
+    ) -> dict[str, str]:
+        return {
+            "conversation_id": str(conversation_id),
+            "status": "not-implemented",
+            "user_id": user.user_id,
+        }
 
     return app
 
