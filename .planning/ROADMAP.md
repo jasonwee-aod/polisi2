@@ -72,9 +72,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Goal:** source_url flows end-to-end from scrape through Spaces upload to Supabase chunk storage and citation rendering; all uncommitted smoke-fix changes are committed
 **Requirements:** INDX-03, API-02, FE-03
 **Gap Closure:** Closes gaps from v1.0 audit — source_url chain break (Phase 1→2 integration), Scrape→Index→Citation flow
+**Plans:** 1 plan
 
-**Plans**:
-- [ ] 04-01: Commit smoke-fix changes + fix source_url chain in SpacesUploader and runner.py
+Plans:
+- [ ] 04-01-PLAN.md — Commit smoke fixes + fix source_url chain in SpacesUploader/runner.py + make source_url nullable in API/frontend with citation fallback
 
 ### Phase 5: Verification Run & Housekeeping
 **Goal:** All three milestone phases have VERIFICATION.md files, REQUIREMENTS.md reflects completed work, and the 429 rate-limit edge case is handled gracefully
