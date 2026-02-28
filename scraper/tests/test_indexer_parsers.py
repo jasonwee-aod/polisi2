@@ -10,7 +10,7 @@ from openpyxl import Workbook
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from polisi_scraper.indexer.chunking import build_chunks
-from polisi_scraper.indexer.parsers import DocxParser, HtmlParser, PdfParser, XlsxParser
+from polisi_scraper.indexer.parsers import DocxParser, HtmlParser, PdfParser, XlsxParser, get_parser
 
 
 class _FakePdfPage:
@@ -86,3 +86,29 @@ def test_docx_xlsx_and_chunking_preserve_structure() -> None:
     assert len(chunks) == 2
     assert chunks[0].metadata["locators"][0]["section_heading"] == "Education Grants"
     assert "Prepare income proof." in chunks[1].text
+
+
+def test_all_supported_file_types_parse(monkeypatch) -> None:
+    monkeypatch.setattr("polisi_scraper.indexer.parsers.pdf.PdfReader", _FakePdfReader)
+
+    docx_buffer = BytesIO()
+    doc = DocxDocument()
+    doc.add_paragraph("DOCX content")
+    doc.save(docx_buffer)
+
+    workbook = Workbook()
+    workbook.active.append(["Name", "Value"])
+    workbook.active.append(["Threshold", "10"])
+    xlsx_buffer = BytesIO()
+    workbook.save(xlsx_buffer)
+
+    payloads = {
+        "html": b"<html><body><p>HTML content</p></body></html>",
+        "pdf": b"%PDF-1.4",
+        "docx": docx_buffer.getvalue(),
+        "xlsx": xlsx_buffer.getvalue(),
+    }
+
+    for file_type, payload in payloads.items():
+        parsed = get_parser(file_type).parse_bytes(payload)
+        assert not parsed.is_empty()
