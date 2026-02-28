@@ -6,8 +6,11 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
+from polisi_scraper.config import ScraperSettings
+from polisi_scraper.indexer.embeddings import EMBEDDING_MODEL
 from polisi_scraper.indexer.manifest import PendingIndexItem, SpacesCorpusManifest
 from polisi_scraper.indexer.pipeline import IndexingPipeline
+from polisi_scraper.indexer.runner import build_parser
 from polisi_scraper.indexer.store import DocumentsStore
 
 
@@ -33,6 +36,17 @@ class FakeFetcher:
 class FakeEmbeddings:
     def embed_texts(self, texts: list[str]) -> list[list[float]]:
         return [[float(len(text)), float(index + 1)] for index, text in enumerate(texts)]
+
+
+BASE_ENV = {
+    "SUPABASE_URL": "https://example.supabase.co",
+    "SUPABASE_SERVICE_ROLE_KEY": "service-role-key",
+    "DO_SPACES_KEY": "spaces-key",
+    "DO_SPACES_SECRET": "spaces-secret",
+    "DO_SPACES_BUCKET": "gov-docs",
+    "DO_SPACES_REGION": "sgp1",
+    "DO_SPACES_ENDPOINT": "https://sgp1.digitaloceanspaces.com",
+}
 
 
 def _pending_item(file_type: str, storage_path: str, *, title: str) -> PendingIndexItem:
@@ -75,3 +89,42 @@ def test_indexing_pipeline_persists_chunks_and_fingerprints() -> None:
     assert store.has_fingerprint(item.storage_path, item.version_token)
     assert store.match_documents([50.0, 1.0], limit=1)[0].title == "Budget"
     assert store._records[0].sha256 == hashlib.sha256(payload).hexdigest()
+
+
+def test_indexer_pipeline_model_and_runner_flags() -> None:
+    scripts_path = pathlib.Path(__file__).resolve().parents[1] / "scripts"
+    if str(scripts_path) not in sys.path:
+        sys.path.insert(0, str(scripts_path))
+
+    from query_smoke import run_smoke_query
+
+    settings = ScraperSettings.from_env(
+        {
+            **BASE_ENV,
+            "OPENAI_API_KEY": "openai-key",
+            "SUPABASE_DB_URL": "postgresql://postgres:password@db.example.supabase.co:5432/postgres",
+        },
+        require_indexer=True,
+    )
+    parser = build_parser()
+    args = parser.parse_args(["--max-items", "2", "--dry-run", "--storage-path", "gov-my/demo/file.pdf"])
+
+    store = DocumentsStore(
+        records=[
+            DocumentsStore().persist_chunks(
+                _pending_item("html", "gov-my/demo/file.pdf", title="Demo Policy"),
+                sha256="a" * 64,
+                chunks=["Bantuan pendidikan untuk isi rumah."],
+                embeddings=[[1.0, 0.0]],
+                chunk_metadata=[{"language": "ms"}],
+            )[0]
+        ]
+    )
+    smoke = run_smoke_query("bantuan pendidikan", limit=1, embeddings=FakeEmbeddings(), store=store)
+
+    assert EMBEDDING_MODEL == "text-embedding-3-large"
+    assert settings.require_indexer().supabase_db_url is not None
+    assert args.max_items == 2
+    assert args.dry_run is True
+    assert args.storage_path == "gov-my/demo/file.pdf"
+    assert smoke[0]["title"] == "Demo Policy"
