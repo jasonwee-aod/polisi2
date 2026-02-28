@@ -13,10 +13,10 @@
 
 ### Indexer
 
-- [ ] **INDX-01**: LlamaIndex pipeline reads raw files from DO Spaces, parses documents (HTML, PDF, DOCX, XLSX), chunks them, and generates embeddings
-- [ ] **INDX-02**: Embeddings are generated using OpenAI `text-embedding-3-large` for multilingual BM/EN support
-- [ ] **INDX-03**: Chunks with embeddings and source metadata (title, URL, agency, date) are written to Supabase pgvector (`documents` table)
-- [ ] **INDX-04**: Indexer is incremental — already-indexed documents are skipped, only new or changed files are processed
+- [x] **INDX-01**: LlamaIndex pipeline reads raw files from DO Spaces, parses documents (HTML, PDF, DOCX, XLSX), chunks them, and generates embeddings
+- [x] **INDX-02**: Embeddings are generated using OpenAI `text-embedding-3-large` for multilingual BM/EN support
+- [x] **INDX-03**: Chunks with embeddings and source metadata (title, URL, agency, date) are written to Supabase pgvector (`documents` table)
+- [x] **INDX-04**: Indexer is incremental — already-indexed documents are skipped, only new or changed files are processed
 
 ### API Backend
 
@@ -84,10 +84,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCRP-03 | Phase 1 | Complete |
 | INFRA-01 | Phase 1 | Complete |
 | INFRA-02 | Phase 1 | Complete |
-| INDX-01 | Phase 2 | Pending |
-| INDX-02 | Phase 2 | Pending |
-| INDX-03 | Phase 2 | Pending |
-| INDX-04 | Phase 2 | Pending |
+| INDX-01 | Phase 2 | Complete |
+| INDX-02 | Phase 2 | Complete |
+| INDX-03 | Phase 2 | Complete |
+| INDX-04 | Phase 2 | Complete |
 | API-01 | Phase 3 | Pending |
 | API-02 | Phase 3 | Pending |
 | API-03 | Phase 3 | Pending |
@@ -104,4 +104,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 — traceability completed after roadmap creation*
+*Last updated: 2026-02-28 — Phase 2 indexing requirements completed*

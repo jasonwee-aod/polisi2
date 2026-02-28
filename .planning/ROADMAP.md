@@ -13,7 +13,7 @@ Three phases deliver the complete product. Phase 1 builds the raw document corpu
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Data Corpus** - Scraper infrastructure and government site adapters harvesting real documents into DO Spaces, deployed on a Droplet with automated cron scheduling *(completed 2026-02-28)*
-- [ ] **Phase 2: Indexing Pipeline** - LlamaIndex pipeline parsing, embedding, and storing document chunks in Supabase pgvector
+- [x] **Phase 2: Indexing Pipeline** - LlamaIndex pipeline parsing, embedding, and storing document chunks in Supabase pgvector *(completed 2026-02-28)*
 - [ ] **Phase 3: Product** - RAG API with citations and language detection plus Next.js chat UI with auth, citations, and conversation history
 
 ## Phase Details
@@ -48,7 +48,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 02-01: Scaffold indexer runtime, corpus manifest loading, and incremental state contracts
 - [x] 02-02: Implement HTML/PDF/DOCX/XLSX parsing and chunk assembly
 - [x] 02-03: Wire embeddings, Supabase persistence, and retrieval smoke queries
-- [ ] 02-04: Operationalize end-to-end indexing on the droplet
+- [x] 02-04: Operationalize end-to-end indexing on the droplet
 
 ### Phase 3: Product
 **Goal**: A user can open the app, log in, ask a policy question in BM or English, and receive a cited answer sourced from real government documents — with conversation history persisted
@@ -70,5 +70,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Corpus | 4/4 | Complete | 2026-02-28 |
-| 2. Indexing Pipeline | 3/4 | In Progress |   |
+| 2. Indexing Pipeline | 4/4 | Complete | 2026-02-28 |
 | 3. Product | 0/TBD | Not started | - |
