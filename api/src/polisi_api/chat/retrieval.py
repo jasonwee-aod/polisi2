@@ -16,7 +16,7 @@ class RetrievedChunk:
     document_id: str | None
     title: str
     agency: str
-    source_url: str
+    source_url: str | None
     chunk_text: str
     similarity: float
     chunk_index: int | None = None

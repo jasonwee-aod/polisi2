@@ -3,7 +3,7 @@ export type CitationRecord = {
   document_id?: string | null;
   title: string;
   agency: string;
-  source_url: string;
+  source_url: string | null;
   excerpt: string;
   published_at?: string | null;
   chunk_index?: number | null;

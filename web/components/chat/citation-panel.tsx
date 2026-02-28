@@ -57,9 +57,13 @@ export function CitationPanel({ citation, onClose }: CitationPanelProps) {
         >
           {citation.excerpt}
         </blockquote>
-        <a href={citation.source_url} rel="noreferrer" target="_blank" style={linkStyle}>
-          Open original source
-        </a>
+        {citation.source_url ? (
+          <a href={citation.source_url} rel="noreferrer" target="_blank" style={linkStyle}>
+            Open original source
+          </a>
+        ) : (
+          <span>[{citation.index}]</span>
+        )}
       </div>
     </aside>
   );

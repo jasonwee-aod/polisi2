@@ -26,7 +26,7 @@ class CitationRecord(BaseModel):
     document_id: UUID | None = None
     title: str
     agency: str
-    source_url: str
+    source_url: str | None = None
     excerpt: str
     published_at: date | None = None
     chunk_index: int | None = None
