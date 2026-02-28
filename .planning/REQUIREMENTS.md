@@ -15,13 +15,13 @@
 
 - [x] **INDX-01**: LlamaIndex pipeline reads raw files from DO Spaces, parses documents (HTML, PDF, DOCX, XLSX), chunks them, and generates embeddings
 - [x] **INDX-02**: Embeddings are generated using OpenAI `text-embedding-3-large` for multilingual BM/EN support
-- [ ] **INDX-03**: Chunks with embeddings and source metadata (title, URL, agency, date) are written to Supabase pgvector (`documents` table)
+- [x] **INDX-03**: Chunks with embeddings and source metadata (title, URL, agency, date) are written to Supabase pgvector (`documents` table)
 - [x] **INDX-04**: Indexer is incremental — already-indexed documents are skipped, only new or changed files are processed
 
 ### API Backend
 
 - [ ] **API-01**: User can send a question and receive a Claude-generated answer grounded in retrieved document chunks via vector similarity search
-- [ ] **API-02**: Every API response includes an inline citation schema — answer text with `[N]` references and a `citations` array with title, agency, URL, excerpt, and published date
+- [x] **API-02**: Every API response includes an inline citation schema — answer text with `[N]` references and a `citations` array with title, agency, URL, excerpt, and published date
 - [ ] **API-03**: System detects the language of the user's question and Claude responds in the same language (Bahasa Malaysia or English)
 - [ ] **API-04**: User's conversation messages are stored and retrievable from Supabase (`conversations` and `messages` tables)
 
@@ -29,7 +29,7 @@
 
 - [ ] **FE-01**: User can sign up with email and password and log in — session persists across browser refresh (Supabase Auth)
 - [ ] **FE-02**: User can type a question in the chat interface and receive an answer with inline superscript citation numbers
-- [ ] **FE-03**: Clicking an inline citation number opens the original source document URL in a new browser tab
+- [x] **FE-03**: Clicking an inline citation number opens the original source document URL in a new browser tab
 - [ ] **FE-04**: User can view a sidebar list of their past conversation sessions and click to resume any conversation
 
 ### Database Schema
@@ -86,15 +86,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-02 | Phase 1 | Complete |
 | INDX-01 | Phase 2 | Complete |
 | INDX-02 | Phase 2 | Complete |
-| INDX-03 | Phase 4 (gap closure) | Pending |
+| INDX-03 | Phase 4 (gap closure) | Complete |
 | INDX-04 | Phase 2 | Complete |
 | API-01 | Phase 5 (gap closure) | Pending |
-| API-02 | Phase 4 (gap closure) | Pending |
+| API-02 | Phase 4 (gap closure) | Complete |
 | API-03 | Phase 5 (gap closure) | Pending |
 | API-04 | Phase 5 (gap closure) | Pending |
 | FE-01 | Phase 5 (gap closure) | Pending |
 | FE-02 | Phase 5 (gap closure) | Pending |
-| FE-03 | Phase 4 (gap closure) | Pending |
+| FE-03 | Phase 4 (gap closure) | Complete |
 | FE-04 | Phase 5 (gap closure) | Pending |
 
 **Coverage:**
