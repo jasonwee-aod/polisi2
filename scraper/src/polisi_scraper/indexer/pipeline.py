@@ -44,8 +44,16 @@ class IndexingPipeline:
         self._embeddings = embeddings
         self._store = store
 
-    def run(self, *, max_items: int | None = None) -> IndexingRunResult:
-        pending_items = self._manifest.pending_items(self._store)
+    def run(
+        self,
+        *,
+        max_items: int | None = None,
+        mode: str = "incremental",
+        storage_path: str | None = None,
+    ) -> IndexingRunResult:
+        pending_items = self._select_items(mode=mode)
+        if storage_path:
+            pending_items = [item for item in pending_items if item.storage_path == storage_path]
         if max_items is not None:
             pending_items = pending_items[:max_items]
 
@@ -61,6 +69,26 @@ class IndexingPipeline:
             skipped_documents=max(0, len(self._manifest.list_objects()) - processed),
             persisted_chunks=persisted_chunks,
         )
+
+    def _select_items(self, *, mode: str) -> list[PendingIndexItem]:
+        if mode == "full":
+            return [
+                PendingIndexItem(
+                    storage_path=obj.storage_path,
+                    agency=obj.agency,
+                    year_month=obj.year_month,
+                    filename=obj.filename,
+                    file_type=obj.file_type,
+                    version_token=obj.version_token,
+                    title=obj.title,
+                    source_url=obj.metadata.get("source_url") if isinstance(obj.metadata.get("source_url"), str) else None,
+                    size_bytes=obj.size_bytes,
+                    last_modified=obj.last_modified,
+                    metadata=dict(obj.metadata),
+                )
+                for obj in self._manifest.list_objects()
+            ]
+        return self._manifest.pending_items(self._store)
 
     def _process_item(self, item: PendingIndexItem) -> int:
         payload = self._fetcher.get_bytes(item.storage_path)

@@ -41,6 +41,12 @@ class SpacesObjectFetcher:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run Polisi indexing pipeline")
+    parser.add_argument(
+        "--mode",
+        choices=["incremental", "full"],
+        default="incremental",
+        help="Incremental skips indexed versions; full reprocesses all discovered objects",
+    )
     parser.add_argument("--max-items", type=int, default=None, help="Limit pending objects per run")
     parser.add_argument("--dry-run", action="store_true", help="List configuration without indexing")
     parser.add_argument(
@@ -62,6 +68,7 @@ def main(argv: list[str] | None = None) -> None:
                 {
                     "ok": True,
                     "mode": "dry-run",
+                    "run_mode": args.mode,
                     "max_items": args.max_items,
                     "storage_path": args.storage_path or None,
                     "settings": {
@@ -82,5 +89,9 @@ def main(argv: list[str] | None = None) -> None:
         OpenAIEmbeddingsClient(settings.openai_api_key or ""),
         store,
     )
-    result = pipeline.run(max_items=args.max_items)
+    result = pipeline.run(
+        max_items=args.max_items,
+        mode=args.mode,
+        storage_path=args.storage_path or None,
+    )
     print(json.dumps(asdict(result), indent=2))

@@ -91,7 +91,7 @@ def test_indexing_pipeline_persists_chunks_and_fingerprints() -> None:
     assert store._records[0].sha256 == hashlib.sha256(payload).hexdigest()
 
 
-def test_indexer_pipeline_model_and_runner_flags() -> None:
+def test_runner_incremental_mode_flags() -> None:
     scripts_path = pathlib.Path(__file__).resolve().parents[1] / "scripts"
     if str(scripts_path) not in sys.path:
         sys.path.insert(0, str(scripts_path))
@@ -107,7 +107,9 @@ def test_indexer_pipeline_model_and_runner_flags() -> None:
         require_indexer=True,
     )
     parser = build_parser()
-    args = parser.parse_args(["--max-items", "2", "--dry-run", "--storage-path", "gov-my/demo/file.pdf"])
+    args = parser.parse_args(
+        ["--mode", "incremental", "--max-items", "2", "--dry-run", "--storage-path", "gov-my/demo/file.pdf"]
+    )
 
     store = DocumentsStore(
         records=[
@@ -124,6 +126,7 @@ def test_indexer_pipeline_model_and_runner_flags() -> None:
 
     assert EMBEDDING_MODEL == "text-embedding-3-large"
     assert settings.require_indexer().supabase_db_url is not None
+    assert args.mode == "incremental"
     assert args.max_items == 2
     assert args.dry_run is True
     assert args.storage_path == "gov-my/demo/file.pdf"

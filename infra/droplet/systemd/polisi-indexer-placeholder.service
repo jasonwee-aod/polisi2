@@ -1,5 +1,5 @@
 [Unit]
-Description=Polisi indexer placeholder service (Phase 2)
+Description=Polisi indexer service
 After=network-online.target
 Wants=network-online.target
 
@@ -9,7 +9,10 @@ User=polisi
 Group=polisi
 WorkingDirectory=/opt/polisigpt/repo
 EnvironmentFile=/opt/polisigpt/.env
-ExecStart=/bin/bash -lc 'echo "Indexer placeholder: Phase 2 service not implemented yet" >> /opt/polisigpt/logs/indexer.log'
+ExecStartPre=/opt/polisigpt/.venv/bin/python scraper/scripts/preflight_check.py --components indexer
+ExecStart=/opt/polisigpt/.venv/bin/python -m polisi_scraper.indexer.runner --mode incremental
+StandardOutput=append:/opt/polisigpt/logs/indexer.log
+StandardError=append:/opt/polisigpt/logs/indexer.log
 
 [Install]
 WantedBy=multi-user.target

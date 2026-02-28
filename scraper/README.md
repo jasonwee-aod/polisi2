@@ -49,13 +49,14 @@ See `.env.example` for the full runtime contract. Indexer startup should use `Sc
 Run a bounded indexer pass:
 
 ```bash
-polisi-indexer --max-items 10
+polisi-indexer --mode incremental --max-items 10
 ```
 
 Inspect the configured runtime without embedding or persistence work:
 
 ```bash
-polisi-indexer --dry-run --max-items 2
+polisi-indexer --mode incremental --dry-run --max-items 2
+polisi-indexer --mode full --dry-run --max-items 2
 ```
 
 Run a BM or English retrieval smoke query after indexing:

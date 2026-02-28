@@ -9,9 +9,10 @@ User=polisi
 Group=polisi
 WorkingDirectory=/opt/polisigpt/repo
 EnvironmentFile=/opt/polisigpt/.env
-ExecStart=/opt/polisigpt/.venv/bin/python scraper/scripts/preflight_check.py
+ExecStartPre=/opt/polisigpt/.venv/bin/python scraper/scripts/preflight_check.py --components all
 ExecStart=/opt/polisigpt/.venv/bin/python scraper/scripts/smoke_crawl.py --sites mof,moe,jpa,moh,dosm --max-docs 1 --dry-run
 ExecStart=/opt/polisigpt/.venv/bin/python -m polisi_scraper.runner --sites mof,moe,jpa,moh,dosm --max-docs 100
+ExecStartPost=/bin/systemctl start polisi-indexer-placeholder.service
 StandardOutput=append:/opt/polisigpt/logs/scraper.log
 StandardError=append:/opt/polisigpt/logs/scraper.log
 
