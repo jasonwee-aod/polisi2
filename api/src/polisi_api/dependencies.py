@@ -17,6 +17,10 @@ def get_chat_repository(db_url: str) -> PostgresChatRepository:
     return PostgresChatRepository(db_url)
 
 
+def get_repository(settings: Settings = Depends(get_settings)) -> PostgresChatRepository:
+    return get_chat_repository(settings.supabase_db_url)
+
+
 @lru_cache(maxsize=4)
 def get_retriever(settings_key: tuple[str, str | None, int, float, float]) -> PostgresRetriever:
     db_url, openai_key, limit, min_similarity, weak_similarity = settings_key
@@ -43,6 +47,6 @@ def get_chat_service(settings: Settings = Depends(get_settings)) -> ChatService:
             settings.retrieval_weak_similarity,
         )
     )
-    repository = get_chat_repository(settings.supabase_db_url)
+    repository = get_repository(settings)
     generator = AnthropicTextGenerator(settings)
     return ChatService(settings=settings, retriever=retriever, generator=generator, repository=repository)
