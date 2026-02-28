@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: active
-last_updated: "2026-02-28T22:36:06+08:00"
+last_updated: "2026-02-28T22:45:13+08:00"
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 12
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -23,18 +23,18 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 3 of 3 (Product)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: Phase 3 in progress
-Last activity: 2026-02-28 — Completed plan 03-01 API foundation, auth boundary, and DTO contracts
+Last activity: 2026-02-28 — Completed plan 03-02 web auth shell and protected /chat workspace
 
-Progress: [████████░░] 75%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 23.0 min
-- Total execution time: 207 min
+- Total plans completed: 10
+- Average duration: 21.2 min
+- Total execution time: 212 min
 
 **By Phase:**
 
@@ -42,11 +42,11 @@ Progress: [████████░░] 75%
 |-------|-------|-------|----------|
 | 1 | 4 | 170 min | 42.5 min |
 | 2 | 4 | 29 min | 7.3 min |
-| 3 | 1 | 8 min | 8.0 min |
+| 3 | 2 | 13 min | 6.5 min |
 
 **Recent Trend:**
-- Last 8 plans: completed (01-02, 01-03, 01-04, 02-01, 02-02, 02-03, 02-04, 03-01)
-- Trend: stable execution with Phase 3 now in progress and one backend contract plan complete
+- Last 8 plans: completed (01-03, 01-04, 02-01, 02-02, 02-03, 02-04, 03-01, 03-02)
+- Trend: stable execution with both product foundations complete and the phase moving into integrated behavior work
 
 ## Accumulated Context
 
@@ -69,6 +69,8 @@ Recent decisions affecting current work:
 - Phase 3: Answers should stream progressively, ask clarifying questions for broad prompts, and stay grounded to the indexed corpus even when retrieval support is weak.
 - Phase 3: Protected API routes verify Supabase bearer tokens on the server via JWT secret or JWKS material rather than trusting client user IDs.
 - Phase 3: Chat, citation, conversation history, and stream-event DTOs are fixed in OpenAPI before RAG behavior and frontend integration work begins.
+- Phase 3: The web app routes authenticated users directly into `/chat` and keeps `/auth` as one combined sign-in/sign-up surface.
+- Phase 3: Protected frontend pages should read the server session first while middleware keeps `/`, `/auth`, and `/chat` aligned on the same auth-first contract.
 
 ### Pending Todos
 
@@ -77,9 +79,10 @@ None yet.
 ### Blockers/Concerns
 
 - Local API verification currently uses `python3.13` in `api/.venv313` because the pinned `pydantic` stack is not yet compatible with the workspace default Python 3.14.
+- Phase 3 still needs live Anthropic and Supabase credentials before end-to-end product behavior can be exercised beyond contract and shell tests.
 
 ## Session Continuity
 
-Last session: 2026-02-28 22:36 +08
-Stopped at: Plan 03-01 complete
-Resume file: .planning/phases/03-product/03-02-PLAN.md
+Last session: 2026-02-28 22:45 +08
+Stopped at: Plan 03-02 complete
+Resume file: .planning/phases/03-product/03-03-PLAN.md
