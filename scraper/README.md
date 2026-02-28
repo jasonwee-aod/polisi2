@@ -1,6 +1,6 @@
 # Polisi Scraper
 
-Core ingestion pipeline for PolisiGPT. This package crawls Malaysian government sources, deduplicates by SHA256, and stores files in DigitalOcean Spaces using the key pattern `gov-my/{agency}/{year-month}/filename.ext`.
+Core ingestion and indexing pipeline for PolisiGPT. The scraper crawls Malaysian government sources, deduplicates by SHA256, and stores files in DigitalOcean Spaces using the key pattern `gov-my/{agency}/{year-month}/filename.ext`. The Phase 2 indexer reads those raw objects, parses them into chunks, embeds them with OpenAI `text-embedding-3-large`, and writes searchable rows into Supabase.
 
 ## Quick Start
 
@@ -28,4 +28,18 @@ Core ingestion pipeline for PolisiGPT. This package crawls Malaysian government 
 - `DO_SPACES_REGION`
 - `DO_SPACES_ENDPOINT`
 
-See `.env.example` for optional runtime knobs.
+## Indexer Environment Variables
+
+- `OPENAI_API_KEY`
+- `SUPABASE_DB_URL`
+
+## Optional Runtime Knobs
+
+- `INDEXER_SPACES_PREFIX`
+- `INDEXER_BATCH_SIZE`
+- `INDEXER_MAX_ITEMS_PER_RUN`
+- `INDEXER_CHUNK_SIZE`
+- `INDEXER_CHUNK_OVERLAP`
+- `INDEXER_SIMILARITY_LIMIT`
+
+See `.env.example` for the full runtime contract. Indexer startup should use `ScraperSettings.from_env(..., require_indexer=True)` so missing embedding or database credentials fail fast.

@@ -1,4 +1,4 @@
-"""Environment-backed settings for the scraper runtime."""
+"""Environment-backed settings for the scraper and indexer runtimes."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ class SettingsError(ValueError):
     """Raised when required runtime settings are missing or invalid."""
 
 
-_REQUIRED_ENV_VARS: tuple[str, ...] = (
+_SCRAPER_REQUIRED_ENV_VARS: tuple[str, ...] = (
     "SUPABASE_URL",
     "SUPABASE_SERVICE_ROLE_KEY",
     "DO_SPACES_KEY",
@@ -19,6 +19,11 @@ _REQUIRED_ENV_VARS: tuple[str, ...] = (
     "DO_SPACES_BUCKET",
     "DO_SPACES_REGION",
     "DO_SPACES_ENDPOINT",
+)
+
+_INDEXER_REQUIRED_ENV_VARS: tuple[str, ...] = (
+    "OPENAI_API_KEY",
+    "SUPABASE_DB_URL",
 )
 
 
@@ -33,6 +38,8 @@ class ScraperSettings:
     do_spaces_bucket: str
     do_spaces_region: str
     do_spaces_endpoint: str
+    openai_api_key: str | None = None
+    supabase_db_url: str | None = None
     scraper_user_agent: str = "PolisiScraper/1.0 (+https://polisigpt.local)"
     scraper_timeout_seconds: int = 30
     scraper_max_retries: int = 3
@@ -40,11 +47,25 @@ class ScraperSettings:
     scraper_state_db_path: str = ".cache/scraper_state.sqlite3"
     scraper_temp_dir: str = ".cache/tmp"
     scraper_politeness_delay_seconds: float = 0.5
+    indexer_spaces_prefix: str = "gov-my/"
+    indexer_batch_size: int = 16
+    indexer_max_items_per_run: int = 0
+    indexer_chunk_size: int = 1400
+    indexer_chunk_overlap: int = 250
+    indexer_similarity_limit: int = 5
 
     @classmethod
-    def from_env(cls, env: dict[str, str] | None = None) -> "ScraperSettings":
+    def from_env(
+        cls,
+        env: dict[str, str] | None = None,
+        *,
+        require_indexer: bool = False,
+    ) -> "ScraperSettings":
         source = env if env is not None else dict(os.environ)
-        missing = _missing_required_vars(source, _REQUIRED_ENV_VARS)
+        required = list(_SCRAPER_REQUIRED_ENV_VARS)
+        if require_indexer:
+            required.extend(_INDEXER_REQUIRED_ENV_VARS)
+        missing = _missing_required_vars(source, required)
         if missing:
             joined = ", ".join(missing)
             raise SettingsError(f"Missing required environment variables: {joined}")
@@ -57,6 +78,8 @@ class ScraperSettings:
             do_spaces_bucket=source["DO_SPACES_BUCKET"],
             do_spaces_region=source["DO_SPACES_REGION"],
             do_spaces_endpoint=source["DO_SPACES_ENDPOINT"],
+            openai_api_key=source.get("OPENAI_API_KEY") or None,
+            supabase_db_url=source.get("SUPABASE_DB_URL") or None,
             scraper_user_agent=source.get(
                 "SCRAPER_USER_AGENT", "PolisiScraper/1.0 (+https://polisigpt.local)"
             ),
@@ -70,7 +93,24 @@ class ScraperSettings:
             scraper_politeness_delay_seconds=_coerce_float(
                 source.get("SCRAPER_POLITENESS_DELAY_SECONDS"), 0.5
             ),
+            indexer_spaces_prefix=source.get("INDEXER_SPACES_PREFIX", "gov-my/"),
+            indexer_batch_size=_coerce_int(source.get("INDEXER_BATCH_SIZE"), 16),
+            indexer_max_items_per_run=_coerce_int(source.get("INDEXER_MAX_ITEMS_PER_RUN"), 0),
+            indexer_chunk_size=_coerce_int(source.get("INDEXER_CHUNK_SIZE"), 1400),
+            indexer_chunk_overlap=_coerce_int(source.get("INDEXER_CHUNK_OVERLAP"), 250),
+            indexer_similarity_limit=_coerce_int(source.get("INDEXER_SIMILARITY_LIMIT"), 5),
         )
+
+    def require_indexer(self) -> "ScraperSettings":
+        missing: list[str] = []
+        if not self.openai_api_key:
+            missing.append("OPENAI_API_KEY")
+        if not self.supabase_db_url:
+            missing.append("SUPABASE_DB_URL")
+        if missing:
+            joined = ", ".join(missing)
+            raise SettingsError(f"Missing required environment variables: {joined}")
+        return self
 
 
 
