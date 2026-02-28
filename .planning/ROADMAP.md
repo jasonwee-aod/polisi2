@@ -81,10 +81,11 @@ Plans:
 **Goal:** All three milestone phases have VERIFICATION.md files, REQUIREMENTS.md reflects completed work, and the 429 rate-limit edge case is handled gracefully
 **Requirements:** API-01, API-02, API-03, API-04, FE-01, FE-02, FE-03, FE-04
 **Gap Closure:** Closes tech debt gaps from v1.0 audit — missing VERIFICATION.md files, stale requirement checkboxes, unhandled 429 edge case, .env.example audit
+**Plans:** 2 plans
 
-**Plans**:
-- [ ] 05-01: Update REQUIREMENTS.md checkboxes + write Phase 2 and Phase 3 VERIFICATION.md
-- [ ] 05-02: Add 429 fallback in /api/chat + confirm .env.example status
+Plans:
+- [ ] 05-01-PLAN.md — Update REQUIREMENTS.md checkboxes + write Phase 2 and Phase 3 VERIFICATION.md
+- [ ] 05-02-PLAN.md — Add 429 RateLimitError fallback in chat service + recreate api/.env.example and web/.env.example
 
 ## Progress
 
