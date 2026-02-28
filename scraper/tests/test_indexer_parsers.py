@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+from io import BytesIO
 import pathlib
 import sys
 
+from docx import Document as DocxDocument
+from openpyxl import Workbook
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
-from polisi_scraper.indexer.parsers import HtmlParser, PdfParser
+from polisi_scraper.indexer.chunking import build_chunks
+from polisi_scraper.indexer.parsers import DocxParser, HtmlParser, PdfParser, XlsxParser
 
 
 class _FakePdfPage:
@@ -51,3 +56,33 @@ def test_html_and_pdf_parsers_preserve_locators(monkeypatch) -> None:
     assert html.blocks[1].block_type == "list_item"
     assert [block.page_number for block in pdf.blocks] == [1, 3]
     assert pdf.blocks[1].text == "Page 3 recovery text"
+
+
+def test_docx_xlsx_and_chunking_preserve_structure() -> None:
+    docx_buffer = BytesIO()
+    doc = DocxDocument()
+    doc.add_heading("Education Grants", level=1)
+    doc.add_paragraph("Applicants must be enrolled full time.")
+    doc.add_paragraph("Prepare income proof.", style="List Bullet")
+    doc.save(docx_buffer)
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Allocations"
+    sheet.append(["Program", "Amount"])
+    sheet.append(["Bantuan Awal", "RM500"])
+    xlsx_buffer = BytesIO()
+    workbook.save(xlsx_buffer)
+
+    parsed_docx = DocxParser().parse_bytes(docx_buffer.getvalue(), metadata={"title": "Grant Guide"})
+    parsed_xlsx = XlsxParser().parse_bytes(xlsx_buffer.getvalue())
+
+    chunks = build_chunks(parsed_docx, target_chars=40, overlap_chars=10)
+
+    assert parsed_docx.blocks[0].section_heading == "Education Grants"
+    assert parsed_docx.blocks[1].block_type == "list_item"
+    assert parsed_xlsx.blocks[0].sheet_name == "Allocations"
+    assert parsed_xlsx.blocks[0].row_label == "Bantuan Awal"
+    assert len(chunks) == 2
+    assert chunks[0].metadata["locators"][0]["section_heading"] == "Education Grants"
+    assert "Prepare income proof." in chunks[1].text
