@@ -12,10 +12,12 @@ sudo apt-get install -y \
   ca-certificates \
   curl \
   git \
+  postgresql-client \
   python3 \
   python3-venv \
   python3-pip \
   build-essential \
+  libpq-dev \
   libxml2-dev \
   libxslt1-dev \
   libjpeg-dev \
@@ -44,4 +46,5 @@ Runtime provisioned:
 - app root: $APP_ROOT
 - repo dir: $REPO_DIR
 - venv: $VENV_DIR
+- parser, embedding, and postgres client deps installed from scraper/pyproject.toml
 RUNTIME_OK

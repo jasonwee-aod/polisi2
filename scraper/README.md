@@ -64,3 +64,9 @@ Run a BM or English retrieval smoke query after indexing:
 python scripts/query_smoke.py --language bm
 python scripts/query_smoke.py --language en
 ```
+
+Validate the indexer runtime before a droplet run:
+
+```bash
+python scripts/preflight_check.py --components indexer --dry-run
+```
