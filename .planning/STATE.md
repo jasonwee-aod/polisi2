@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: active
-last_updated: "2026-03-01T02:38:00Z"
+last_updated: "2026-03-01T03:13:28Z"
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 16
+  completed_plans: 16
 ---
 
 # Project State
@@ -18,23 +18,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** A user asks a question about Malaysian government policy and gets a direct, sourced answer — in their language — without having to search across 30+ fragmented government websites.
-**Current focus:** Phase 5 plan 02 complete — 429 fallbacks added, .env.example files restored, v1.0 housekeeping complete
+**Current focus:** Phase 5 plan 03 complete — all gaps closed, OpenAI-429 degradation chain verified, v1.0 milestone fully verified (8/8)
 
 ## Current Position
 
 Phase: 5 of 5 (Verification Housekeeping)
-Plan: 2 of 2 in current phase
-Status: Phase 5 plan 02 complete — all v1.0 housekeeping done
-Last activity: 2026-03-01 — Completed plan 05-02: 429 rate-limit fallbacks for Anthropic and OpenAI, restored api/.env.example and web/.env.example
+Plan: 3 of 3 in current phase
+Status: Phase 5 plan 03 complete — all gaps closed, v1.0 milestone fully verified
+Last activity: 2026-03-01 — Completed plan 05-03: empty-embedding guard in PostgresRetriever.retrieve(), unit test, 05-VERIFICATION.md updated to 8/8
 
 Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
-- Average duration: 15.7 min
-- Total execution time: 236 min
+- Total plans completed: 16
+- Average duration: 14.9 min
+- Total execution time: 239 min
 
 **By Phase:**
 
@@ -44,14 +44,15 @@ Progress: [██████████] 100%
 | 2 | 4 | 29 min | 7.3 min |
 | 3 | 4 | 19 min | 4.8 min |
 | 4 | 1 | 2 min | 2 min |
-| 5 | 2 | 16 min | 8 min |
+| 5 | 3 | 19 min | 6.3 min |
 
 **Recent Trend:**
-- Last 11 plans: completed (02-01 through 05-02)
-- Trend: stable execution, v1.0 housekeeping fully complete
+- Last 12 plans: completed (02-01 through 05-03)
+- Trend: stable execution, v1.0 milestone fully verified (8/8)
 | Phase 04-fix-source-url-chain P01 | 2 | 3 tasks | 14 files |
 | Phase 05-verification-housekeeping P01 | 4 | 3 tasks | 3 files |
 | Phase 05-verification-housekeeping P02 | 2 | 2 tasks | 4 files |
+| Phase 05-verification-housekeeping P03 | 3 | 1 task | 2 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,7 @@ Recent decisions affecting current work:
 - [Phase 05-verification-housekeeping]: Anthropic 429 is caught at the generator level and converted to a fallback string so ChatService.generate_reply() produces a normal AssistantResponse — no HTTP 500 raised
 - [Phase 05-verification-housekeeping]: OpenAI 429 in embed() returns [] so the existing retrieval path handles it as 'no results' — no new code path needed in PostgresRetriever or ChatService
 - [Phase 05-verification-housekeeping]: Only status_code == 429 is caught in embed(); all other HTTPStatusError codes re-raise to surface as real errors
+- [Phase 05-03-gap-closure]: PostgresRetriever.retrieve() guards against empty embedding with 'if not embedding: return []' before the psycopg.connect block, closing the OpenAI-429 degradation chain
 
 ### Pending Todos
 
@@ -103,5 +105,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 05-01-PLAN.md — REQUIREMENTS.md updated, Phase 2 and Phase 3 VERIFICATION.md files written
-Resume file: .planning/phases/05-verification-housekeeping/05-02-PLAN.md
+Stopped at: Completed 05-03-PLAN.md — empty-embedding guard added, unit test added, 05-VERIFICATION.md updated to 8/8 verified
+Resume file: None — all phases complete
