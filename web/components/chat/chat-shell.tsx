@@ -21,6 +21,8 @@ import { ConversationSidebar } from "./conversation-sidebar";
 import { MessageComposer } from "./message-composer";
 import { MessageList } from "./message-list";
 
+const DEFAULT_API_CLIENT = { fetchConversations, fetchConversationDetail };
+
 type ChatShellProps = {
   accessToken: string;
   initialConversationId?: string | null;
@@ -49,7 +51,7 @@ export function ChatShell({
   accessToken,
   initialConversationId = null,
   apiBaseUrl,
-  apiClient = { fetchConversations, fetchConversationDetail },
+  apiClient = DEFAULT_API_CLIENT,
   streamChat = readChatStream,
   navigate
 }: ChatShellProps) {

@@ -100,10 +100,15 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-None — milestone shipped.
+**Spinup debugging in progress (2026-03-01):**
+- Backend is running at http://localhost:8000 (healthz returns OK)
+- Frontend has 3 console errors — 2 fixed, 1 pending:
+  - ✅ FIXED: Infinite loop in `chat-shell.tsx` — `apiClient` default object was recreated on every render, triggering useEffect deps repeatedly. Fixed by hoisting `DEFAULT_API_CLIENT` to module level (committed).
+  - ✅ IDENTIFIED: "Failed to fetch /api/chat" — caused by Rails process (PID 34566) holding port 3000, forcing Next.js to a different port, causing CORS mismatch (backend allows `http://localhost:3000` only).
+  - ⏳ PENDING USER ACTION: Kill Rails (`kill 34566`) then restart Next.js so it claims port 3000 — OR — add Next.js port to `API_ALLOWED_ORIGINS` in `api/.env`.
 
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: v1.0 milestone archived — ready for /gsd:new-milestone
-Resume file: None — start fresh with /gsd:new-milestone
+Stopped at: Spinup debugging — fixed chat-shell infinite loop, identified CORS/port conflict
+Resume file: None — see Blockers/Concerns above for exact next action
