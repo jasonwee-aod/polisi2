@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: active
-last_updated: "2026-03-01T17:52:45Z"
+last_updated: "2026-03-01T02:35:18Z"
 progress:
-  total_phases: 4
-  completed_phases: 3
-  total_plans: 13
-  completed_plans: 13
+  total_phases: 5
+  completed_phases: 4
+  total_plans: 15
+  completed_plans: 15
 ---
 
 # Project State
@@ -18,23 +18,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** A user asks a question about Malaysian government policy and gets a direct, sourced answer — in their language — without having to search across 30+ fragmented government websites.
-**Current focus:** Phase 4 plan 01 complete — source_url chain fixed, smoke fixes committed
+**Current focus:** Phase 5 plan 02 complete — 429 fallbacks added, .env.example files restored, v1.0 housekeeping complete
 
 ## Current Position
 
-Phase: 4 of 4 (Fix source_url Chain)
-Plan: 1 of 1 in current phase
-Status: Phase 4 plan 01 complete
-Last activity: 2026-03-01 — Completed plan 04-01: source_url chain fix, SpacesUploader metadata, nullable API models, CitationPanel fallback
+Phase: 5 of 5 (Verification Housekeeping)
+Plan: 2 of 2 in current phase
+Status: Phase 5 plan 02 complete — all v1.0 housekeeping done
+Last activity: 2026-03-01 — Completed plan 05-02: 429 rate-limit fallbacks for Anthropic and OpenAI, restored api/.env.example and web/.env.example
 
 Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 18.2 min
-- Total execution time: 218 min
+- Total plans completed: 15
+- Average duration: 15.7 min
+- Total execution time: 236 min
 
 **By Phase:**
 
@@ -44,11 +44,13 @@ Progress: [██████████] 100%
 | 2 | 4 | 29 min | 7.3 min |
 | 3 | 4 | 19 min | 4.8 min |
 | 4 | 1 | 2 min | 2 min |
+| 5 | 2 | 16 min | 8 min |
 
 **Recent Trend:**
-- Last 9 plans: completed (02-01, 02-02, 02-03, 02-04, 03-01, 03-02, 03-03, 03-04, 04-01)
-- Trend: stable execution with source_url data chain fixed and smoke fixes committed
+- Last 11 plans: completed (02-01 through 05-02)
+- Trend: stable execution, v1.0 housekeeping fully complete
 | Phase 04-fix-source-url-chain P01 | 2 | 3 tasks | 14 files |
+| Phase 05-verification-housekeeping P02 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -83,6 +85,9 @@ Recent decisions affecting current work:
 - [Phase 04-fix-source-url-chain]: source_url stored as S3 object Metadata dict key so manifest can read it back via obj.metadata.get('source_url')
 - [Phase 04-fix-source-url-chain]: CitationRecord.source_url is str | None = None in Pydantic / string | null in TypeScript for graceful degradation on legacy rows
 - [Phase 04-fix-source-url-chain]: Citation fallback renders plain [N] span with no anchor, no 'Source unavailable' message per user decision
+- [Phase 05-verification-housekeeping]: Anthropic 429 is caught at the generator level and converted to a fallback string so ChatService.generate_reply() produces a normal AssistantResponse — no HTTP 500 raised
+- [Phase 05-verification-housekeeping]: OpenAI 429 in embed() returns [] so the existing retrieval path handles it as 'no results' — no new code path needed in PostgresRetriever or ChatService
+- [Phase 05-verification-housekeeping]: Only status_code == 429 is caught in embed(); all other HTTPStatusError codes re-raise to surface as real errors
 
 ### Pending Todos
 
@@ -95,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-01 17:52 UTC
-Stopped at: Completed 04-01-PLAN.md
-Resume file: .planning/phases/04-fix-source-url-chain/04-01-SUMMARY.md
+Last session: 2026-03-01
+Stopped at: Completed 05-02-PLAN.md — v1.0 milestone housekeeping complete
+Resume file: None — all phases complete
