@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: active
-last_updated: "2026-03-01T03:13:28Z"
+milestone_name: PolisiGPT
+status: shipped
+last_updated: "2026-03-01T11:37:00+08:00"
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 16
   completed_plans: 16
 ---
@@ -15,17 +15,16 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-28)
+See: .planning/PROJECT.md (updated 2026-03-01 after v1.0 milestone)
 
 **Core value:** A user asks a question about Malaysian government policy and gets a direct, sourced answer — in their language — without having to search across 30+ fragmented government websites.
-**Current focus:** Phase 5 plan 03 complete — all gaps closed, OpenAI-429 degradation chain verified, v1.0 milestone fully verified (8/8)
+**Current focus:** v1.0 shipped — planning next milestone
 
 ## Current Position
 
-Phase: 5 of 5 (Verification Housekeeping)
-Plan: 3 of 3 in current phase
-Status: Phase 5 plan 03 complete — all gaps closed, v1.0 milestone fully verified
-Last activity: 2026-03-01 — Completed plan 05-03: empty-embedding guard in PostgresRetriever.retrieve(), unit test, 05-VERIFICATION.md updated to 8/8
+Phase: — (milestone complete)
+Status: v1.0 shipped — 5 phases, 16 plans, 18/18 requirements satisfied
+Last activity: 2026-03-01 — Completed v1.0 milestone archival
 
 Progress: [██████████] 100%
 
@@ -95,15 +94,16 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- Add `ALTER TABLE public.documents ALTER COLUMN source_url DROP NOT NULL;` migration
+- Add `ALTER TABLE public.citations ALTER COLUMN source_url DROP NOT NULL;` migration
+- Perform live end-to-end validation with real credentials (DO Spaces + Supabase + OpenAI + Anthropic)
 
 ### Blockers/Concerns
 
-- Local API verification currently uses `python3.13` in `api/.venv313` because the pinned `pydantic` stack is not yet compatible with the workspace default Python 3.14.
-- End-to-end live verification still needs Anthropic, Supabase DB/auth, and web env credentials populated in the deployment/runtime environments.
+None — milestone shipped.
 
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 05-03-PLAN.md — empty-embedding guard added, unit test added, 05-VERIFICATION.md updated to 8/8 verified
-Resume file: None — all phases complete
+Stopped at: v1.0 milestone archived — ready for /gsd:new-milestone
+Resume file: None — start fresh with /gsd:new-milestone
