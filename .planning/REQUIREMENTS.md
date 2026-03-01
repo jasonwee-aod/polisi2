@@ -20,17 +20,17 @@
 
 ### API Backend
 
-- [ ] **API-01**: User can send a question and receive a Claude-generated answer grounded in retrieved document chunks via vector similarity search
+- [x] **API-01**: User can send a question and receive a Claude-generated answer grounded in retrieved document chunks via vector similarity search
 - [x] **API-02**: Every API response includes an inline citation schema — answer text with `[N]` references and a `citations` array with title, agency, URL, excerpt, and published date
-- [ ] **API-03**: System detects the language of the user's question and Claude responds in the same language (Bahasa Malaysia or English)
-- [ ] **API-04**: User's conversation messages are stored and retrievable from Supabase (`conversations` and `messages` tables)
+- [x] **API-03**: System detects the language of the user's question and Claude responds in the same language (Bahasa Malaysia or English)
+- [x] **API-04**: User's conversation messages are stored and retrievable from Supabase (`conversations` and `messages` tables)
 
 ### Frontend
 
-- [ ] **FE-01**: User can sign up with email and password and log in — session persists across browser refresh (Supabase Auth)
-- [ ] **FE-02**: User can type a question in the chat interface and receive an answer with inline superscript citation numbers
+- [x] **FE-01**: User can sign up with email and password and log in — session persists across browser refresh (Supabase Auth)
+- [x] **FE-02**: User can type a question in the chat interface and receive an answer with inline superscript citation numbers
 - [x] **FE-03**: Clicking an inline citation number opens the original source document URL in a new browser tab
-- [ ] **FE-04**: User can view a sidebar list of their past conversation sessions and click to resume any conversation
+- [x] **FE-04**: User can view a sidebar list of their past conversation sessions and click to resume any conversation
 
 ### Database Schema
 
@@ -88,21 +88,21 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INDX-02 | Phase 2 | Complete |
 | INDX-03 | Phase 4 (gap closure) | Complete |
 | INDX-04 | Phase 2 | Complete |
-| API-01 | Phase 5 (gap closure) | Pending |
+| API-01 | Phase 5 (gap closure) | Complete |
 | API-02 | Phase 4 (gap closure) | Complete |
-| API-03 | Phase 5 (gap closure) | Pending |
-| API-04 | Phase 5 (gap closure) | Pending |
-| FE-01 | Phase 5 (gap closure) | Pending |
-| FE-02 | Phase 5 (gap closure) | Pending |
+| API-03 | Phase 5 (gap closure) | Complete |
+| API-04 | Phase 5 (gap closure) | Complete |
+| FE-01 | Phase 5 (gap closure) | Complete |
+| FE-02 | Phase 5 (gap closure) | Complete |
 | FE-03 | Phase 4 (gap closure) | Complete |
-| FE-04 | Phase 5 (gap closure) | Pending |
+| FE-04 | Phase 5 (gap closure) | Complete |
 
 **Coverage:**
 - v1 requirements: 18 total
 - Mapped to phases: 18
 - Unmapped: 0
-- Pending (gap closure): 10 (INDX-03, API-01..04, FE-01..04)
+- Pending (gap closure): 0
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-03-01 — Gap closure phases 4-5 added; INDX-03 reset to pending; Phase 3 requirements reassigned to gap closure phases*
+*Last updated: 2026-03-01 — Phase 5 housekeeping: all v1 Phase 3 requirements marked Complete*
