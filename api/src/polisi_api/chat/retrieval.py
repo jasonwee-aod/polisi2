@@ -35,18 +35,23 @@ class OpenAIEmbeddingClient:
         self._model = model
 
     async def embed(self, text: str) -> list[float]:
-        async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.post(
-                "https://api.openai.com/v1/embeddings",
-                headers={
-                    "Authorization": f"Bearer {self._api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={"input": text, "model": self._model},
-            )
-            response.raise_for_status()
-        payload = response.json()
-        return [float(value) for value in payload["data"][0]["embedding"]]
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.post(
+                    "https://api.openai.com/v1/embeddings",
+                    headers={
+                        "Authorization": f"Bearer {self._api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={"input": text, "model": self._model},
+                )
+                response.raise_for_status()
+            payload = response.json()
+            return [float(value) for value in payload["data"][0]["embedding"]]
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 429:
+                return []
+            raise
 
 
 class PostgresRetriever:

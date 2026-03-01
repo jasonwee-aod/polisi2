@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID, uuid4
 
-from anthropic import AsyncAnthropic
+from anthropic import AsyncAnthropic, RateLimitError
 
 from polisi_api.config import Settings
 from polisi_api.models import AssistantResponse, ChatRequest, CitationRecord
@@ -40,17 +40,20 @@ class AnthropicTextGenerator:
         self._model = settings.anthropic_model
 
     async def generate(self, prompt: PromptPackage) -> str:
-        response = await self._client.messages.create(
-            model=self._model,
-            max_tokens=1200,
-            system=prompt.system,
-            messages=[{"role": "user", "content": prompt.user}],
-        )
-        text_parts: list[str] = []
-        for block in response.content:
-            if getattr(block, "type", None) == "text":
-                text_parts.append(block.text)
-        return "".join(text_parts).strip()
+        try:
+            response = await self._client.messages.create(
+                model=self._model,
+                max_tokens=1200,
+                system=prompt.system,
+                messages=[{"role": "user", "content": prompt.user}],
+            )
+            text_parts: list[str] = []
+            for block in response.content:
+                if getattr(block, "type", None) == "text":
+                    text_parts.append(block.text)
+            return "".join(text_parts).strip()
+        except RateLimitError:
+            return "[Rate limit reached — please try again in a moment.]"
 
 
 class ChatService:
