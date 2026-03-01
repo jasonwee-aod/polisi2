@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Indexing Pipeline** - LlamaIndex pipeline parsing, embedding, and storing document chunks in Supabase pgvector *(completed 2026-02-28)*
 - [x] **Phase 3: Product** - RAG API with citations and language detection plus Next.js chat UI with auth, citations, and conversation history (completed 2026-02-28)
 - [x] **Phase 4: Fix source_url Chain + Commit Smoke Fixes** - Fix source_url propagation from Spaces upload through manifest to Supabase, and commit existing CORS/async-Supabase smoke fixes *(Gap Closure — completed 2026-03-01)*
-- [x] **Phase 5: Verification Run & Housekeeping** - Retroactive Phase 2 and 3 VERIFICATION.md, REQUIREMENTS.md checkbox update, 429 fallback, and .env.example audit *(Gap Closure — completed 2026-03-01)*
+- [ ] **Phase 5: Verification Run & Housekeeping** - Retroactive Phase 2 and 3 VERIFICATION.md, REQUIREMENTS.md checkbox update, 429 fallback, and .env.example audit *(Gap Closure — in progress)*
 
 ## Phase Details
 
@@ -81,11 +81,12 @@ Plans:
 **Goal:** All three milestone phases have VERIFICATION.md files, REQUIREMENTS.md reflects completed work, and the 429 rate-limit edge case is handled gracefully
 **Requirements:** API-01, API-02, API-03, API-04, FE-01, FE-02, FE-03, FE-04
 **Gap Closure:** Closes tech debt gaps from v1.0 audit — missing VERIFICATION.md files, stale requirement checkboxes, unhandled 429 edge case, .env.example audit
-**Plans:** 2/2 plans complete
+**Plans:** 3 plans (03 is gap closure for VERIFICATION score 7/8 → 8/8)
 
 Plans:
 - [x] 05-01-PLAN.md — Update REQUIREMENTS.md checkboxes + write Phase 2 and Phase 3 VERIFICATION.md *(completed 2026-03-01)*
 - [x] 05-02-PLAN.md — Add 429 RateLimitError fallback in chat service + recreate api/.env.example and web/.env.example *(completed 2026-03-01)*
+- [ ] 05-03-PLAN.md — Add empty-embedding guard in PostgresRetriever.retrieve() + unit test (gap closure: closes VERIFICATION Truth 6)
 
 ## Progress
 
@@ -98,4 +99,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Indexing Pipeline | 4/4 | Complete | 2026-02-28 |
 | 3. Product | 4/4 | Complete | 2026-02-28 |
 | 4. Fix source_url Chain + Commit Smoke Fixes | 1/1 | Complete   | 2026-02-28 |
-| 5. Verification Run & Housekeeping | 2/2 | Complete   | 2026-03-01 |
+| 5. Verification Run & Housekeeping | 2/3 | In Progress | — |
