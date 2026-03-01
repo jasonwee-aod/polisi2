@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from polisi_api.auth import AuthenticatedUser, get_current_user
 from polisi_api.chat.repository import InMemoryChatRepository
 from polisi_api.chat.prompting import PromptPackage
-from polisi_api.chat.retrieval import RetrievedChunk
+from polisi_api.chat.retrieval import RetrievedChunk, PostgresRetriever
 from polisi_api.chat.service import ChatService, TextGenerator
 from polisi_api.config import Settings
 from polisi_api.dependencies import get_chat_service
@@ -156,3 +156,22 @@ async def run_streaming_chat_persistence() -> None:
     assert conversation is not None
     assert [message.role for message in conversation.messages] == ["user", "assistant"]
     assert conversation.messages[1].citations[0].title == "Bantuan Pendidikan"
+
+
+@dataclass
+class EmptyEmbeddingClient:
+    async def embed(self, text: str) -> list[float]:
+        return []
+
+
+def test_retrieve_returns_empty_list_when_embed_returns_empty() -> None:
+    asyncio.run(_run_retrieve_empty_embedding())
+
+
+async def _run_retrieve_empty_embedding() -> None:
+    settings = build_settings()
+    retriever = PostgresRetriever(
+        settings, embedding_client=EmptyEmbeddingClient()
+    )
+    result = await retriever.retrieve("any question", limit=5)
+    assert result == []

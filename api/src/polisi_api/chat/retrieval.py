@@ -68,6 +68,8 @@ class PostgresRetriever:
 
     async def retrieve(self, question: str, *, limit: int) -> list[RetrievedChunk]:
         embedding = await self._embedding_client.embed(question)
+        if not embedding:
+            return []
         with psycopg.connect(self._settings.supabase_db_url) as conn:
             rows = conn.execute(
                 """
