@@ -4,10 +4,23 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import sys
 from datetime import date
+from pathlib import Path
 
 import click
+from dotenv import load_dotenv
+
+# Load .env from repo root, or /opt/polisigpt/.env on the Droplet
+_env_candidates = [
+    Path(__file__).resolve().parents[3] / ".env",   # scraper/.env (local dev)
+    Path("/opt/polisigpt/.env"),                     # Droplet
+]
+for _env in _env_candidates:
+    if _env.exists():
+        load_dotenv(_env)
+        break
 
 from polisi_scraper.runner import run_scrape
 

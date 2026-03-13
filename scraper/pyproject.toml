@@ -26,6 +26,7 @@ dependencies = [
   "click>=8.1,<9",
   "tenacity>=8.2,<9",
   "python-dateutil>=2.9,<3",
+  "python-dotenv>=1.0,<2",
 ]
 
 [project.scripts]
