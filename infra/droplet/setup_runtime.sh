@@ -8,14 +8,17 @@ REPO_DIR="${REPO_DIR:-$APP_ROOT/repo}"
 VENV_DIR="${VENV_DIR:-$APP_ROOT/.venv}"
 
 sudo apt-get update
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository -y ppa:deadsnakes/ppa
+sudo apt-get update
 sudo apt-get install -y \
   ca-certificates \
   curl \
   git \
   postgresql-client \
-  python3 \
-  python3-venv \
-  python3-pip \
+  python3.11 \
+  python3.11-venv \
+  python3.11-dev \
   build-essential \
   libpq-dev \
   libxml2-dev \
@@ -37,7 +40,7 @@ if [[ ! -d "$REPO_DIR" ]]; then
   exit 1
 fi
 
-python3 -m venv "$VENV_DIR"
+python3.11 -m venv "$VENV_DIR"
 "$VENV_DIR/bin/pip" install --upgrade pip
 "$VENV_DIR/bin/pip" install -e "$REPO_DIR/scraper"
 "$VENV_DIR/bin/pip" install -e "$REPO_DIR/api"
