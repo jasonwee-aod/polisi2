@@ -1,2 +1,2 @@
 # Run scraper at 01:00 UTC every 3 days (09:00 AM MYT, UTC+8)
-0 1 */3 * * cd /opt/polisigpt/repo && /opt/polisigpt/.venv/bin/python scraper/scripts/preflight_check.py >> /opt/polisigpt/logs/preflight.log 2>&1 && /opt/polisigpt/.venv/bin/python -m polisi_scraper.runner --sites mof,moe,jpa,moh,dosm --max-docs 200 >> /opt/polisigpt/logs/scraper.log 2>&1
+0 1 */3 * * cd /opt/polisigpt/repo && /opt/polisigpt/.venv/bin/python scraper/scripts/preflight_check.py >> /opt/polisigpt/logs/preflight.log 2>&1 && /opt/polisigpt/.venv/bin/polisi-scraper --all --max-pages 200 --site-config scraper/configs >> /opt/polisigpt/logs/scraper.log 2>&1
