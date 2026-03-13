@@ -25,8 +25,6 @@ _BROAD_PREFIXES = (
     "overview of",
     "explain policy",
     "ceritakan tentang",
-    "terangkan dasar",
-    "apa dasar",
 )
 
 
@@ -39,6 +37,6 @@ def detect_language(text: str) -> LanguageCode:
 def needs_clarification(text: str) -> bool:
     normalized = " ".join(text.lower().split())
     tokens = normalized.split()
-    if len(tokens) <= 3:
+    if len(tokens) <= 1:
         return True
     return any(normalized.startswith(prefix) for prefix in _BROAD_PREFIXES)

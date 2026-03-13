@@ -1,0 +1,17 @@
+{
+  "site_slug": "moe",
+  "base_url": "https://www.moe.gov.my",
+  "allowed_hosts": ["www.moe.gov.my", "moe.gov.my"],
+  "agency": "Ministry of Education",
+  "default_language": "ms",
+  "parser_version": "1.0",
+  "feed_urls": [],
+  "sitemap_urls": [],
+  "section_urls": [
+    "https://www.moe.gov.my/pekeliling",
+    "https://www.moe.gov.my/kenyataan-media",
+    "https://www.moe.gov.my/ucapan"
+  ],
+  "max_pages_default": 500,
+  "same_domain_only": true
+}

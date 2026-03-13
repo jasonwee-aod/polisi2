@@ -32,20 +32,32 @@ def build_chunks(
         if not text:
             continue
 
-        projected = "\n\n".join(current_texts + [text])
-        if current_texts and len(projected) > target_chars:
-            chunks.append(_emit_chunk(chunks, current_blocks, current_texts, carryover, document))
-            carryover = chunks[-1].text[-overlap_chars:] if overlap_chars > 0 else ""
-            current_blocks = []
-            current_texts = []
+        # Hard-split blocks that are individually larger than target_chars so
+        # no single chunk ever exceeds the embedding model's token limit.
+        sub_texts = _split_text(text, target_chars)
 
-        current_blocks.append(block)
-        current_texts.append(text)
+        for sub_text in sub_texts:
+            projected = "\n\n".join(current_texts + [sub_text])
+            if current_texts and len(projected) > target_chars:
+                chunks.append(_emit_chunk(chunks, current_blocks, current_texts, carryover, document))
+                carryover = chunks[-1].text[-overlap_chars:] if overlap_chars > 0 else ""
+                current_blocks = []
+                current_texts = []
+
+            current_blocks.append(block)
+            current_texts.append(sub_text)
 
     if current_texts:
         chunks.append(_emit_chunk(chunks, current_blocks, current_texts, carryover, document))
 
     return chunks
+
+
+def _split_text(text: str, target_chars: int) -> list[str]:
+    """Return text as a list of at most target_chars-sized pieces."""
+    if len(text) <= target_chars:
+        return [text]
+    return [text[i : i + target_chars] for i in range(0, len(text), target_chars)]
 
 
 def _emit_chunk(

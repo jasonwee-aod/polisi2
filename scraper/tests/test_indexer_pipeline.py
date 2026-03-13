@@ -64,7 +64,8 @@ def _pending_item(file_type: str, storage_path: str, *, title: str) -> PendingIn
 
 
 def test_documents_schema_supports_multiple_chunks_per_version() -> None:
-    sql = pathlib.Path("supabase/migrations/20260228_02_phase2_documents_chunks.sql").read_text()
+    repo_root = pathlib.Path(__file__).resolve().parents[2]
+    sql = (repo_root / "supabase/migrations/20260228_02_phase2_documents_chunks.sql").read_text()
 
     assert "documents_storage_version_chunk_unique" in sql
     assert "version_token text" in sql

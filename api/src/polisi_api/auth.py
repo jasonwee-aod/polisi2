@@ -70,6 +70,8 @@ class SupabaseTokenVerifier:
             raise TokenVerificationError("Missing JWT key id")
         for jwk in self._jwks.get("keys", []):
             if jwk.get("kid") == key_id:
+                if jwk.get("kty") == "EC":
+                    return jwt.algorithms.ECAlgorithm.from_jwk(json.dumps(jwk))
                 return jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
         raise TokenVerificationError("No matching signing key")
 

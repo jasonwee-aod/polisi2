@@ -1,0 +1,168 @@
+site_slug: kpkt
+agency: "Kementerian Perumahan dan Kerajaan Tempatan"
+base_url: "https://www.kpkt.gov.my"
+
+allowed_hosts:
+  - "www.kpkt.gov.my"
+  - "kpkt.gov.my"
+
+sections:
+  # ── Siaran Media (Press Releases) ─────────────────────────────────────────
+  # Organized by year; each year is a separate listing page.
+  # HTML: jQuery UI Accordion with month headers; PDFs at
+  #       /kpkt/resources/user_1/media_akhbar/<YYYY>/<FILENAME>.pdf
+  - name: siaran_media
+    doc_type: press_release
+    language: ms
+    listing_pages:
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/3760?mid=765"
+        label: "Siaran Media 2026"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/3470?mid=764"
+        label: "Siaran Media 2025"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/2590?mid=732"
+        label: "Siaran Media 2024"
+      # Add earlier years here as needed, e.g.:
+      # - url: "https://www.kpkt.gov.my/index.php/pages/view/<ID>?mid=<MID>"
+      #   label: "Siaran Media 2023"
+
+  # ── Muat Turun / Downloads Hub ────────────────────────────────────────────
+  # /index.php/pages/view/1026 is a hub page. Its accordion links to 5 sub-pages:
+  #   /88   → Senarai Perundangan (legislation: Acts, PU(A), regulations)
+  #   /228  → Pengurusan Kualiti (quality management docs)
+  #   /646  → Borang BKK – PPG & PPW (community credit control forms)
+  #   /425  → Borang Tribunal Pengurusan Strata (strata tribunal forms)
+  #   /326  → Borang Tribunal Tuntutan Pembeli Rumah (housing claims tribunal forms)
+  #
+  # page_type: hub → pipeline will crawl sub-pages automatically.
+  # Download links use two schemes:
+  #   - Direct: /kpkt/resources/user_1/...
+  #   - Obfuscated: /index.php/dl/<hex(base64(path))>  → decoded to direct URL
+  - name: muat_turun
+    page_type: hub
+    doc_type: legislation    # default; overridden per sub-page by extractor
+    language: ms
+    listing_pages:
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/1026"
+        label: "Muat Turun Hub"
+
+  # Sub-pages can also be targeted individually (useful for --dry-run testing):
+  # - name: senarai_perundangan
+  #   page_type: attachments
+  #   doc_type: legislation
+  #   language: ms
+  #   listing_pages:
+  #     - url: "https://www.kpkt.gov.my/index.php/pages/view/88"
+  #       label: "Senarai Perundangan"
+  #
+  # - name: borang_tps
+  #   page_type: attachments
+  #   doc_type: form
+  #   language: ms
+  #   listing_pages:
+  #     - url: "https://www.kpkt.gov.my/index.php/pages/view/425"
+  #       label: "Borang Tribunal Pengurusan Strata"
+  #     - url: "https://www.kpkt.gov.my/index.php/pages/view/326"
+  #       label: "Borang Tribunal Tuntutan Pembeli Rumah"
+  #
+  # - name: borang_bkk
+  #   page_type: attachments
+  #   doc_type: form
+  #   language: ms
+  #   listing_pages:
+  #     - url: "https://www.kpkt.gov.my/index.php/pages/view/646"
+  #       label: "Borang BKK (PPG & PPW)"
+
+  # ── Statistik KPKT (Annual & Quarterly Statistics) ────────────────────────
+  # Hub: /index.php/pages/view/490?mid=661  (plain-page links, NOT accordion)
+  #   Sub-page 700 → yearly stats 2017-2024 + 8 archive sub-pages (2009-2016)
+  #   Sub-page 131 → Piagam Pelanggan monthly PDFs
+  #   Sub-page 121 → Bilangan Transaksi Online monthly PDFs
+  #
+  # HTML archetype: <h3>YEAR</h3> headers + <a> in <td> thumbnail grid
+  #   (no .container_attachments, no accordion → fallback whole-page scan used)
+  # List archetype: <a> in <li> (piagam pelanggan, statistik online)
+  # No /index.php/dl/ obfuscated links on any stats pages.
+  # Dates extracted from title text: "Sehingga 31 Mac 2022" → 2022-03-31,
+  #   "Bulan Januari 2026" → 2026-01-01, year-only "2024" → 2024-01-01.
+  - name: statistik_kpkt
+    page_type: attachments
+    doc_type: report
+    language: ms
+    listing_pages:
+      # Main page: covers 2017–2024 (annual + quarterly)
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/700?mid=586"
+        label: "Statistik KPKT 2017-2024"
+      # Archive sub-pages: one per year, 2009–2016
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/431"
+        label: "Statistik KPKT 2016"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/351"
+        label: "Statistik KPKT 2015"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/167"
+        label: "Statistik KPKT 2014"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/188"
+        label: "Statistik KPKT 2013"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/190"
+        label: "Statistik KPKT 2012"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/192"
+        label: "Statistik KPKT 2011"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/194"
+        label: "Statistik KPKT 2010"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/196"
+        label: "Statistik KPKT 2009"
+
+  # ── Piagam Pelanggan (Customer Charter Achievement Statistics) ─────────────
+  # HTML: <a> in <li> list, monthly PDFs at
+  #       /kpkt/resources/user_1/Attachments/piagam_pelanggan/YYYY/
+  - name: piagam_pelanggan
+    page_type: attachments
+    doc_type: report
+    language: ms
+    listing_pages:
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/131"
+        label: "Piagam Pelanggan (Current)"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/137"
+        label: "Piagam Pelanggan (Archive)"
+
+  # ── Statistik Perkhidmatan Dalam Talian (Online Services Stats) ────────────
+  # HTML: <a> in <li> list, monthly PDFs at
+  #       /kpkt/resources/user_1/Attachments/statistik_online/YYYY/
+  # Note: Last updated 2021-11-10 – may be discontinued.
+  - name: statistik_online
+    page_type: attachments
+    doc_type: report
+    language: ms
+    listing_pages:
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/121"
+        label: "Statistik Online (Current)"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/128"
+        label: "Statistik Online (Archive)"
+
+  # ── Teks Ucapan (Speeches) ────────────────────────────────────────────────
+  # TODO: Identify the correct page ID for Teks Ucapan.
+  # Navigate to MEDIA > Teks Ucapan and inspect the URL, then add below.
+  # - name: teks_ucapan
+  #   doc_type: speech
+  #   language: ms
+  #   listing_pages:
+  #     - url: "https://www.kpkt.gov.my/index.php/pages/view/<ID>?mid=<MID>"
+  #       label: "Teks Ucapan"
+
+  # ── Penerbitan KPKT (Publications) ────────────────────────────────────────
+  # TODO: Identify the correct page ID for Penerbitan KPKT.
+  # Navigate to MEDIA > Penerbitan KPKT and inspect the URL, then add below.
+  # - name: penerbitan_kpkt
+  #   doc_type: report
+  #   language: ms
+  #   listing_pages:
+  #     - url: "https://www.kpkt.gov.my/index.php/pages/view/<ID>?mid=<MID>"
+  #       label: "Penerbitan KPKT"
+
+  # ── Pekeliling (Circulars) ────────────────────────────────────────────────
+  # TODO: Identify the correct page ID for Pekeliling.
+  # Navigate to INFO KORPORAT > Pekeliling and inspect the URL, then add below.
+  # - name: pekeliling
+  #   doc_type: notice
+  #   language: ms
+  #   listing_pages:
+  #     - url: "https://www.kpkt.gov.my/index.php/pages/view/<ID>?mid=<MID>"
+  #       label: "Pekeliling"

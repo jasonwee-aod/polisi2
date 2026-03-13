@@ -27,6 +27,7 @@ class IndexingRunResult:
     processed_documents: int
     skipped_documents: int
     persisted_chunks: int
+    failed_documents: int = 0
 
 
 class IndexingPipeline:
@@ -59,15 +60,21 @@ class IndexingPipeline:
 
         processed = 0
         persisted_chunks = 0
+        failed = 0
 
         for item in pending_items:
-            persisted_chunks += self._process_item(item)
-            processed += 1
+            try:
+                persisted_chunks += self._process_item(item)
+                processed += 1
+            except Exception as exc:
+                failed += 1
+                print(f"[indexer] skipped {item.storage_path}: {exc}")
 
         return IndexingRunResult(
             processed_documents=processed,
-            skipped_documents=max(0, len(self._manifest.list_objects()) - processed),
+            skipped_documents=max(0, len(self._manifest.list_objects()) - processed - failed),
             persisted_chunks=persisted_chunks,
+            failed_documents=failed,
         )
 
     def _select_items(self, *, mode: str) -> list[PendingIndexItem]:

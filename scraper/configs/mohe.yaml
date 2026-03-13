@@ -1,0 +1,115 @@
+# Unified scraper config for MOHE
+# Ministry of Higher Education — RSS feeds + DOCman tables
+# Source: specific-scrapers/mohe-scraper/configs/mohe_site_config.yaml
+#
+# The MOHE adapter reads:
+#   - base_url
+#   - allowed_hosts
+#   - rss_feeds: list of {name, url_en, url_ms, doc_type}
+#   - listing_pages: list of {name, url_ms, url_en, doc_type, playwright_required}
+# If rss_feeds / listing_pages are not in config, embedded defaults are used.
+
+site_slug: mohe
+agency: "Ministry of Higher Education (Kementerian Pengajian Tinggi)"
+base_url: "https://www.mohe.gov.my"
+
+allowed_hosts:
+  - "www.mohe.gov.my"
+  - "mohe.gov.my"
+
+request_delay: 1.5
+estimated_pages: 350
+
+# ── RSS Feeds (bilingual EN + MS) ──────────────────────────────────────────
+rss_feeds:
+  - name: "announcements"
+    url_en: "https://www.mohe.gov.my/en/broadcast/announcements?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/pengumuman?format=feed&type=rss"
+    doc_type: "announcement"
+
+  - name: "media_statements"
+    url_en: "https://www.mohe.gov.my/en/broadcast/media-statements?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/kenyataan-media?format=feed&type=rss"
+    doc_type: "press_release"
+
+  - name: "activities"
+    url_en: "https://www.mohe.gov.my/en/broadcast/activities?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/sorotan-aktiviti?format=feed&type=rss"
+    doc_type: "announcement"
+
+  - name: "media_coverage"
+    url_en: "https://www.mohe.gov.my/en/broadcast/media-coverage?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/liputan-media?format=feed&type=rss"
+    doc_type: "report"
+
+  - name: "infographics"
+    url_en: "https://www.mohe.gov.my/en/broadcast/infographics?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/infografik?format=feed&type=rss"
+    doc_type: "report"
+
+  - name: "speeches"
+    url_en: "https://www.mohe.gov.my/en/broadcast/speeches?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/teks-ucapan?format=feed&type=rss"
+    doc_type: "speech"
+
+  - name: "faq"
+    url_en: "https://www.mohe.gov.my/en/broadcast/faq?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/soalan-lazim?format=feed&type=rss"
+    doc_type: "other"
+
+  - name: "job_tender"
+    url_en: "https://www.mohe.gov.my/en/broadcast/job-tender?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/tender-kerja?format=feed&type=rss"
+    doc_type: "notice"
+
+# ── DOCman Listing Pages (staff downloads) ──────────────────────────────────
+listing_pages:
+  - name: "circulars_arahan_pentadbiran"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/pekeliling/arahan-pentadbiran"
+    url_en: "https://www.mohe.gov.my/en/staff/downloads/circular"
+    doc_type: "circular"
+    playwright_required: false
+
+  - name: "circulars_data"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/pekeliling/data"
+    doc_type: "circular"
+    playwright_required: false
+
+  - name: "circulars_ict"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/pekeliling/ict"
+    doc_type: "circular"
+    playwright_required: false
+
+  - name: "circulars_kewangan"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/pekeliling/kewangan"
+    doc_type: "circular"
+    playwright_required: false
+
+  - name: "circulars_pengurusan_rekod"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/pekeliling/pengurusan-rekod"
+    doc_type: "circular"
+    playwright_required: false
+
+  - name: "forms"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/borang"
+    url_en: "https://www.mohe.gov.my/en/staff/downloads/forms"
+    doc_type: "form"
+    playwright_required: true
+
+  - name: "broadcasts"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/hebahan-warga"
+    url_en: "https://www.mohe.gov.my/en/staff/downloads/broadcasts"
+    doc_type: "announcement"
+    playwright_required: false
+
+  - name: "manuals_guidelines"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/manual-dan-garis-panduan"
+    url_en: "https://www.mohe.gov.my/en/staff/downloads/manuals-and-guidelines"
+    doc_type: "manual"
+    playwright_required: false
+
+  - name: "faq_downloads"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/soalan-lazim"
+    url_en: "https://www.mohe.gov.my/en/staff/downloads/faq"
+    doc_type: "other"
+    playwright_required: false

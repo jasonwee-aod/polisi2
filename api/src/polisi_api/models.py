@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 LanguageCode = Literal["ms", "en"]
 ConversationRole = Literal["system", "user", "assistant"]
-AssistantResponseKind = Literal["answer", "clarification", "limited-support", "no-information"]
+AssistantResponseKind = Literal["answer", "clarification", "limited-support", "no-information", "general-knowledge"]
 StreamEventType = Literal["conversation", "message-start", "message-delta", "message-complete", "done"]
 
 

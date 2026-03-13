@@ -16,6 +16,7 @@ export default async function ChatConversationPage({ params }: ChatConversationP
     <ChatShell
       accessToken={session?.access_token ?? ""}
       initialConversationId={conversationId}
+      userEmail={session?.user?.email}
     />
   );
 }

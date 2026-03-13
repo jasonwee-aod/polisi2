@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "perpaduan-scraper"
+version = "0.1.0"
+description = "Production scraper for Kementerian Perpaduan Negara (perpaduan.gov.my)"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "AOD Malaysia", email = "dev@aodmalaysia.org"}
+]
+
+dependencies = [
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=4.9.0",
+    "python-dateutil>=2.8.2",
+    "boto3>=1.28.0",
+    "tenacity>=8.2.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+]
+
+[project.scripts]
+perpaduan-scraper = "src.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

@@ -1,0 +1,250 @@
+# Unified scraper config for BHEUU
+# Bahagian Hal Ehwal Undang-undang (BHEUU) — Strapi v3 API
+# Source: specific-scrapers/bheuu-scraper/configs/bheuu.yaml
+
+site_slug: bheuu
+agency: "Bahagian Hal Ehwal Undang-undang (BHEUU)"
+
+base_url: "https://www.bheuu.gov.my"
+
+# Strapi v3 backend — all API calls go here
+strapi_base: "https://strapi.bheuu.gov.my"
+
+# Host allowlist: frontend domain + Strapi domain (where files are served)
+allowed_hosts:
+  - "www.bheuu.gov.my"
+  - "strapi.bheuu.gov.my"
+
+request_delay: 1.5
+estimated_pages: 270
+
+sections:
+
+  # ── Media Statements / Kenyataan Media ────────────────────────────────────
+  - name: media_statements
+    label: "Media Statements"
+    doc_type: press_release
+    language: ms
+    source_type: collection
+    endpoint: "media-statements"
+    title_field: "title"
+    date_field: "publishDate"
+    file_field: "fileName.url"
+
+  # ── Annual Reports / Laporan Tahunan ──────────────────────────────────────
+  - name: annual_reports
+    label: "Annual Reports"
+    doc_type: report
+    language: ms
+    source_type: collection
+    endpoint: "annual-reports"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "url"
+
+  # ── eBuletin ──────────────────────────────────────────────────────────────
+  - name: ebuletins
+    label: "eBuletin"
+    doc_type: report
+    language: ms
+    source_type: collection
+    endpoint: "ebuletins"
+    title_field: "title"
+    date_field: "publishDate"
+    file_field: "url"
+
+  # ── Strategic Plans / Pelan Strategik ─────────────────────────────────────
+  - name: strategic_plans
+    label: "Strategic Plans"
+    doc_type: report
+    language: ms
+    source_type: collection
+    endpoint: "strategic-plans"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "url"
+
+  # ── FOI Publications ──────────────────────────────────────────────────────
+  - name: publication_fois
+    label: "FOI Initiative Publications"
+    doc_type: report
+    language: en
+    source_type: collection
+    endpoint: "publication-fois"
+    title_field: "title"
+    date_field: "published_at"
+    file_field: "url"
+
+  # ── NAPBHR / NHRAP Publications ────────────────────────────────────────────
+  - name: publication_nhraps
+    label: "NAPBHR Publications"
+    doc_type: report
+    language: en
+    source_type: collection
+    endpoint: "publication-nhraps"
+    title_field: "title"
+    date_field: "published_at"
+    file_field: "url"
+
+  # ── Other Publications ────────────────────────────────────────────────────
+  - name: publication_others
+    label: "Other Publications"
+    doc_type: report
+    language: en
+    source_type: collection
+    endpoint: "publication-others"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "url"
+
+  # ── Tender Quotations / Sebut Harga ───────────────────────────────────────
+  - name: tender_quotations
+    label: "Tender Quotations"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "tender-quotations"
+    title_field: "tenderTitle"
+    date_field: "startDate"
+    file_field: "advertisementInfo.url"
+
+  # ── Tender Results / Pemegang Tender ─────────────────────────────────────
+  - name: tender_holders
+    label: "Tender Results"
+    doc_type: notice
+    language: ms
+    source_type: metadata_only
+    endpoint: "tender-holders"
+    title_field: "tenderTitle"
+    date_field: "resultDate"
+
+  # ── Trustee Registrations / Pemerbadanan ─────────────────────────────────
+  - name: trustee_registrations
+    label: "Trustee Registration Documents"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "trustee-registrations"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "file.url"
+
+  # ── Trustee Amendments ────────────────────────────────────────────────────
+  - name: trustee_amendments
+    label: "Trustee Amendment Documents"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "trustee-amendments"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "file.url"
+
+  # ── Trustee Liquidations ──────────────────────────────────────────────────
+  - name: trustee_liquidations
+    label: "Trustee Liquidation Documents"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "trustee-liquidations"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "file.url"
+
+  # ── Trustee Monitorings ───────────────────────────────────────────────────
+  - name: trustee_monitorings
+    label: "Trustee Monitoring Documents"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "trustee-monitorings"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "file.url"
+
+  # ── Review of Incorporation Statuses ─────────────────────────────────────
+  - name: review_incorporation_statuses
+    label: "Review of Incorporation Statuses"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "review-incorporation-statuses"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "file.url"
+
+  # ── Whistleblower Act Archives ────────────────────────────────────────────
+  - name: act_protection_archives
+    label: "Whistleblower Act Annual Report Archives"
+    doc_type: report
+    language: ms
+    source_type: collection
+    endpoint: "act-protection-archives"
+    title_field: "year"
+    date_field: "year"
+    file_field: "pdfFile.url"
+
+  # ── Whistleblower Act – Newspaper Clippings (Single Type) ─────────────────
+  - name: act_protection_newspaper_clip
+    label: "Whistleblower Act Newspaper Clippings"
+    doc_type: other
+    language: ms
+    source_type: single_type
+    endpoint: "act-protection-newspaper-clip"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "pdfFile.url"
+
+  # ── Whistleblower Act – Implementation Guideline (Single Type) ───────────
+  - name: act_protection_guideline
+    label: "Whistleblower Act Implementation Guideline"
+    doc_type: notice
+    language: ms
+    source_type: single_type
+    endpoint: "act-protection-guideline"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "pdfFile.url"
+
+  # ── Whistleblower Act – Brief (Single Type) ───────────────────────────────
+  - name: act_protection_brief
+    label: "Whistleblower Act Brief"
+    doc_type: notice
+    language: ms
+    source_type: single_type
+    endpoint: "act-protection-brief"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "pdfFile.url"
+
+  # ── Whistleblower Act – Copy of Act (Single Type) ─────────────────────────
+  - name: act_protection_copy
+    label: "Whistleblower Act Copy"
+    doc_type: notice
+    language: ms
+    source_type: single_type
+    endpoint: "act-protection-copy"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "pdfFile.url"
+
+  # ── Acts and Laws Hub ─────────────────────────────────────────────────────
+  - name: act_laws
+    label: "Acts and Laws"
+    doc_type: other
+    language: ms
+    source_type: collection
+    endpoint: "act-laws"
+    title_field: "titleEN"
+    date_field: "createdAt"
+    file_field: "pdf.url"
+
+  # ── Latest News (Metadata Only) ───────────────────────────────────────────
+  - name: latest_news
+    label: "Latest News"
+    doc_type: press_release
+    language: ms
+    source_type: metadata_only
+    endpoint: "latest-news"
+    title_field: "title"
+    date_field: "publishDate"

@@ -9,22 +9,27 @@ description = "PolisiGPT government document scraping pipeline"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-  "requests==2.32.3",
-  "beautifulsoup4==4.12.3",
-  "playwright==1.51.0",
-  "boto3==1.37.7",
-  "openai==1.68.2",
-  "psycopg[binary]==3.2.13",
-  "pypdf==5.4.0",
-  "python-docx==1.1.2",
-  "openpyxl==3.1.5",
-  "pydantic==2.11.1",
-  "pytest==8.3.5",
-  "PyYAML==6.0.2"
+  "requests>=2.31,<3",
+  "beautifulsoup4>=4.12,<5",
+  "lxml>=5.0,<6",
+  "playwright>=1.44,<2",
+  "boto3>=1.34,<2",
+  "openai>=1.60,<2",
+  "psycopg[binary]>=3.2,<4",
+  "pypdf>=5.0,<6",
+  "llama-parse",
+  "python-docx>=1.1,<2",
+  "openpyxl>=3.1,<4",
+  "pydantic>=2.0,<3",
+  "pytest>=8.0,<9",
+  "PyYAML>=6.0,<7",
+  "click>=8.1,<9",
+  "tenacity>=8.2,<9",
+  "python-dateutil>=2.9,<3",
 ]
 
 [project.scripts]
-polisi-scraper = "polisi_scraper.runner:main"
+polisi-scraper = "polisi_scraper.cli:main"
 polisi-indexer = "polisi_scraper.indexer.runner:main"
 
 [tool.setuptools]

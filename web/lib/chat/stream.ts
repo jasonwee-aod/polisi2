@@ -28,7 +28,8 @@ export async function readChatStream({
   });
 
   if (!response.ok || !response.body) {
-    throw new Error("Failed to stream chat response");
+    const body = await response.text().catch(() => "");
+    throw new Error(`Chat request failed (${response.status}): ${body}`);
   }
 
   const reader = response.body.getReader();

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
@@ -23,9 +22,16 @@ import { MessageList } from "./message-list";
 
 const DEFAULT_API_CLIENT = { fetchConversations, fetchConversationDetail };
 
+const SUGGESTION_CHIPS = [
+  "Draft a speech",
+  "Create a research report",
+  "Brainstorm a policy idea"
+];
+
 type ChatShellProps = {
   accessToken: string;
   initialConversationId?: string | null;
+  userEmail?: string | null;
   apiBaseUrl?: string;
   apiClient?: {
     fetchConversations(args: { accessToken: string; apiBaseUrl?: string }): Promise<ConversationSummary[]>;
@@ -50,6 +56,7 @@ type ChatShellProps = {
 export function ChatShell({
   accessToken,
   initialConversationId = null,
+  userEmail,
   apiBaseUrl,
   apiClient = DEFAULT_API_CLIENT,
   streamChat = readChatStream,
@@ -194,28 +201,140 @@ export function ChatShell({
     router.push("/chat");
   }
 
+  const showWelcome = !activeConversationId && messages.length === 0;
+
   return (
     <div
       style={{
-        display: "grid",
-        gridTemplateColumns: "18rem minmax(0, 1fr) 20rem",
-        gap: "1rem",
-        alignItems: "start"
+        display: "flex",
+        height: "100%",
+        overflow: "hidden",
+        background: "var(--bg-page)"
       }}
     >
+      {/* Sidebar */}
       <ConversationSidebar
         conversations={conversations}
         activeConversationId={activeConversationId}
         onSelect={handleSelectConversation}
         onNewConversation={handleNewConversation}
+        userEmail={userEmail}
       />
 
-      <section style={{ display: "grid", gap: "1rem" }}>
-        <MessageList messages={messages} onCitationSelect={setSelectedCitation} />
-        <MessageComposer disabled={isStreaming || isLoadingConversation} onSubmit={handleSubmit} />
-      </section>
+      {/* Main area */}
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+          background: "var(--bg-surface)"
+        }}
+      >
+        {/* Welcome state or message thread */}
+        {showWelcome ? (
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "32px 40px"
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: 680,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 24
+              }}
+            >
+              <h1
+                style={{
+                  fontSize: 32,
+                  fontWeight: 700,
+                  letterSpacing: -1,
+                  margin: 0,
+                  color: "var(--text-primary)"
+                }}
+              >
+                What can I help with?
+              </h1>
+              <div
+                style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}
+              >
+                {SUGGESTION_CHIPS.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => void handleSubmit(chip)}
+                    disabled={isStreaming}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "12px 18px",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-subtle)",
+                      background: "var(--bg-surface)",
+                      boxShadow: "0 2px 12px rgba(26,25,24,0.03)",
+                      fontSize: 14,
+                      fontWeight: 500,
+                      color: "var(--text-primary)",
+                      cursor: isStreaming ? "not-allowed" : "pointer"
+                    }}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "32px 40px" }}>
+            <div style={{ maxWidth: 720, margin: "0 auto" }}>
+              <MessageList messages={messages} isStreaming={isStreaming} onCitationSelect={setSelectedCitation} />
+            </div>
+          </div>
+        )}
 
-      <CitationPanel citation={selectedCitation} onClose={() => setSelectedCitation(null)} />
+        {/* Input section — always visible */}
+        <div
+          style={{
+            flexShrink: 0,
+            padding: "0 24px 24px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 8
+          }}
+        >
+          <div style={{ width: "100%", maxWidth: 680 }}>
+            <MessageComposer
+              disabled={isStreaming || isLoadingConversation}
+              onSubmit={handleSubmit}
+            />
+          </div>
+          <span
+            style={{
+              fontSize: 12,
+              color: "var(--text-tertiary)",
+              textAlign: "center"
+            }}
+          >
+            Polisi.ai can make mistakes. Check important info.
+          </span>
+        </div>
+      </div>
+
+      {/* Citation panel */}
+      {selectedCitation ? (
+        <CitationPanel citation={selectedCitation} onClose={() => setSelectedCitation(null)} />
+      ) : null}
     </div>
   );
 }

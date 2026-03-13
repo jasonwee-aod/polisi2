@@ -59,3 +59,7 @@ def main(argv: list[str] | None = None) -> None:
     embeddings = OpenAIEmbeddingsClient(settings.openai_api_key or "")
     store = DocumentsStore(settings.supabase_db_url)
     print(json.dumps(run_smoke_query(query, limit=args.limit, embeddings=embeddings, store=store), indent=2))
+
+
+if __name__ == "__main__":
+    main()

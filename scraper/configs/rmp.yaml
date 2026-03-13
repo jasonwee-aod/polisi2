@@ -1,0 +1,39 @@
+# Unified scraper config for RMP
+# Royal Malaysia Police — Sitefinity, path-based pagination
+# Source: specific-scrapers/rmp-scraper/configs/rmp.yaml
+
+site_slug: rmp
+agency: "Royal Malaysia Police (Polis DiRaja Malaysia)"
+base_url: "https://www.rmp.gov.my"
+
+allowed_hosts:
+  - "www.rmp.gov.my"
+
+request_delay: 1.5
+estimated_pages: 600
+
+sections:
+
+  # ── News / Berita ──────────────────────────────────────────────────────────
+  - name: berita
+    label: "News (Berita)"
+    doc_type: press_release
+    language: ms
+    source_type: listing
+    listing_url: "https://www.rmp.gov.my/arkib-berita/berita"
+
+  # ── Media Statements / Siaran Media ───────────────────────────────────────
+  - name: siaran_media
+    label: "Media Statements (Siaran Media)"
+    doc_type: statement
+    language: ms
+    source_type: listing
+    listing_url: "https://www.rmp.gov.my/arkib-berita/siaran-media"
+
+  # ── Publications / Penerbitan ──────────────────────────────────────────────
+  - name: penerbitan
+    label: "Publications (Penerbitan)"
+    doc_type: report
+    language: ms
+    source_type: publications
+    listing_url: "https://www.rmp.gov.my/laman-utama/penerbitan"

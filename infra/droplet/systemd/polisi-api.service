@@ -1,0 +1,24 @@
+[Unit]
+Description=Polisi API (FastAPI/uvicorn)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=polisi
+Group=polisi
+WorkingDirectory=/opt/polisigpt/repo
+EnvironmentFile=/opt/polisigpt/.env
+ExecStart=/opt/polisigpt/.venv/bin/uvicorn polisi_api.main:app \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --workers 2 \
+    --log-level info \
+    --access-log
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/opt/polisigpt/logs/api.log
+StandardError=append:/opt/polisigpt/logs/api.log
+
+[Install]
+WantedBy=multi-user.target

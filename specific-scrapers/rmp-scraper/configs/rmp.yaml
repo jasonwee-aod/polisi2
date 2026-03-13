@@ -1,0 +1,55 @@
+site_slug: rmp
+agency: "Royal Malaysia Police (Polis DiRaja Malaysia)"
+
+base_url: "https://www.rmp.gov.my"
+
+# Only www.rmp.gov.my serves content and documents.
+# No subdomains needed; all /docs/default-source/ PDFs are on the same host.
+allowed_hosts:
+  - "www.rmp.gov.my"
+
+# No usable sitemap.xml (returns 500 or only homepage URL from 2021).
+# Discovery uses seeded listing URLs with Sitefinity /page/N path pagination.
+#
+# Two source_type values:
+#   listing      – Sitefinity news widget; each item is an HTML article page
+#                  (may embed PDF/DOCX links in the article body).
+#   publications – Telerik RadGrid document table; each item is a direct
+#                  file download (PDF/DOCX/etc.). No HTML article is fetched.
+
+sections:
+
+  # ── News / Berita ──────────────────────────────────────────────────────────
+  # URL: /arkib-berita/berita  (page 2: /arkib-berita/berita/page/2)
+  # Sitefinity news listing; items carry data-sf-field="Title" anchor.
+  # Detail pages may embed PDFs in the article body.
+  # Date embedded in article URL: /YYYY/MM/DD/slug
+  - name: berita
+    label: "News (Berita)"
+    doc_type: press_release
+    language: ms
+    source_type: listing
+    listing_url: "https://www.rmp.gov.my/arkib-berita/berita"
+
+  # ── Media Statements / Siaran Media ───────────────────────────────────────
+  # URL: /arkib-berita/siaran-media  (page 2: /arkib-berita/siaran-media/page/2)
+  # Official press releases and statements from PDRM.
+  # Same Sitefinity news listing archetype as berita.
+  - name: siaran_media
+    label: "Media Statements (Siaran Media)"
+    doc_type: statement
+    language: ms
+    source_type: listing
+    listing_url: "https://www.rmp.gov.my/arkib-berita/siaran-media"
+
+  # ── Publications / Penerbitan ──────────────────────────────────────────────
+  # URL: /laman-utama/penerbitan  (page 2: /laman-utama/penerbitan/page/2)
+  # Telerik RadGrid document table; each row has a direct PDF/DOCX download.
+  # File types: PDF (majority), DOCX (forms), JPEG (images/permits).
+  # No HTML article page; files are archived directly.
+  - name: penerbitan
+    label: "Publications (Penerbitan)"
+    doc_type: report
+    language: ms
+    source_type: publications
+    listing_url: "https://www.rmp.gov.my/laman-utama/penerbitan"

@@ -1,0 +1,105 @@
+# Unified scraper config for Dewan Negeri Selangor
+# WordPress + pdfjs-viewer + e-QUANS
+# Source: specific-scrapers/dewan-selangor-scraper/configs/dewan_selangor.yaml
+
+site_slug: dewan-selangor
+agency: "Dewan Negeri Selangor"
+base_url: "https://dewan.selangor.gov.my"
+
+allowed_hosts:
+  - "dewan.selangor.gov.my"
+
+# Site has known SSL certificate issues
+verify_ssl: false
+
+request_delay: 1.5
+estimated_pages: 5200
+
+sections:
+
+  # ── Berita Dewan (Assembly News) ─────────────────────────────────────────
+  - name: berita_dewan
+    label: "Berita Dewan"
+    doc_type: press_release
+    language: ms
+    source_type: listing
+    listing_pages:
+      - url: "https://dewan.selangor.gov.my/berita-dewan/"
+        label: "Berita Dewan"
+
+  # ── Kenyataan Media (Media Statements) ────────────────────────────────────
+  - name: kenyataan_media
+    label: "Kenyataan Media"
+    doc_type: statement
+    language: ms
+    source_type: listing
+    listing_pages:
+      - url: "https://dewan.selangor.gov.my/kenyataan-media/"
+        label: "Kenyataan Media"
+
+  # ── Media Perdana ──────────────────────────────────────────────────────────
+  - name: media_perdana
+    label: "Media Perdana"
+    doc_type: press_release
+    language: ms
+    source_type: listing
+    listing_pages:
+      - url: "https://dewan.selangor.gov.my/media-perdana/"
+        label: "Media Perdana"
+
+  # ── Ucapan (Speeches & Addresses) ─────────────────────────────────────────
+  - name: ucapan
+    label: "Ucapan"
+    doc_type: speech
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewan.selangor.gov.my/ucapan-sitemap.xml"
+
+  # ── Penyata Jawatankuasa (Committee Statements) ────────────────────────────
+  - name: penyata_jawatankuasa
+    label: "Penyata Jawatankuasa"
+    doc_type: statement
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewan.selangor.gov.my/statement-sitemap.xml"
+
+  # ── Hansard (Parliamentary Records) ───────────────────────────────────────
+  - name: hansard
+    label: "Hansard"
+    doc_type: report
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewan.selangor.gov.my/hansard-sitemap.xml"
+
+  # ── Urusan Mesyuarat (Meeting Proceedings) ────────────────────────────────
+  - name: urusan_mesyuarat
+    label: "Urusan Mesyuarat"
+    doc_type: notice
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewan.selangor.gov.my/urusan-mesyuarat-sitemap.xml"
+
+  # ── Sidang (Sessions) ─────────────────────────────────────────────────────
+  - name: sidang
+    label: "Sidang"
+    doc_type: notice
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewan.selangor.gov.my/sidang-sitemap.xml"
+
+  # ── e-QUANS (Soalan Mulut dan Soalan Bertulis) ────────────────────────────
+  # Discovery chain: /tahun-dan-sesi/ -> /equans/{id}/ -> /question?...
+  - name: equans
+    label: "Soalan Mulut dan Soalan Bertulis (e-QUANS)"
+    doc_type: report
+    language: ms
+    source_type: equans
+    listing_url: "https://dewan.selangor.gov.my/tahun-dan-sesi/"
+
+  # ── Penyata Rasmi / Hansard PDFs ──────────────────────────────────────────
+  - name: penyata_rasmi
+    label: "Penyata Rasmi"
+    doc_type: report
+    language: ms
+    source_type: hub
+    hub_page: "https://dewan.selangor.gov.my/penyata-rasmi/"

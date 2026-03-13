@@ -1,0 +1,88 @@
+# Site configuration for Kementerian Perpaduan Negara (perpaduan.gov.my)
+
+site_name: "Kementerian Perpaduan Negara"
+site_slug: "perpaduan"
+base_url: "https://www.perpaduan.gov.my"
+
+# Allowed hosts for scraping
+allowed_hosts:
+  - "www.perpaduan.gov.my"
+  - "perpaduan.gov.my"
+
+# HTTP client settings
+user_agent: "Mozilla/5.0 (compatible; perpaduan-scraper/0.1)"
+timeout: 10
+delay: 1.0
+
+# Sections to crawl
+# URLs obtained from sitemap (JSitemap) and verified accessible
+sections:
+  - name: "Perkhidmatan Teras - Jati Diri Negara"
+    url: "https://www.perpaduan.gov.my/index.php/bm/perkhidmatann/perkhidmatan-teras-kementeriann/meningkatkan-jati-diri-dan-semangat-cintakan-negara"
+    agency: "Kementerian Perpaduan Negara"
+    doc_type: "report"
+    item_selector: "div.item-page"
+    title_selector: "h2"
+    link_selector: "h2 a"
+    has_detail_pages: false
+
+  - name: "Perkhidmatan Teras - Integrasi Sosial"
+    url: "https://www.perpaduan.gov.my/index.php/bm/perkhidmatann/perkhidmatan-teras-kementeriann/mengukuhkan-tapak-integrasi-sosial"
+    agency: "Kementerian Perpaduan Negara"
+    doc_type: "report"
+    item_selector: "div.item-page"
+    title_selector: "h2"
+    link_selector: "h2 a"
+    has_detail_pages: false
+
+  - name: "Tender & Sebutharga"
+    url: "https://www.perpaduan.gov.my/index.php/bm/perkhidmatann/perkhidmatan-lainn/tender-sebuthargaa"
+    agency: "Kementerian Perpaduan Negara"
+    doc_type: "notice"
+    item_selector: "div.item-page"
+    title_selector: "h2"
+    link_selector: "h2 a"
+    date_selector: "span.published"
+    has_detail_pages: false
+
+  - name: "Iklan Jawatan Kosong"
+    url: "https://www.perpaduan.gov.my/index.php/bm/perkhidmatann/perkhidmatan-lainn/iklan-jawatan-kosong"
+    agency: "Kementerian Perpaduan Negara"
+    doc_type: "notice"
+    item_selector: "div.item-page"
+    title_selector: "h2"
+    link_selector: "h2 a"
+    date_selector: "span.published"
+    has_detail_pages: false
+
+  - name: "Dasar - Policy Documents"
+    url: "https://www.perpaduan.gov.my/index.php/bm/dasarr-3/dasarr-2"
+    agency: "Kementerian Perpaduan Negara"
+    doc_type: "policy"
+    item_selector: "li.accordeonck.level2"
+    title_selector: "a.accordeonck"
+    link_selector: "a.accordeonck"
+    has_detail_pages: false
+
+  - name: "Kajian & Literasi Perpaduan - Research & Literacy"
+    url: "https://www.perpaduan.gov.my/index.php/bm/dasarr-3/kajian-dan-literasi-perpaduan-3"
+    agency: "Kementerian Perpaduan Negara"
+    doc_type: "report"
+    item_selector: "li.accordeonck.level2"
+    title_selector: "a.accordeonck"
+    link_selector: "a.accordeonck"
+    has_detail_pages: false
+
+  - name: "Inisiatif - Initiatives"
+    url: "https://www.perpaduan.gov.my/index.php/bm/dasarr-3/inisiatiff-2"
+    agency: "Kementerian Perpaduan Negara"
+    doc_type: "report"
+    item_selector: "li.accordeonck.level2"
+    title_selector: "a.accordeonck"
+    link_selector: "a.accordeonck"
+    has_detail_pages: false
+
+# Output contract
+output_contract:
+  records_file: "records.jsonl"
+  runs_file: "crawl_runs.jsonl"

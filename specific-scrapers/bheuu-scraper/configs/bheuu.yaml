@@ -1,0 +1,311 @@
+site_slug: bheuu
+agency: "Bahagian Hal Ehwal Undang-undang (BHEUU)"
+
+# Nuxt.js frontend
+base_url: "https://www.bheuu.gov.my"
+
+# Strapi v3 backend – all API calls go here
+strapi_base: "https://strapi.bheuu.gov.my"
+
+# Host allowlist: frontend domain + Strapi domain (where files are served)
+allowed_hosts:
+  - "www.bheuu.gov.my"
+  - "strapi.bheuu.gov.my"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Sections
+#
+# source_type values:
+#   collection   – Paginated Strapi collection (array endpoint, _start/_limit)
+#   single_type  – Single-type Strapi endpoint (returns one dict, not an array)
+#   metadata_only– Collection with no downloadable file (write metadata records)
+#
+# file_field: dot-notation path to the file URL within the Strapi record.
+#   Examples:
+#     "url"               → record["url"]      (direct absolute URL)
+#     "fileName.url"      → record["fileName"]["url"]
+#     "file.url"          → record["file"]["url"]
+#     "pdfFile.url"       → record["pdfFile"]["url"]
+#     "advertisementInfo.url" → record["advertisementInfo"]["url"]
+#
+# title_field: field path for the document title (default: "title")
+# date_field:  field path for the publication date (default: "publishDate")
+#              leave blank to fall back to: publishDate → published_at → createdAt
+# ─────────────────────────────────────────────────────────────────────────────
+
+sections:
+
+  # ── Media Statements / Kenyataan Media ────────────────────────────────────
+  # URL: /media-statements?_start=N&_limit=100
+  # 146 records as of 2026-03.
+  # Each record: title (BM), publishDate, fileName.url (relative PDF path)
+  - name: media_statements
+    label: "Media Statements"
+    doc_type: press_release
+    language: ms
+    source_type: collection
+    endpoint: "media-statements"
+    title_field: "title"
+    date_field: "publishDate"
+    file_field: "fileName.url"
+
+  # ── Annual Reports / Laporan Tahunan ──────────────────────────────────────
+  # URL: /annual-reports?_start=N&_limit=100
+  # 6 records. Each record: title, url (full absolute URL to PDF)
+  - name: annual_reports
+    label: "Annual Reports"
+    doc_type: report
+    language: ms
+    source_type: collection
+    endpoint: "annual-reports"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "url"
+
+  # ── eBuletin ──────────────────────────────────────────────────────────────
+  # URL: /ebuletins?_start=N&_limit=100
+  # 26 records. Each record: title, url (absolute URL to PDF), publishDate
+  - name: ebuletins
+    label: "eBuletin"
+    doc_type: report
+    language: ms
+    source_type: collection
+    endpoint: "ebuletins"
+    title_field: "title"
+    date_field: "publishDate"
+    file_field: "url"
+
+  # ── Strategic Plans / Pelan Strategik ─────────────────────────────────────
+  # URL: /strategic-plans?_start=N&_limit=100
+  # 4 records. Each record: title, url (absolute URL to PDF)
+  - name: strategic_plans
+    label: "Strategic Plans"
+    doc_type: report
+    language: ms
+    source_type: collection
+    endpoint: "strategic-plans"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "url"
+
+  # ── FOI Publications ──────────────────────────────────────────────────────
+  # URL: /publication-fois?_start=N&_limit=100
+  # 17 records. Each record: title, url (absolute URL), published_at
+  - name: publication_fois
+    label: "FOI Initiative Publications"
+    doc_type: report
+    language: en
+    source_type: collection
+    endpoint: "publication-fois"
+    title_field: "title"
+    date_field: "published_at"
+    file_field: "url"
+
+  # ── NAPBHR / NHRAP Publications ────────────────────────────────────────────
+  # URL: /publication-nhraps?_start=N&_limit=100
+  # Currently 1 record. Each record: title, url (absolute URL), published_at
+  - name: publication_nhraps
+    label: "NAPBHR Publications"
+    doc_type: report
+    language: en
+    source_type: collection
+    endpoint: "publication-nhraps"
+    title_field: "title"
+    date_field: "published_at"
+    file_field: "url"
+
+  # ── Other Publications ────────────────────────────────────────────────────
+  # URL: /publication-others?_start=N&_limit=100
+  # 18 records. Each record: title, url (absolute URL)
+  - name: publication_others
+    label: "Other Publications"
+    doc_type: report
+    language: en
+    source_type: collection
+    endpoint: "publication-others"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "url"
+
+  # ── Tender Quotations / Sebut Harga ───────────────────────────────────────
+  # URL: /tender-quotations?_start=N&_limit=100
+  # 15 records. Each record: tenderTitle, startDate,
+  #   advertisementInfo.url (relative PDF path)
+  - name: tender_quotations
+    label: "Tender Quotations"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "tender-quotations"
+    title_field: "tenderTitle"
+    date_field: "startDate"
+    file_field: "advertisementInfo.url"
+
+  # ── Tender Results / Pemegang Tender ─────────────────────────────────────
+  # URL: /tender-holders?_start=N&_limit=100
+  # 4 records. Metadata only – no downloadable file.
+  # Fields: tenderNo, tenderTitle, tenderHolder, offerPrice, resultDate
+  - name: tender_holders
+    label: "Tender Results"
+    doc_type: notice
+    language: ms
+    source_type: metadata_only
+    endpoint: "tender-holders"
+    title_field: "tenderTitle"
+    date_field: "resultDate"
+
+  # ── Trustee Registrations / Pemerbadanan ─────────────────────────────────
+  # URL: /trustee-registrations?_start=N&_limit=100
+  # 10 records. Each record: title, file.url (relative PDF)
+  - name: trustee_registrations
+    label: "Trustee Registration Documents"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "trustee-registrations"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "file.url"
+
+  # ── Trustee Amendments ────────────────────────────────────────────────────
+  # URL: /trustee-amendments?_start=N&_limit=100
+  # 1 record. Each record: title, file.url (relative PDF)
+  - name: trustee_amendments
+    label: "Trustee Amendment Documents"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "trustee-amendments"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "file.url"
+
+  # ── Trustee Liquidations ──────────────────────────────────────────────────
+  # URL: /trustee-liquidations?_start=N&_limit=100
+  # 3 records. Each record: title, file.url (relative PDF)
+  - name: trustee_liquidations
+    label: "Trustee Liquidation Documents"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "trustee-liquidations"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "file.url"
+
+  # ── Trustee Monitorings ───────────────────────────────────────────────────
+  # URL: /trustee-monitorings?_start=N&_limit=100
+  # 1 record. Each record: title, file.url (relative PDF)
+  - name: trustee_monitorings
+    label: "Trustee Monitoring Documents"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "trustee-monitorings"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "file.url"
+
+  # ── Review of Incorporation Statuses ─────────────────────────────────────
+  # URL: /review-incorporation-statuses?_start=N&_limit=100
+  # 4 records. Each record: title, file.url (relative PDF, if present)
+  - name: review_incorporation_statuses
+    label: "Review of Incorporation Statuses"
+    doc_type: notice
+    language: ms
+    source_type: collection
+    endpoint: "review-incorporation-statuses"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "file.url"
+
+  # ── Whistleblower Act Archives ────────────────────────────────────────────
+  # URL: /act-protection-archives?_start=N&_limit=100
+  # 3 records. Each record: year (string), pdfFile.url (relative PDF)
+  # Note: "year" field (e.g. "2010") used as title prefix; pdfFile.url for file
+  - name: act_protection_archives
+    label: "Whistleblower Act Annual Report Archives"
+    doc_type: report
+    language: ms
+    source_type: collection
+    endpoint: "act-protection-archives"
+    title_field: "year"
+    date_field: "year"
+    file_field: "pdfFile.url"
+
+  # ── Whistleblower Act – Newspaper Clippings (Single Type) ─────────────────
+  # URL: /act-protection-newspaper-clip  (single-type → returns one dict)
+  # Contains one consolidated newspaper clippings PDF: pdfFile.url
+  - name: act_protection_newspaper_clip
+    label: "Whistleblower Act Newspaper Clippings"
+    doc_type: other
+    language: ms
+    source_type: single_type
+    endpoint: "act-protection-newspaper-clip"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "pdfFile.url"
+
+  # ── Whistleblower Act – Implementation Guideline (Single Type) ───────────
+  # URL: /act-protection-guideline  (single-type → returns one dict)
+  # Contains one guideline PDF: pdfFile.url
+  - name: act_protection_guideline
+    label: "Whistleblower Act Implementation Guideline"
+    doc_type: notice
+    language: ms
+    source_type: single_type
+    endpoint: "act-protection-guideline"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "pdfFile.url"
+
+  # ── Whistleblower Act – Brief (Single Type) ───────────────────────────────
+  # URL: /act-protection-brief  (single-type → returns one dict)
+  - name: act_protection_brief
+    label: "Whistleblower Act Brief"
+    doc_type: notice
+    language: ms
+    source_type: single_type
+    endpoint: "act-protection-brief"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "pdfFile.url"
+
+  # ── Whistleblower Act – Copy of Act (Single Type) ─────────────────────────
+  # URL: /act-protection-copy  (single-type → returns one dict)
+  - name: act_protection_copy
+    label: "Whistleblower Act Copy"
+    doc_type: notice
+    language: ms
+    source_type: single_type
+    endpoint: "act-protection-copy"
+    title_field: "title"
+    date_field: "createdAt"
+    file_field: "pdfFile.url"
+
+  # ── Acts and Laws Hub ─────────────────────────────────────────────────────
+  # URL: /act-laws?_start=N&_limit=100
+  # 3 records. Fields: titleBM, titleEN, optional pdf (nested object with url).
+  # Records without a pdf are navigation links only and are silently skipped.
+  # File URL pattern: record["pdf"]["url"] → relative /uploads/... path
+  - name: act_laws
+    label: "Acts and Laws"
+    doc_type: other
+    language: ms
+    source_type: collection
+    endpoint: "act-laws"
+    title_field: "titleEN"
+    date_field: "createdAt"
+    file_field: "pdf.url"
+
+  # ── Latest News (Metadata Only) ───────────────────────────────────────────
+  # URL: /latest-news?_start=N&_limit=100
+  # 5 records. title + publishDate only; no downloadable file.
+  - name: latest_news
+    label: "Latest News"
+    doc_type: press_release
+    language: ms
+    source_type: metadata_only
+    endpoint: "latest-news"
+    title_field: "title"
+    date_field: "publishDate"

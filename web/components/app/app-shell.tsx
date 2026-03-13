@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import React from "react";
 import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -43,63 +43,55 @@ export function AppShell({
   return (
     <div
       style={{
-        minHeight: "100vh",
-        padding: "2rem",
-        display: "grid",
-        gap: "1.5rem"
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden"
       }}
     >
       <header
         style={{
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
-          gap: "1rem",
-          padding: "1rem 1.25rem",
-          borderRadius: "1.5rem",
-          background: "rgba(255, 255, 255, 0.78)",
-          border: "1px solid rgba(20, 35, 29, 0.08)"
+          justifyContent: "space-between",
+          padding: "0 20px",
+          height: 52,
+          flexShrink: 0,
+          borderBottom: "1px solid var(--border-subtle)",
+          background: "var(--bg-surface)"
         }}
       >
-        <div style={{ display: "grid", gap: "0.15rem" }}>
-          <strong style={{ fontSize: "1.1rem" }}>Polisi</strong>
-          <span style={{ color: "#4f6a5f", fontSize: "0.95rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ fontSize: 16, fontWeight: 600, color: "var(--text-primary)" }}>
+            Polisi.ai
+          </span>
+          <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>
             Protected workspace for grounded Malaysian policy questions.
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <span style={{ color: "#4f6a5f", fontSize: "0.95rem" }}>
-            {userEmail ?? "Signed in"}
-          </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {userEmail ? (
+            <span style={{ fontSize: 13, color: "var(--text-tertiary)" }}>{userEmail}</span>
+          ) : null}
           <button
             type="button"
             onClick={handleSignOut}
             disabled={isPending}
             style={{
-              borderRadius: "999px",
-              border: "1px solid rgba(20, 35, 29, 0.15)",
-              background: "#f6f7f1",
-              padding: "0.65rem 0.95rem",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: 8,
+              padding: "4px 12px",
+              background: "transparent",
+              fontSize: 13,
+              color: "var(--text-secondary)",
               cursor: isPending ? "wait" : "pointer"
             }}
           >
-            {isPending ? "Signing out..." : "Sign out"}
+            {isPending ? "Signing out…" : "Sign out"}
           </button>
         </div>
       </header>
-
-      <main
-        style={{
-          display: "grid",
-          placeItems: "center",
-          padding: "2rem",
-          borderRadius: "2rem",
-          background: "rgba(255, 255, 255, 0.72)",
-          border: "1px solid rgba(20, 35, 29, 0.08)"
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: "56rem" }}>{children}</div>
-      </main>
+      <main style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>{children}</main>
     </div>
   );
 }

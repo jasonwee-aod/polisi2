@@ -7,5 +7,10 @@ export default async function ChatPage() {
     data: { session }
   } = await supabase.auth.getSession();
 
-  return <ChatShell accessToken={session?.access_token ?? ""} />;
+  return (
+    <ChatShell
+      accessToken={session?.access_token ?? ""}
+      userEmail={session?.user?.email}
+    />
+  );
 }

@@ -6,29 +6,28 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 from polisi_scraper.adapters import get_adapter_registry
-from polisi_scraper.models import SUPPORTED_FILE_TYPES
+from polisi_scraper.adapters.base import BaseSiteAdapter
 
 
-def test_adapter_registry_has_five_sites() -> None:
+EXPECTED_ADAPTERS = {
+    "bheuu", "dewan_johor", "dewan_selangor", "idfr", "kpkt",
+    "mcmc", "moe", "moh", "mohe", "perpaduan", "rmp",
+}
+
+
+def test_adapter_registry_has_eleven_sites() -> None:
     registry = get_adapter_registry()
-    assert set(registry.keys()) == {"mof", "moe", "jpa", "moh", "dosm"}
+    assert set(registry.keys()) == EXPECTED_ADAPTERS
 
 
 def test_adapter_smoke_matrix() -> None:
     registry = get_adapter_registry()
 
-    for slug, factory in registry.items():
-        adapter = factory()
-        candidates = adapter.iter_document_candidates(max_docs=1)
-
-        assert candidates, f"{slug} should return at least one candidate"
-        candidate = candidates[0]
-
-        assert candidate.document_url.startswith("https://")
-        assert candidate.file_type in SUPPORTED_FILE_TYPES
-        assert candidate.title
-
-        record = adapter.to_record(candidate, sha256="a" * 64)
-        assert record.storage_path().startswith("gov-my/")
-        assert record.metadata["adapter"] == slug
-        assert record.metadata["source_page_url"] == candidate.source_page_url
+    for slug, cls in registry.items():
+        adapter = cls()
+        assert isinstance(adapter, BaseSiteAdapter)
+        assert adapter.slug == slug
+        assert adapter.agency
+        assert hasattr(adapter, "discover")
+        assert hasattr(adapter, "fetch_and_extract")
+        assert hasattr(adapter, "extract_downloads")

@@ -1,0 +1,133 @@
+site_slug: mcmc
+agency: "Malaysian Communications and Multimedia Commission"
+base_url: "https://mcmc.gov.my"
+
+# Host allowlist: mcmc.gov.my for HTML pages; www.mcmc.gov.my for PDF assets
+# (PDFs are hosted at https://www.mcmc.gov.my/skmmgovmy/media/...)
+allowed_hosts:
+  - "mcmc.gov.my"
+  - "www.mcmc.gov.my"
+
+# No sitemap.xml available on mcmc.gov.my.
+# Discovery uses seeded listing pages with ?page=N pagination.
+# Pagination stops automatically when a page returns no items.
+
+sections:
+
+  # ── Press Releases ────────────────────────────────────────────────────────
+  # URL: /en/media/press-releases?page=N
+  # Archetype: article_list (div.article-list-box)
+  # Date on listing: "MAR 03, 2026" in div.date
+  # PDF download button may appear on listing row: a.btn.btn-secondary.btn-sm
+  - name: press_releases
+    label: "Press Releases"
+    doc_type: press_release
+    language: en
+    listing_archetype: article_list
+    listing_url: "https://mcmc.gov.my/en/media/press-releases"
+
+  # ── Announcements ─────────────────────────────────────────────────────────
+  # URL: /en/media/announcements?page=N
+  - name: announcements
+    label: "Announcements"
+    doc_type: notice
+    language: en
+    listing_archetype: article_list
+    listing_url: "https://mcmc.gov.my/en/media/announcements"
+
+  # ── Press Clippings ───────────────────────────────────────────────────────
+  # URL: /en/media/press-clippings?page=N
+  - name: press_clippings
+    label: "Press Clippings"
+    doc_type: press_release
+    language: en
+    listing_archetype: article_list
+    listing_url: "https://mcmc.gov.my/en/media/press-clippings"
+
+  # ── Publications ──────────────────────────────────────────────────────────
+  # URL: /en/resources/publications?page=N
+  # Archetype: media_box (a.media-box grid)
+  # Date only available on detail page; no date on listing row.
+  - name: publications
+    label: "Publications"
+    doc_type: report
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/resources/publications"
+
+  # ── Reports ───────────────────────────────────────────────────────────────
+  # URL: /en/resources/reports?page=N
+  # Types include: Access List, Public Inquiry Report, Information Paper
+  - name: reports
+    label: "Reports"
+    doc_type: report
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/resources/reports"
+
+  # ── Guidelines ────────────────────────────────────────────────────────────
+  # URL: /en/resources/guidelines?page=N
+  - name: guidelines
+    label: "Guidelines"
+    doc_type: notice
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/resources/guidelines"
+
+  # ── Statistics ────────────────────────────────────────────────────────────
+  # URL: /en/resources/statistics?page=N
+  - name: statistics
+    label: "Statistics"
+    doc_type: report
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/resources/statistics"
+
+  # ── Annual Reports ────────────────────────────────────────────────────────
+  # URL: /en/about-us/annual-reports?page=N
+  - name: annual_reports
+    label: "Annual Reports"
+    doc_type: report
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/about-us/annual-reports"
+
+  # ── Research Reports ──────────────────────────────────────────────────────
+  # URL: /en/resources/research?page=N
+  - name: research_reports
+    label: "Research Reports"
+    doc_type: report
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/resources/research"
+
+  # ── Legal Acts ────────────────────────────────────────────────────────────
+  # source_type: acts_hub
+  # Single non-paginated hub page; one <h2> per Act.
+  # Each Act has:
+  #   - a "More Details" link → /en/legal/acts/SLUG  (archived as HTML page)
+  #   - one or more direct PDF links on the row      (archived as documents)
+  # The detail page may list subsidiary legislation, regulations, and orders;
+  # those embedded PDFs are captured via extract_embedded_doc_links().
+  - name: legal_acts
+    label: "Legal Acts"
+    doc_type: notice
+    language: en
+    source_type: acts_hub
+    hub_url: "https://mcmc.gov.my/en/legal/acts"
+
+  # ── Dispute Resolution ────────────────────────────────────────────────────
+  # source_type: static_page
+  # Single static content page; no listing or pagination.
+  # Contains:
+  #   - Introductory text about the dispute resolution process
+  #   - Guidelines PDF download
+  #   - Form 1/2/3 (Word + PDF) for initiating / responding to a dispute
+  # The page HTML is archived once; all embedded PDF/DOCX links are
+  # extracted and archived as separate document records.
+  - name: dispute_resolution
+    label: "Dispute Resolution"
+    doc_type: notice
+    language: en
+    source_type: static_page
+    page_url: "https://mcmc.gov.my/en/legal/dispute-resolution"

@@ -1,0 +1,105 @@
+# Unified scraper config for MCMC
+# Malaysian Communications and Multimedia Commission — Kentico ASP.NET
+# Source: specific-scrapers/mcmc-scraper/configs/mcmc.yaml
+
+site_slug: mcmc
+agency: "Malaysian Communications and Multimedia Commission"
+base_url: "https://mcmc.gov.my"
+
+# Host allowlist: mcmc.gov.my for HTML pages; www.mcmc.gov.my for PDF assets
+allowed_hosts:
+  - "mcmc.gov.my"
+  - "www.mcmc.gov.my"
+
+request_delay: 1.5
+estimated_pages: 800
+
+sections:
+
+  # ── Press Releases ────────────────────────────────────────────────────────
+  - name: press_releases
+    label: "Press Releases"
+    doc_type: press_release
+    language: en
+    listing_archetype: article_list
+    listing_url: "https://mcmc.gov.my/en/media/press-releases"
+
+  # ── Announcements ─────────────────────────────────────────────────────────
+  - name: announcements
+    label: "Announcements"
+    doc_type: notice
+    language: en
+    listing_archetype: article_list
+    listing_url: "https://mcmc.gov.my/en/media/announcements"
+
+  # ── Press Clippings ───────────────────────────────────────────────────────
+  - name: press_clippings
+    label: "Press Clippings"
+    doc_type: press_release
+    language: en
+    listing_archetype: article_list
+    listing_url: "https://mcmc.gov.my/en/media/press-clippings"
+
+  # ── Publications ──────────────────────────────────────────────────────────
+  - name: publications
+    label: "Publications"
+    doc_type: report
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/resources/publications"
+
+  # ── Reports ───────────────────────────────────────────────────────────────
+  - name: reports
+    label: "Reports"
+    doc_type: report
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/resources/reports"
+
+  # ── Guidelines ────────────────────────────────────────────────────────────
+  - name: guidelines
+    label: "Guidelines"
+    doc_type: notice
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/resources/guidelines"
+
+  # ── Statistics ────────────────────────────────────────────────────────────
+  - name: statistics
+    label: "Statistics"
+    doc_type: report
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/resources/statistics"
+
+  # ── Annual Reports ────────────────────────────────────────────────────────
+  - name: annual_reports
+    label: "Annual Reports"
+    doc_type: report
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/about-us/annual-reports"
+
+  # ── Research Reports ──────────────────────────────────────────────────────
+  - name: research_reports
+    label: "Research Reports"
+    doc_type: report
+    language: en
+    listing_archetype: media_box
+    listing_url: "https://mcmc.gov.my/en/resources/research"
+
+  # ── Legal Acts ────────────────────────────────────────────────────────────
+  - name: legal_acts
+    label: "Legal Acts"
+    doc_type: notice
+    language: en
+    source_type: acts_hub
+    hub_url: "https://mcmc.gov.my/en/legal/acts"
+
+  # ── Dispute Resolution ────────────────────────────────────────────────────
+  - name: dispute_resolution
+    label: "Dispute Resolution"
+    doc_type: notice
+    language: en
+    source_type: static_page
+    page_url: "https://mcmc.gov.my/en/legal/dispute-resolution"

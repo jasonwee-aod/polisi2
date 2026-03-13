@@ -1,0 +1,209 @@
+# Site Configuration for mohe.gov.my
+# Defines RSS feeds, selectors, and extraction rules
+
+site:
+  name: "Ministry of Higher Education Malaysia"
+  slug: "mohe"
+  domain: "www.mohe.gov.my"
+  base_url: "https://www.mohe.gov.my"
+
+  # Allowed hosts (canonicalized)
+  allowed_hosts:
+    - "www.mohe.gov.my"
+    - "mohe.gov.my"
+
+# RSS Feeds (preferred source - machine-readable)
+rss_feeds:
+  - name: "announcements"
+    url_en: "https://www.mohe.gov.my/en/broadcast/announcements?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/pengumuman?format=feed&type=rss"
+    doc_type: "announcement"
+
+  - name: "media_statements"
+    url_en: "https://www.mohe.gov.my/en/broadcast/media-statements?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/kenyataan-media?format=feed&type=rss"
+    doc_type: "press_release"
+
+  - name: "activities"
+    url_en: "https://www.mohe.gov.my/en/broadcast/activities?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/sorotan-aktiviti?format=feed&type=rss"
+    doc_type: "announcement"
+
+  - name: "media_coverage"
+    url_en: "https://www.mohe.gov.my/en/broadcast/media-coverage?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/liputan-media?format=feed&type=rss"
+    doc_type: "report"
+
+  - name: "infographics"
+    url_en: "https://www.mohe.gov.my/en/broadcast/infographics?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/infografik?format=feed&type=rss"
+    doc_type: "report"
+
+  - name: "speeches"
+    url_en: "https://www.mohe.gov.my/en/broadcast/speeches?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/teks-ucapan?format=feed&type=rss"
+    doc_type: "speech"
+
+  - name: "faq"
+    url_en: "https://www.mohe.gov.my/en/broadcast/faq?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/soalan-lazim?format=feed&type=rss"
+    doc_type: "other"
+
+  - name: "job_tender"
+    url_en: "https://www.mohe.gov.my/en/broadcast/job-tender?format=feed&type=rss"
+    url_ms: "https://www.mohe.gov.my/hebahan/tender-kerja?format=feed&type=rss"
+    doc_type: "notice"
+
+# Staff Downloads (DOCman HTML, no RSS — uses .k-js-documents-table)
+listing_pages:
+  - name: "circulars_arahan_pentadbiran"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/pekeliling/arahan-pentadbiran"
+    url_en: "https://www.mohe.gov.my/en/staff/downloads/circular"
+    doc_type: "circular"
+    playwright_required: false
+    selectors:
+      item_rows: ".k-js-documents-table tr"
+      title: "a[href*='/file']"
+      published_date: "td:nth-child(2)"
+      next_page: null
+
+  - name: "circulars_data"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/pekeliling/data"
+    doc_type: "circular"
+    playwright_required: false
+    selectors:
+      item_rows: ".k-js-documents-table tr"
+      title: "a[href*='/file']"
+      published_date: "td:nth-child(2)"
+      next_page: null
+
+  - name: "circulars_ict"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/pekeliling/ict"
+    doc_type: "circular"
+    playwright_required: false
+    selectors:
+      item_rows: ".k-js-documents-table tr"
+      title: "a[href*='/file']"
+      published_date: "td:nth-child(2)"
+      next_page: null
+
+  - name: "circulars_kewangan"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/pekeliling/kewangan"
+    doc_type: "circular"
+    playwright_required: false
+    selectors:
+      item_rows: ".k-js-documents-table tr"
+      title: "a[href*='/file']"
+      published_date: "td:nth-child(2)"
+      next_page: null
+
+  - name: "circulars_pengurusan_rekod"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/pekeliling/pengurusan-rekod"
+    doc_type: "circular"
+    playwright_required: false
+    selectors:
+      item_rows: ".k-js-documents-table tr"
+      title: "a[href*='/file']"
+      published_date: "td:nth-child(2)"
+      next_page: null
+
+  - name: "forms"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/borang"
+    url_en: "https://www.mohe.gov.my/en/staff/downloads/forms"
+    doc_type: "form"
+    playwright_required: true   # JS-rendered category tree — skipped until Playwright added
+    selectors:
+      item_rows: ".k-js-documents-table tr"
+      title: "a[href*='/file']"
+      published_date: "td:nth-child(2)"
+      next_page: null
+
+  - name: "broadcasts"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/hebahan-warga"
+    url_en: "https://www.mohe.gov.my/en/staff/downloads/broadcasts"
+    doc_type: "announcement"
+    playwright_required: false
+    selectors:
+      item_rows: ".k-js-documents-table tr"
+      title: "a[href*='/file']"
+      published_date: "td:nth-child(2)"
+      next_page: null
+
+  - name: "manuals_guidelines"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/manual-dan-garis-panduan"
+    url_en: "https://www.mohe.gov.my/en/staff/downloads/manuals-and-guidelines"
+    doc_type: "manual"
+    playwright_required: false
+    selectors:
+      item_rows: ".k-js-documents-table tr"
+      title: "a[href*='/file']"
+      published_date: "td:nth-child(2)"
+      next_page: null
+
+  - name: "faq_downloads"
+    url_ms: "https://www.mohe.gov.my/warga/muat-turun/soalan-lazim"
+    url_en: "https://www.mohe.gov.my/en/staff/downloads/faq"
+    doc_type: "other"
+    playwright_required: false
+    selectors:
+      item_rows: ".k-js-documents-table tr"
+      title: "a[href*='/file']"
+      published_date: "td:nth-child(2)"
+      next_page: null
+
+# Metadata extraction rules
+metadata:
+  agency: "Ministry of Higher Education (MOHE)"
+  language_map:
+    en: "en"
+    ms: "ms"
+  doc_types:
+    announcement: "announcement"
+    press_release: "press_release"
+    report: "report"
+    speech: "speech"
+    notice: "notice"
+    statement: "press_release"
+    circular: "circular"
+    form: "form"
+    manual: "manual"
+    guideline: "guideline"
+    other: "other"
+
+# Date parsing hints
+date_parsing:
+  formats:
+    - "%d %B %Y"          # 27 February 2026
+    - "%d-%m-%Y"          # 27-02-2026
+    - "%Y-%m-%d"          # 2026-02-27
+    - "%d/%m/%Y"          # 27/02/2026
+    - "%A, %d %B %Y"      # Thursday, 27 February 2026
+  locales:
+    ms:
+      - "Januari"
+      - "Februari"
+      - "Mac"
+      - "April"
+      - "Mei"
+      - "Jun"
+      - "Julai"
+      - "Ogos"
+      - "September"
+      - "Oktober"
+      - "November"
+      - "Disember"
+
+# Crawl behavior
+crawl:
+  request_timeout: 30
+  max_retries: 3
+  retry_backoff_factor: 2
+  batch_size: 50
+  respect_robots_txt: true
+  user_agent: "MOHEScraper/1.0 (+https://github.com/your-org/mohe-scraper)"
+
+# Deduplication thresholds
+dedup:
+  url_match_weight: 1.0
+  etag_match_weight: 0.9
+  sha256_match_weight: 1.0

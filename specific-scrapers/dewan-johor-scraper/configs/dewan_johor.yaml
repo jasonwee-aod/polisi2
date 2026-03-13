@@ -1,0 +1,101 @@
+site_slug: dewan-johor
+agency: "Dewan Negeri Johor"
+base_url: "https://dewannegeri.johor.gov.my"
+
+allowed_hosts:
+  - "dewannegeri.johor.gov.my"
+
+# Sitemap index: https://dewannegeri.johor.gov.my/wp-sitemap.xml
+# WordPress native sitemap (no Yoast/RankMath – built-in WP 5.5+ sitemap).
+# Child sitemaps discovered:
+#   wp-sitemap-posts-post-1.xml       (blog/announcement posts)
+#   wp-sitemap-posts-page-1.xml       (static pages)
+#   wp-sitemap-posts-wpdmpro-1.xml    (WP Download Manager packages)
+#   wp-sitemap-posts-ahli-1.xml       (member profiles – not scraped)
+#   wp-sitemap-taxonomies-*           (taxonomy terms – not scraped)
+#   wp-sitemap-users-1.xml            (user profiles – not scraped)
+
+sections:
+
+  # ── Pengumuman (Announcements / Press Releases) ─────────────────────────────
+  # Standard WordPress blog posts under category "pengumuman".
+  # Uses WP native sitemap for discovery; each item is an HTML article page.
+  - name: pengumuman
+    label: "Pengumuman"
+    doc_type: press_release
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewannegeri.johor.gov.my/wp-sitemap-posts-post-1.xml"
+
+  # ── Penyata Rasmi / Download Packages (WP Download Manager) ─────────────────
+  # Session documents served via WP Download Manager Pro (wpdmpro post type).
+  # Each package page (/download/{date}/) lists one or more downloadable files.
+  # The actual file links are `a.inddl[href*="wpdmdl"]` redirect URLs that
+  # resolve to PDFs in wp-content/uploads/.
+  # Organized by session periods via download categories.
+  - name: penyata_rasmi
+    label: "Penyata Rasmi"
+    doc_type: report
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewannegeri.johor.gov.my/wp-sitemap-posts-wpdmpro-1.xml"
+
+  # ── Penyata Rasmi Verbatim Records hub (/pr/) ────────────────────────────────
+  # Single-page hub listing all verbatim records across 4 Dewan levels (Ke-12
+  # through Ke-15).  No pagination; all PDF links are embedded directly in the
+  # page inside a Divi accordion.  Date is extracted from document title text
+  # using Malay month names.
+  - name: pr
+    label: "Penyata Rasmi (Verbatim)"
+    doc_type: verbatim
+    language: ms
+    source_type: pr_hub
+    hub_url: "https://dewannegeri.johor.gov.my/pr/"
+
+  # ── Soalan & Jawapan Lisan (Oral Questions) hub (/sdjl/) ─────────────────────
+  # Single-page Divi accordion hub listing oral-question PDFs for Dewan Ke-15.
+  # No top-level Dewan h2; meeting headers are <p><strong>Mesyuarat N</strong></p>.
+  # Link text is the document date (Malay format: "19 Mei 2025").
+  # ~88 PDFs covering 2019–2025; no pagination.
+  - name: sdjl
+    label: "Soalan & Jawapan Lisan"
+    doc_type: oral_questions
+    language: ms
+    source_type: sdjl_hub
+    hub_url: "https://dewannegeri.johor.gov.my/sdjl/"
+
+  # ── Soalan & Jawapan Bertulis (Written Questions) hub (/sdjb/) ───────────────
+  # Structurally identical to /sdjl/: single Divi accordion, p>strong meeting
+  # headers, single-cell tables where the link text is the date.
+  # Reuses the sdjl_hub source_type and extractor.
+  # ~3+ PDFs covering 2025; no pagination.
+  - name: sdjb
+    label: "Soalan & Jawapan Bertulis"
+    doc_type: written_questions
+    language: ms
+    source_type: sdjl_hub
+    hub_url: "https://dewannegeri.johor.gov.my/sdjb/"
+
+  # ── Rang Undang-Undang / Enakmen (Bills / Ordinances) (/rang-undang-undang-enakmen/)
+  # Single-page Divi accordion with 4-column tables:
+  #   Bil | Tarikh | Perkara | Muat Turun
+  # Date is in the Tarikh column (Malay month names).
+  # Title is in the Perkara column.
+  # Download link is in the Muat Turun column.
+  # Currently sparse (many rows empty/placeholder); extractor skips rows without links.
+  - name: ruu
+    label: "Rang Undang-Undang / Enakmen"
+    doc_type: legislation
+    language: ms
+    source_type: ruu_hub
+    hub_url: "https://dewannegeri.johor.gov.my/rang-undang-undang-enakmen/"
+
+  # ── Static Pages (optional – uncomment to enable) ───────────────────────────
+  # 64 static pages from the page sitemap. Most are institutional/structural
+  # (about, org chart, contact). Enable if you need archival of static pages.
+  # - name: static_pages
+  #   label: "Static Pages"
+  #   doc_type: other
+  #   language: ms
+  #   source_type: sitemap
+  #   sitemap_url: "https://dewannegeri.johor.gov.my/wp-sitemap-posts-page-1.xml"

@@ -1,0 +1,27 @@
+node_modules
+.next/
+*.egg-info/
+__pycache__/
+.cache/
+.DS_Store
+*.pyc
+
+# Environment / secrets
+.env
+.env.local
+api/.env
+scraper/.env
+web/.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Build artifacts
+web/tsconfig.tsbuildinfo
+
+# Runtime data
+scraper/data/state/
+scraper/data/manifests/
+*.sqlite3

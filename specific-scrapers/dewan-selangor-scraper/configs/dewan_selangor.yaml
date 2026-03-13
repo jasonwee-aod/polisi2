@@ -1,0 +1,131 @@
+site_slug: dewan-selangor
+agency: "Dewan Negeri Selangor"
+base_url: "https://dewan.selangor.gov.my"
+
+allowed_hosts:
+  - "dewan.selangor.gov.my"
+
+# Sitemap index: https://dewan.selangor.gov.my/sitemap_index.xml
+# Child sitemaps discovered:
+#   post-sitemap.xml          (general WordPress posts – berita dewan, etc.)
+#   page-sitemap.xml          (static pages)
+#   urusan-mesyuarat-sitemap.xml  (meeting proceedings)
+#   hansard-sitemap.xml       (parliamentary records)
+#   ucapan-sitemap.xml        (speeches)
+#   statement-sitemap.xml     (committee statements)
+#   sidang-sitemap.xml        (sessions)
+
+sections:
+
+  # ── Berita Dewan (Assembly News) ─────────────────────────────────────────
+  # WordPress posts; paginated archive listing at /berita-dewan/
+  # Each item is an HTML article page; some embed PDFs via pdfjs-viewer.
+  - name: berita_dewan
+    label: "Berita Dewan"
+    doc_type: press_release
+    language: ms
+    source_type: listing
+    listing_pages:
+      - url: "https://dewan.selangor.gov.my/berita-dewan/"
+        label: "Berita Dewan"
+
+  # ── Kenyataan Media (Media Statements) ────────────────────────────────────
+  - name: kenyataan_media
+    label: "Kenyataan Media"
+    doc_type: statement
+    language: ms
+    source_type: listing
+    listing_pages:
+      - url: "https://dewan.selangor.gov.my/kenyataan-media/"
+        label: "Kenyataan Media"
+
+  # ── Media Perdana ──────────────────────────────────────────────────────────
+  - name: media_perdana
+    label: "Media Perdana"
+    doc_type: press_release
+    language: ms
+    source_type: listing
+    listing_pages:
+      - url: "https://dewan.selangor.gov.my/media-perdana/"
+        label: "Media Perdana"
+
+  # ── Ucapan (Speeches & Addresses) ─────────────────────────────────────────
+  # Custom post type; sitemap available.
+  - name: ucapan
+    label: "Ucapan"
+    doc_type: speech
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewan.selangor.gov.my/ucapan-sitemap.xml"
+
+  # ── Penyata Jawatankuasa (Committee Statements) ────────────────────────────
+  # Custom post type "statement"; sitemap available.
+  - name: penyata_jawatankuasa
+    label: "Penyata Jawatankuasa"
+    doc_type: statement
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewan.selangor.gov.my/statement-sitemap.xml"
+
+  # ── Hansard (Parliamentary Records) ───────────────────────────────────────
+  # Custom post type "hansard"; sitemap available.
+  # URLs follow pattern: /hansard/YYMM/ (e.g. /hansard/2512/ = December 2025)
+  - name: hansard
+    label: "Hansard"
+    doc_type: report
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewan.selangor.gov.my/hansard-sitemap.xml"
+
+  # ── Urusan Mesyuarat (Meeting Proceedings) ────────────────────────────────
+  # Custom post type; sitemap available.
+  - name: urusan_mesyuarat
+    label: "Urusan Mesyuarat"
+    doc_type: notice
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewan.selangor.gov.my/urusan-mesyuarat-sitemap.xml"
+
+  # ── Sidang (Sessions) ─────────────────────────────────────────────────────
+  - name: sidang
+    label: "Sidang"
+    doc_type: notice
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewan.selangor.gov.my/sidang-sitemap.xml"
+
+  # ── e-QUANS (Soalan Mulut dan Soalan Bertulis) ────────────────────────────
+  # Oral and written assembly questions with answers, going back to 2008.
+  # Listing URL is /question/ (Bootstrap-paginated, ~4900+ pages).
+  # Each question page has: title, sitting date range, Q+A text, and optional
+  # document attachments. source_type "equans" uses Bootstrap pagination
+  # (li.page-item.next) instead of the standard WordPress next-page link.
+  - name: equans
+    label: "Soalan Mulut dan Soalan Bertulis (e-QUANS)"
+    doc_type: report
+    language: ms
+    source_type: equans
+    listing_url: "https://dewan.selangor.gov.my/question/"
+
+  # ── Penyata Rasmi / Hansard PDFs ──────────────────────────────────────────
+  # 3-level hub: /penyata-rasmi/ → /hansard/sesi-N-N/ session pages → PDFs.
+  # Each PDF represents one sitting day's official parliamentary record.
+  # source_type "hub" fetches the hub index, then each session page, then
+  # archives the individual dated PDFs as `report` documents.
+  - name: penyata_rasmi
+    label: "Penyata Rasmi"
+    doc_type: report
+    language: ms
+    source_type: hub
+    hub_page: "https://dewan.selangor.gov.my/penyata-rasmi/"
+
+  # ── Berita CPA (CPA News) ─────────────────────────────────────────────────
+  # Optional – uncomment to enable.
+  # - name: berita_cpa
+  #   label: "Berita CPA"
+  #   doc_type: press_release
+  #   language: ms
+  #   source_type: listing
+  #   listing_pages:
+  #     - url: "https://dewan.selangor.gov.my/berita-cpa/"
+  #       label: "Berita CPA"

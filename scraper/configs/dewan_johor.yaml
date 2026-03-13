@@ -1,0 +1,63 @@
+# Unified scraper config for Dewan Negeri Johor
+# WordPress + WP Download Manager + Divi theme
+# Source: specific-scrapers/dewan-johor-scraper/configs/dewan_johor.yaml
+
+site_slug: dewan-johor
+agency: "Dewan Negeri Johor"
+base_url: "https://dewannegeri.johor.gov.my"
+
+allowed_hosts:
+  - "dewannegeri.johor.gov.my"
+
+request_delay: 1.5
+estimated_pages: 300
+
+sections:
+
+  # ── Pengumuman (Announcements / Press Releases) ─────────────────────────────
+  - name: pengumuman
+    label: "Pengumuman"
+    doc_type: press_release
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewannegeri.johor.gov.my/wp-sitemap-posts-post-1.xml"
+
+  # ── Penyata Rasmi / Download Packages (WP Download Manager) ─────────────────
+  - name: penyata_rasmi
+    label: "Penyata Rasmi"
+    doc_type: report
+    language: ms
+    source_type: sitemap
+    sitemap_url: "https://dewannegeri.johor.gov.my/wp-sitemap-posts-wpdmpro-1.xml"
+
+  # ── Penyata Rasmi Verbatim Records hub (/pr/) ────────────────────────────────
+  - name: pr
+    label: "Penyata Rasmi (Verbatim)"
+    doc_type: verbatim
+    language: ms
+    source_type: pr_hub
+    hub_url: "https://dewannegeri.johor.gov.my/pr/"
+
+  # ── Soalan & Jawapan Lisan (Oral Questions) hub (/sdjl/) ─────────────────────
+  - name: sdjl
+    label: "Soalan & Jawapan Lisan"
+    doc_type: oral_questions
+    language: ms
+    source_type: sdjl_hub
+    hub_url: "https://dewannegeri.johor.gov.my/sdjl/"
+
+  # ── Soalan & Jawapan Bertulis (Written Questions) hub (/sdjb/) ───────────────
+  - name: sdjb
+    label: "Soalan & Jawapan Bertulis"
+    doc_type: written_questions
+    language: ms
+    source_type: sdjl_hub
+    hub_url: "https://dewannegeri.johor.gov.my/sdjb/"
+
+  # ── Rang Undang-Undang / Enakmen (Bills / Ordinances) ────────────────────────
+  - name: ruu
+    label: "Rang Undang-Undang / Enakmen"
+    doc_type: legislation
+    language: ms
+    source_type: ruu_hub
+    hub_url: "https://dewannegeri.johor.gov.my/rang-undang-undang-enakmen/"

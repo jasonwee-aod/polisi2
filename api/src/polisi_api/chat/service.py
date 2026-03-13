@@ -15,7 +15,7 @@ from .detector import detect_language, needs_clarification
 from .prompting import (
     PromptPackage,
     build_clarification_text,
-    build_no_information_text,
+    build_general_knowledge_prefix,
     build_prompt,
     build_weak_support_prefix,
 )
@@ -87,15 +87,24 @@ class ChatService:
 
         retrieved = await self._retriever.retrieve(question, limit=self._settings.retrieval_limit)
         if not retrieved or retrieved[0].similarity < self._settings.retrieval_min_similarity:
+            # No DB match — answer from Claude's general knowledge
+            prompt = build_prompt(
+                question=question,
+                language=language,
+                contexts=[],
+                support_mode="none",
+            )
+            answer = await self._generator.generate(prompt)
+            answer = f"{build_general_knowledge_prefix(language)}\n\n{answer}".strip()
             response = AssistantResponse(
                 conversation_id=conversation_value,
                 message_id=uuid4(),
                 language=language,
-                answer=build_no_information_text(language),
+                answer=answer,
                 citations=[],
-                kind="no-information",
+                kind="general-knowledge",
             )
-            return GeneratedReply(response=response, kind="no-information", retrieved_chunks=[])
+            return GeneratedReply(response=response, kind="general-knowledge", retrieved_chunks=[])
 
         support_mode = (
             "weak"

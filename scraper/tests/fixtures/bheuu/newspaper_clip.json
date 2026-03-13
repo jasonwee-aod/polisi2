@@ -1,0 +1,16 @@
+{
+  "_id": "66a3977796f27e103aee54cb",
+  "createdAt": "2024-07-26T12:32:55.596Z",
+  "updatedAt": "2024-07-27T14:05:06.951Z",
+  "__v": 0,
+  "pdfFile": {
+    "_id": "66a4fe7156203d12aa0e2ee1",
+    "name": "Keratan_Akhbar.pdf",
+    "ext": ".pdf",
+    "mime": "application/pdf",
+    "size": 614.32,
+    "url": "/uploads/Keratan_Akhbar_06f57bf1ac.pdf",
+    "provider": "local"
+  },
+  "id": "66a3977796f27e103aee54cb"
+}

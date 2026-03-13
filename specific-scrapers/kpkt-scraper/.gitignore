@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment / secrets
+.env
+*.env
+
+# Data / runtime artefacts
+data/state.db
+data/state*.db
+data/manifests/**/*.jsonl
+records.jsonl
+crawl_runs.jsonl
+
+# GCP credentials
+*.json
+!pyproject.toml
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# pytest cache
+.pytest_cache/
+.coverage
+htmlcov/

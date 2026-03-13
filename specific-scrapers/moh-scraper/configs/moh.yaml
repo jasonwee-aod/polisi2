@@ -1,0 +1,124 @@
+site_slug: moh
+agency: "Ministry of Health Malaysia (Kementerian Kesihatan Malaysia)"
+
+base_url: "https://www.moh.gov.my"
+
+# All HTML pages and PDFs are served from www.moh.gov.my.
+# PDFs live under /images/... on the same host.
+allowed_hosts:
+  - "www.moh.gov.my"
+
+# No sitemap.xml on moh.gov.my.
+# Discovery uses seeded listing URLs with Joomla offset pagination (?start=N).
+# Listing archetype: Joomla 4 com_content category table view (all sections).
+
+sections:
+
+  # ── Media Statements / Kenyataan Media ────────────────────────────────────
+  # URL pattern: /en/media-kkm/media-statement/{YEAR}?start=N
+  # Joomla category table: one row per statement, date format "DD-MM-YYYY"
+  # Detail page: HTML article with embedded PDF download link
+  # Archive: HTML article + embedded PDFs
+  - name: media_statements
+    label: "Media Statements (Kenyataan Media)"
+    doc_type: press_release
+    language: ms
+    source_type: listing
+    listing_url_template: "https://www.moh.gov.my/en/media-kkm/media-statement/{year}"
+    year_from: 2018
+    year_to: 2026
+    page_size: 10
+
+  # ── Speech Texts / Teks Ucapan ────────────────────────────────────────────
+  # URL: /en/media-kkm/speech-text?start=N
+  # Contains ministerial and DG speeches; detail pages may include PDFs.
+  - name: speech_texts
+    label: "Speech Texts (Teks Ucapan)"
+    doc_type: speech
+    language: ms
+    source_type: listing
+    listing_url: "https://www.moh.gov.my/en/media-kkm/speech-text"
+    page_size: 10
+
+  # ── Circulars / Pekeliling ────────────────────────────────────────────────
+  # URL: /en/publications-and-reports/circulars?start=N
+  # Circular detail pages typically link to PDF attachments.
+  - name: circulars
+    label: "Circulars (Pekeliling)"
+    doc_type: notice
+    language: ms
+    source_type: listing
+    listing_url: "https://www.moh.gov.my/en/publications-and-reports/circulars"
+    page_size: 10
+
+  # ── Bulletins ─────────────────────────────────────────────────────────────
+  # URL: /en/publications-and-reports/bulletins-reference/bulletins?start=N
+  # Health bulletins; detail pages link to PDFs.
+  - name: bulletins
+    label: "Bulletins"
+    doc_type: report
+    language: en
+    source_type: listing
+    listing_url: "https://www.moh.gov.my/en/publications-and-reports/bulletins-reference/bulletins"
+    page_size: 10
+
+  # ── News Clippings / Keratan Akhbar ──────────────────────────────────────
+  # URL: /media-kkm/keratan-akhbar?start=N  (Malay URL, no /en/ prefix)
+  # Listing: Joomla category table; each row → month sub-page (e.g. /mac-2026)
+  # Month sub-page: HTML table with daily PDF links under /images/keratan-akhbar/...
+  # Archive: HTML month page + all embedded day PDFs
+  # Note: detail page uses plain text dates ("01 Mac 2026") — date field may be empty;
+  #       listing date_text is used as fallback.
+  - name: keratan_akhbar
+    label: "News Clippings (Keratan Akhbar)"
+    doc_type: press_release
+    language: ms
+    source_type: listing
+    listing_url: "https://www.moh.gov.my/media-kkm/keratan-akhbar"
+    page_size: 10
+
+  # ── Annual Reports / Laporan Tahunan ─────────────────────────────────────
+  # URL: /en/publications-and-reports/infographics-reports-statistics/annual-report
+  # Listing: standard Joomla category table (com-content-category__table)
+  # All reports (2009–2024) fit on one page — no pagination needed.
+  # Detail page: Joomla article → embedded PDF at /images/04-penerbitan/laporan-tahunan/
+  # Archive: HTML detail page + embedded PDF
+  - name: annual_reports
+    label: "Annual Reports (Laporan Tahunan)"
+    doc_type: report
+    language: en
+    source_type: listing
+    listing_url: "https://www.moh.gov.my/en/publications-and-reports/infographics-reports-statistics/annual-report"
+    page_size: 100
+
+  # ── Policies, Acts & Guidelines / Polisi, Akta & Garis Panduan ───────────
+  # Hub: /en/publications-and-reports/policies-act-policies-guide-lines/
+  # 10 sub-sections, each a standard Joomla category table with ?start=N pagination.
+  # Detail pages contain PDF downloads; embedded docs extracted automatically.
+  - name: policies_guidelines
+    label: "Policies, Acts & Guidelines (Polisi, Akta & Garis Panduan)"
+    doc_type: policy
+    language: ms
+    source_type: listing
+    listing_urls:
+      # 1. General Guidelines – Public
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/garis-panduan-umum-awam"
+      # 2. General Guidelines – Ministry (KKM)
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/garis-panduan-umum-kkm"
+      # 3. Management Publications
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/penerbitan-pengurusan"
+      # 4. Policy Documents
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/polisi"
+      # 5. Health Acts
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/akta-kesihatan"
+      # 6. Clinical Publications
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/penerbitan-klinikal"
+      # 7. Health White Papers
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/kertas-putih-kesihatan"
+      # 8. Strategic Plans
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/strategic-plan"
+      # 9. Risk Management Plans
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/risk-management-plan"
+      # 10. Cybersecurity
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/keselamatan-siber"
+    page_size: 10

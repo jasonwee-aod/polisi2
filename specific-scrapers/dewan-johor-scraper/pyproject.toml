@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "dewan-johor-scraper"
+version = "1.0.0"
+description = "Production-grade scraper for dewannegeri.johor.gov.my – archives public documents to GCS for RAG pipelines"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31,<3",
+    "beautifulsoup4>=4.12,<5",
+    "lxml>=5.0,<6",
+    "python-dateutil>=2.9,<3",
+    "google-cloud-storage>=2.14,<3",
+    "tenacity>=8.2,<9",
+    "pyyaml>=6.0,<7",
+    "click>=8.1,<9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0,<9",
+    "pytest-cov>=5.0,<6",
+]
+playwright = [
+    "playwright>=1.44,<2",
+]
+
+[project.scripts]
+dewan-johor-scraper = "dewan_johor_scraper.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["src/dewan_johor_scraper"]
+omit = ["tests/*"]

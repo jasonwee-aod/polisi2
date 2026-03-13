@@ -1,0 +1,49 @@
+# Unified scraper config for IDFR
+# Institut Diplomasi dan Hubungan Luar Negeri — Joomla 4
+# Source: specific-scrapers/idfr-scraper/configs/idfr.yaml
+
+site_slug: idfr
+agency: "Institut Diplomasi dan Hubungan Luar Negeri (IDFR)"
+base_url: "https://www.idfr.gov.my"
+
+allowed_hosts:
+  - "www.idfr.gov.my"
+  - "idfr.gov.my"
+
+request_delay: 1.5
+estimated_pages: 100
+
+sections:
+
+  # ── Press Releases ───────────────────────────────────────────────────────────
+  - name: press
+    label: "Press Releases"
+    doc_type: press_release
+    language: ms
+    source_type: press_listing
+    listing_url: "https://www.idfr.gov.my/my/media-1/press"
+
+  # ── Speeches ─────────────────────────────────────────────────────────────────
+  - name: speeches
+    label: "Speeches"
+    doc_type: speech
+    language: en
+    source_type: speeches_listing
+    listing_urls:
+      - "https://www.idfr.gov.my/my/media-1/speeches"
+
+  # ── Publications Hub ──────────────────────────────────────────────────────────
+  - name: publications
+    label: "Publications"
+    doc_type: report
+    language: en
+    source_type: publications_hub
+    hub_url: "https://www.idfr.gov.my/my/publications"
+
+  # ── JDFR Journal Archive (component page) ─────────────────────────────────────
+  - name: jdfr_archive
+    label: "JDFR Journal Archive"
+    doc_type: report
+    language: en
+    source_type: article_body_listing
+    listing_url: "https://www.idfr.gov.my/my/component/content/article/1520-jdfr?Itemid=2352"

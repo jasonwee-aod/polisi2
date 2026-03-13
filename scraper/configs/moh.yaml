@@ -1,0 +1,90 @@
+# Unified scraper config for MOH
+# Ministry of Health Malaysia — Joomla 4, offset pagination
+# Source: specific-scrapers/moh-scraper/configs/moh.yaml
+
+site_slug: moh
+agency: "Ministry of Health Malaysia (Kementerian Kesihatan Malaysia)"
+base_url: "https://www.moh.gov.my"
+
+allowed_hosts:
+  - "www.moh.gov.my"
+
+request_delay: 1.5
+estimated_pages: 1500
+
+sections:
+
+  # ── Media Statements / Kenyataan Media ────────────────────────────────────
+  - name: media_statements
+    label: "Media Statements (Kenyataan Media)"
+    doc_type: press_release
+    language: ms
+    source_type: listing
+    listing_url_template: "https://www.moh.gov.my/en/media-kkm/media-statement/{year}"
+    year_from: 2018
+    year_to: 2026
+    page_size: 10
+
+  # ── Speech Texts / Teks Ucapan ────────────────────────────────────────────
+  - name: speech_texts
+    label: "Speech Texts (Teks Ucapan)"
+    doc_type: speech
+    language: ms
+    source_type: listing
+    listing_url: "https://www.moh.gov.my/en/media-kkm/speech-text"
+    page_size: 10
+
+  # ── Circulars / Pekeliling ────────────────────────────────────────────────
+  - name: circulars
+    label: "Circulars (Pekeliling)"
+    doc_type: notice
+    language: ms
+    source_type: listing
+    listing_url: "https://www.moh.gov.my/en/publications-and-reports/circulars"
+    page_size: 10
+
+  # ── Bulletins ─────────────────────────────────────────────────────────────
+  - name: bulletins
+    label: "Bulletins"
+    doc_type: report
+    language: en
+    source_type: listing
+    listing_url: "https://www.moh.gov.my/en/publications-and-reports/bulletins-reference/bulletins"
+    page_size: 10
+
+  # ── News Clippings / Keratan Akhbar ──────────────────────────────────────
+  - name: keratan_akhbar
+    label: "News Clippings (Keratan Akhbar)"
+    doc_type: press_release
+    language: ms
+    source_type: listing
+    listing_url: "https://www.moh.gov.my/media-kkm/keratan-akhbar"
+    page_size: 10
+
+  # ── Annual Reports / Laporan Tahunan ─────────────────────────────────────
+  - name: annual_reports
+    label: "Annual Reports (Laporan Tahunan)"
+    doc_type: report
+    language: en
+    source_type: listing
+    listing_url: "https://www.moh.gov.my/en/publications-and-reports/infographics-reports-statistics/annual-report"
+    page_size: 100
+
+  # ── Policies, Acts & Guidelines ───────────────────────────────────────────
+  - name: policies_guidelines
+    label: "Policies, Acts & Guidelines (Polisi, Akta & Garis Panduan)"
+    doc_type: policy
+    language: ms
+    source_type: listing
+    listing_urls:
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/garis-panduan-umum-awam"
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/garis-panduan-umum-kkm"
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/penerbitan-pengurusan"
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/polisi"
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/akta-kesihatan"
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/penerbitan-klinikal"
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/kertas-putih-kesihatan"
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/strategic-plan"
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/risk-management-plan"
+      - "https://www.moh.gov.my/en/publications-and-reports/policies-act-policies-guide-lines/keselamatan-siber"
+    page_size: 10

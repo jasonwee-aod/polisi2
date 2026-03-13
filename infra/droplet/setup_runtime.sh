@@ -40,11 +40,12 @@ fi
 python3 -m venv "$VENV_DIR"
 "$VENV_DIR/bin/pip" install --upgrade pip
 "$VENV_DIR/bin/pip" install -e "$REPO_DIR/scraper"
+"$VENV_DIR/bin/pip" install -e "$REPO_DIR/api"
 
 cat <<RUNTIME_OK
 Runtime provisioned:
 - app root: $APP_ROOT
 - repo dir: $REPO_DIR
 - venv: $VENV_DIR
-- parser, embedding, and postgres client deps installed from scraper/pyproject.toml
+- scraper, indexer, and API deps installed
 RUNTIME_OK

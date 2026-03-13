@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+.env
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Project state and output (keep .gitkeep files)
+data/state.db
+data/manifests/dewan-selangor/records.jsonl
+data/manifests/dewan-selangor/crawl_runs.jsonl
+
+# macOS
+.DS_Store

@@ -1,0 +1,84 @@
+# Unified scraper config for KPKT
+# Kementerian Perumahan dan Kerajaan Tempatan — Custom Joomla
+# Source: specific-scrapers/kpkt-scraper/configs/kpkt.yaml
+
+site_slug: kpkt
+agency: "Kementerian Perumahan dan Kerajaan Tempatan"
+base_url: "https://www.kpkt.gov.my"
+
+allowed_hosts:
+  - "www.kpkt.gov.my"
+  - "kpkt.gov.my"
+
+request_delay: 1.5
+estimated_pages: 400
+
+sections:
+
+  # ── Siaran Media (Press Releases) ─────────────────────────────────────────
+  - name: siaran_media
+    doc_type: press_release
+    language: ms
+    listing_pages:
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/3760?mid=765"
+        label: "Siaran Media 2026"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/3470?mid=764"
+        label: "Siaran Media 2025"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/2590?mid=732"
+        label: "Siaran Media 2024"
+
+  # ── Muat Turun / Downloads Hub ────────────────────────────────────────────
+  - name: muat_turun
+    page_type: hub
+    doc_type: legislation
+    language: ms
+    listing_pages:
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/1026"
+        label: "Muat Turun Hub"
+
+  # ── Statistik KPKT (Annual & Quarterly Statistics) ────────────────────────
+  - name: statistik_kpkt
+    page_type: attachments
+    doc_type: report
+    language: ms
+    listing_pages:
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/700?mid=586"
+        label: "Statistik KPKT 2017-2024"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/431"
+        label: "Statistik KPKT 2016"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/351"
+        label: "Statistik KPKT 2015"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/167"
+        label: "Statistik KPKT 2014"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/188"
+        label: "Statistik KPKT 2013"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/190"
+        label: "Statistik KPKT 2012"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/192"
+        label: "Statistik KPKT 2011"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/194"
+        label: "Statistik KPKT 2010"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/196"
+        label: "Statistik KPKT 2009"
+
+  # ── Piagam Pelanggan (Customer Charter Achievement Statistics) ─────────────
+  - name: piagam_pelanggan
+    page_type: attachments
+    doc_type: report
+    language: ms
+    listing_pages:
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/131"
+        label: "Piagam Pelanggan (Current)"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/137"
+        label: "Piagam Pelanggan (Archive)"
+
+  # ── Statistik Perkhidmatan Dalam Talian (Online Services Stats) ────────────
+  - name: statistik_online
+    page_type: attachments
+    doc_type: report
+    language: ms
+    listing_pages:
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/121"
+        label: "Statistik Online (Current)"
+      - url: "https://www.kpkt.gov.my/index.php/pages/view/128"
+        label: "Statistik Online (Archive)"

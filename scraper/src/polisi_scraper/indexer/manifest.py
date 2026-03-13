@@ -37,7 +37,11 @@ class SpacesObject:
 
     @property
     def title(self) -> str:
-        return Path(self.filename).stem.replace("_", " ").strip() or self.filename
+        stem = Path(self.filename).stem
+        # Strip leading hex hash prefix (e.g. "005aa2f70136fe53_") added by the scraper
+        if len(stem) > 17 and stem[16] == "_" and all(c in "0123456789abcdef" for c in stem[:16]):
+            stem = stem[17:]
+        return stem.replace("_", " ").replace("-", " ").strip() or self.filename
 
 
 @dataclass(frozen=True)
@@ -133,10 +137,15 @@ class SpacesCorpusManifest:
     def _normalize_object(self, raw_object: dict[str, Any]) -> SpacesObject:
         key = raw_object["Key"]
         parts = key.split("/")
-        if len(parts) != 4 or parts[0] != "gov-my":
+        # Support both gov-my/{agency}/{year}/{file} and polisi/gov-my/{agency}/{year}/{file}
+        if len(parts) == 5 and parts[0] == "polisi" and parts[1] == "gov-my":
+            agency_part, year_month_part, filename_part = parts[2], parts[3], parts[4]
+        elif len(parts) == 4 and parts[0] == "gov-my":
+            agency_part, year_month_part, filename_part = parts[1], parts[2], parts[3]
+        else:
             raise ManifestError(f"Unsupported storage path: {key}")
 
-        filename = parts[3]
+        filename = filename_part
         suffix = Path(filename).suffix.lower()
         if suffix not in {".html", ".pdf", ".docx", ".xlsx"}:
             raise ManifestError(f"Unsupported file type in storage path: {key}")
@@ -150,8 +159,8 @@ class SpacesCorpusManifest:
         )
         return SpacesObject(
             storage_path=key,
-            agency=parts[1],
-            year_month=parts[2],
+            agency=agency_part,
+            year_month=year_month_part,
             filename=filename,
             file_type=suffix.lstrip("."),
             version_token=str(version_token),

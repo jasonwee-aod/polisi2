@@ -1,0 +1,71 @@
+site_slug: idfr
+agency: "Institut Diplomasi dan Hubungan Luar Negeri (IDFR)"
+base_url: "https://www.idfr.gov.my"
+
+allowed_hosts:
+  - "www.idfr.gov.my"
+  - "idfr.gov.my"
+
+# ── Notes ──────────────────────────────────────────────────────────────────────
+# Site: https://www.idfr.gov.my/my/
+# CMS:  Joomla 4 + Helix Ultimate template + SP Page Builder
+# No sitemap.xml or RSS feeds available – all discovery via HTML parsing.
+#
+# Robots.txt: 404 (not configured)
+# Pagination:  None – all content is on single listing pages, organized by year.
+# Date info:  Press releases expose year only; speeches may include full dates.
+#
+# Speeches – multiple year pages:
+#   The main /my/media-1/speeches page covers the current year.
+#   Earlier years may be available at /my/media-1/speeches-YYYY or similar paths.
+#   Add additional listing_urls entries below if you discover working year URLs.
+# ──────────────────────────────────────────────────────────────────────────────
+
+sections:
+
+  # ── Press Releases ───────────────────────────────────────────────────────────
+  # Single page listing all press releases grouped by year headings.
+  # Items are deeply nested <li><a href="...pdf">TITLE</a></li> elements.
+  # Date resolution: year only ("YYYY-01-01") – no day/month in source.
+  - name: press
+    label: "Press Releases"
+    doc_type: press_release
+    language: ms
+    source_type: press_listing
+    listing_url: "https://www.idfr.gov.my/my/media-1/press"
+
+  # ── Speeches ─────────────────────────────────────────────────────────────────
+  # One HTML table per year page.
+  # listing_urls lists all known yearly speech pages.
+  # Add earlier years (e.g. "https://www.idfr.gov.my/my/media-1/speeches-2024")
+  # once you confirm their URLs.
+  - name: speeches
+    label: "Speeches"
+    doc_type: speech
+    language: en
+    source_type: speeches_listing
+    listing_urls:
+      - "https://www.idfr.gov.my/my/media-1/speeches"
+
+  # ── Publications Hub ──────────────────────────────────────────────────────────
+  # SP Page Builder hub page linking to:
+  #   - Direct PDFs: Prospectus, Annual Reports
+  #   - Sub-listing pages: Newsletter archive, JDFR journal, Other publications
+  # Sub-listing pages are fetched automatically via the publications_hub handler.
+  - name: publications
+    label: "Publications"
+    doc_type: report
+    language: en
+    source_type: publications_hub
+    hub_url: "https://www.idfr.gov.my/my/publications"
+
+  # ── JDFR Journal Archive (component page) ─────────────────────────────────────
+  # The main /my/publication/jdfr sub-page only shows the latest issue.
+  # This Joomla component page contains the full journal archive (~26 PDFs, 1999–2024).
+  # It is not auto-discovered via the publications hub, so listed explicitly here.
+  - name: jdfr_archive
+    label: "JDFR Journal Archive"
+    doc_type: report
+    language: en
+    source_type: article_body_listing
+    listing_url: "https://www.idfr.gov.my/my/component/content/article/1520-jdfr?Itemid=2352"

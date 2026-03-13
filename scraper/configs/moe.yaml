@@ -1,0 +1,81 @@
+# Unified scraper config for MOE
+# Kementerian Pendidikan Malaysia — DataTables listing pages
+# No source config exists; created from adapter code at
+# scraper/src/polisi_scraper/adapters/moe.py
+#
+# The MOE adapter expects:
+#   - base_url: str
+#   - allowed_hosts: list[str]
+#   - sections: list of {url, doc_type, language}
+#   - max_pages_default: int (optional)
+
+site_slug: moe
+agency: "Kementerian Pendidikan Malaysia (MOE)"
+base_url: "https://www.moe.gov.my"
+
+allowed_hosts:
+  - "www.moe.gov.my"
+  - "moe.gov.my"
+
+request_delay: 1.5
+estimated_pages: 500
+
+# Optional cap on total items yielded per crawl run
+max_pages_default: 500
+
+sections:
+
+  # ── Pekeliling (Circulars) ────────────────────────────────────────────────
+  - url: "https://www.moe.gov.my/pekeliling"
+    doc_type: notice
+    language: ms
+
+  # ── Surat Siaran (Official Circulars) ─────────────────────────────────────
+  - url: "https://www.moe.gov.my/pekeliling/surat-siaran"
+    doc_type: notice
+    language: ms
+
+  # ── Kenyataan Media (Press Releases) ──────────────────────────────────────
+  - url: "https://www.moe.gov.my/pemberitahuan/kenyataan-media"
+    doc_type: press_release
+    language: ms
+
+  # ── Pengumuman (Announcements) ────────────────────────────────────────────
+  - url: "https://www.moe.gov.my/pemberitahuan/pengumuman"
+    doc_type: notice
+    language: ms
+
+  # ── Teks Ucapan (Speeches) ────────────────────────────────────────────────
+  - url: "https://www.moe.gov.my/pemberitahuan/teks-ucapan"
+    doc_type: speech
+    language: ms
+
+  # ── Iklan Jawatan (Job Advertisements) ────────────────────────────────────
+  - url: "https://www.moe.gov.my/pemberitahuan/iklan-jawatan"
+    doc_type: notice
+    language: ms
+
+  # ── Laporan Tahunan (Annual Reports) ──────────────────────────────────────
+  - url: "https://www.moe.gov.my/muat-turun/penerbitan-dan-jurnal/laporan-tahunan"
+    doc_type: report
+    language: ms
+
+  # ── Dasar (Policies) ──────────────────────────────────────────────────────
+  - url: "https://www.moe.gov.my/muat-turun/penerbitan-dan-jurnal/dasar"
+    doc_type: policy
+    language: ms
+
+  # ── Buku (Books/Publications) ─────────────────────────────────────────────
+  - url: "https://www.moe.gov.my/muat-turun/penerbitan-dan-jurnal/buku"
+    doc_type: report
+    language: ms
+
+  # ── Statistik Pendidikan (Education Statistics) ───────────────────────────
+  - url: "https://www.moe.gov.my/muat-turun/penerbitan-dan-jurnal/terbitan-kpm/statistik-pendidikan"
+    doc_type: report
+    language: ms
+
+  # ── Borang (Forms) ────────────────────────────────────────────────────────
+  - url: "https://www.moe.gov.my/muat-turun/borang"
+    doc_type: form
+    language: ms

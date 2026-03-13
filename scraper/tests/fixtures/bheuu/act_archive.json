@@ -1,0 +1,17 @@
+{
+  "_id": "66a397edcb3289104aa1a553",
+  "year": "2010",
+  "createdAt": "2024-07-26T12:34:53.596Z",
+  "updatedAt": "2024-07-27T14:05:20.426Z",
+  "__v": 0,
+  "pdfFile": {
+    "_id": "66a4fe7156203d12aa0e2edd",
+    "name": "Arkib_2010.pdf",
+    "ext": ".pdf",
+    "mime": "application/pdf",
+    "size": 201.16,
+    "url": "/uploads/Arkib_2010_b342f92417.pdf",
+    "provider": "local"
+  },
+  "id": "66a397edcb3289104aa1a553"
+}

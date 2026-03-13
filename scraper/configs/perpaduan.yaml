@@ -1,0 +1,81 @@
+# Unified scraper config for Perpaduan
+# Kementerian Perpaduan Negara — CSS selector-driven HTML scraping
+# Source: specific-scrapers/perpaduan-scraper/configs/perpaduan.yaml
+
+site_slug: perpaduan
+agency: "Kementerian Perpaduan Negara"
+base_url: "https://www.perpaduan.gov.my"
+
+allowed_hosts:
+  - "www.perpaduan.gov.my"
+  - "perpaduan.gov.my"
+
+request_delay: 1.5
+estimated_pages: 50
+
+sections:
+
+  # ── Perkhidmatan Teras - Jati Diri Negara ────────────────────────────────
+  - name: "Perkhidmatan Teras - Jati Diri Negara"
+    url: "https://www.perpaduan.gov.my/index.php/bm/perkhidmatann/perkhidmatan-teras-kementeriann/meningkatkan-jati-diri-dan-semangat-cintakan-negara"
+    doc_type: "report"
+    item_selector: "div.item-page"
+    title_selector: "h2"
+    link_selector: "h2 a"
+    has_detail_pages: false
+
+  # ── Perkhidmatan Teras - Integrasi Sosial ────────────────────────────────
+  - name: "Perkhidmatan Teras - Integrasi Sosial"
+    url: "https://www.perpaduan.gov.my/index.php/bm/perkhidmatann/perkhidmatan-teras-kementeriann/mengukuhkan-tapak-integrasi-sosial"
+    doc_type: "report"
+    item_selector: "div.item-page"
+    title_selector: "h2"
+    link_selector: "h2 a"
+    has_detail_pages: false
+
+  # ── Tender & Sebutharga ──────────────────────────────────────────────────
+  - name: "Tender & Sebutharga"
+    url: "https://www.perpaduan.gov.my/index.php/bm/perkhidmatann/perkhidmatan-lainn/tender-sebuthargaa"
+    doc_type: "notice"
+    item_selector: "div.item-page"
+    title_selector: "h2"
+    link_selector: "h2 a"
+    date_selector: "span.published"
+    has_detail_pages: false
+
+  # ── Iklan Jawatan Kosong ─────────────────────────────────────────────────
+  - name: "Iklan Jawatan Kosong"
+    url: "https://www.perpaduan.gov.my/index.php/bm/perkhidmatann/perkhidmatan-lainn/iklan-jawatan-kosong"
+    doc_type: "notice"
+    item_selector: "div.item-page"
+    title_selector: "h2"
+    link_selector: "h2 a"
+    date_selector: "span.published"
+    has_detail_pages: false
+
+  # ── Dasar - Policy Documents ─────────────────────────────────────────────
+  - name: "Dasar - Policy Documents"
+    url: "https://www.perpaduan.gov.my/index.php/bm/dasarr-3/dasarr-2"
+    doc_type: "policy"
+    item_selector: "li.accordeonck.level2"
+    title_selector: "a.accordeonck"
+    link_selector: "a.accordeonck"
+    has_detail_pages: false
+
+  # ── Kajian & Literasi Perpaduan - Research & Literacy ────────────────────
+  - name: "Kajian & Literasi Perpaduan - Research & Literacy"
+    url: "https://www.perpaduan.gov.my/index.php/bm/dasarr-3/kajian-dan-literasi-perpaduan-3"
+    doc_type: "report"
+    item_selector: "li.accordeonck.level2"
+    title_selector: "a.accordeonck"
+    link_selector: "a.accordeonck"
+    has_detail_pages: false
+
+  # ── Inisiatif - Initiatives ──────────────────────────────────────────────
+  - name: "Inisiatif - Initiatives"
+    url: "https://www.perpaduan.gov.my/index.php/bm/dasarr-3/inisiatiff-2"
+    doc_type: "report"
+    item_selector: "li.accordeonck.level2"
+    title_selector: "a.accordeonck"
+    link_selector: "a.accordeonck"
+    has_detail_pages: false
