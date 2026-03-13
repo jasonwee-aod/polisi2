@@ -4,7 +4,19 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterable
+
+from dotenv import load_dotenv
+
+# Auto-load .env: scraper/.env (local dev) or /opt/polisigpt/.env (Droplet)
+for _candidate in [
+    Path(__file__).resolve().parents[3] / ".env",
+    Path("/opt/polisigpt/.env"),
+]:
+    if _candidate.exists():
+        load_dotenv(_candidate)
+        break
 
 
 class SettingsError(ValueError):
