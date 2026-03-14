@@ -125,7 +125,6 @@ function AssistantMessage({
   currentRating: number | null;
   onFeedback?(messageId: string, rating: 1 | -1): void;
 }) {
-  const variant = getAssistantVariant(message.content);
   return (
     <div style={{ display: "flex", gap: 12 }}>
       <div
@@ -143,20 +142,6 @@ function AssistantMessage({
         <span style={{ color: "var(--text-inverse)", fontSize: 13, fontWeight: 700 }}>P</span>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        {variant !== "standard" ? (
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: "var(--text-tertiary)",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              marginBottom: 8
-            }}
-          >
-            {assistantVariantLabel(variant)}
-          </div>
-        ) : null}
         <div className="prose" style={{ fontSize: 15, lineHeight: 1.7, color: "var(--text-primary)" }}>
           {isThinking ? (
             <ThinkingIndicator />
@@ -168,33 +153,6 @@ function AssistantMessage({
             />
           )}
         </div>
-        {message.citations.length > 0 ? (
-          <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {message.citations.map((citation) => (
-              <button
-                key={citation.index}
-                type="button"
-                onClick={() => onCitationSelect(citation)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "4px 10px",
-                  borderRadius: 20,
-                  border: "1px solid var(--border-subtle)",
-                  background: "var(--bg-page)",
-                  color: "var(--text-secondary)",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  cursor: "pointer"
-                }}
-              >
-                <span style={{ color: "var(--accent)", fontWeight: 700 }}>[{citation.index}]</span>
-                {decodeDocTitle(citation.title || citation.agency)}
-              </button>
-            ))}
-          </div>
-        ) : null}
         {!isThinking && message.content && onFeedback ? (
           <FeedbackButtons
             messageId={message.id}
@@ -258,14 +216,13 @@ function FeedbackButtons({
   );
 }
 
-// Titles are stored with % stripped from URL-encoding (e.g. "SPI 20KPM" → "SPI KPM").
-// Re-insert % before hex pairs and URL-decode to get readable titles.
-function decodeDocTitle(raw: string): string {
-  try {
-    return decodeURIComponent(raw.replace(/ ([0-9A-Fa-f]{2})/g, "%$1"));
-  } catch {
-    return raw;
-  }
+/** Short readable title from the raw doc title (which often has SHA prefixes). */
+function shortenTitle(raw: string): string {
+  // Strip leading hex hash prefixes (e.g. "a1b2c3d4... ACTUAL TITLE")
+  const cleaned = raw.replace(/^[0-9a-fA-F]{32,}\s*/, "").trim();
+  if (!cleaned) return raw;
+  // Truncate long titles
+  return cleaned.length > 50 ? cleaned.slice(0, 47) + "..." : cleaned;
 }
 
 function MarkdownWithCitations({
@@ -277,13 +234,11 @@ function MarkdownWithCitations({
   citations: CitationRecord[];
   onCitationSelect(citation: CitationRecord): void;
 }) {
-  // Replace citation markers with inline code spans so the whole content
-  // renders in one ReactMarkdown call, preserving block-level structure
-  // (tables, code blocks, headings). The custom `code` component below
-  // intercepts only the cite:n / cite:gk tokens.
+  // Replace [n] citation markers and [General knowledge] with inline code
+  // tokens that the custom code renderer intercepts.
   const processed = content
     .replace(/\[(\d+)\]/g, (_, n) => `\`cite:${n}\``)
-    .replace(/\[General knowledge\]/g, "`cite:gk`");
+    .replace(/\[General knowledge\]/gi, "");
 
   return (
     <ReactMarkdown
@@ -295,51 +250,59 @@ function MarkdownWithCitations({
           if (citeMatch) {
             const n = Number(citeMatch[1]);
             const citation = citations.find((c) => c.index === n);
-            if (!citation) return <span>[{n}]</span>;
-            return (
-              <button
-                type="button"
-                onClick={() => onCitationSelect(citation)}
-                aria-label={`Citation ${n}`}
-                style={{
-                  border: 0,
-                  background: "transparent",
-                  cursor: "pointer",
-                  color: "var(--accent)",
-                  fontWeight: 700,
-                  verticalAlign: "super",
-                  fontSize: "0.8em",
-                  padding: "0 0.1rem",
-                  textDecoration: "underline"
-                }}
-              >
-                [{n}]
-              </button>
-            );
-          }
-          if (text === "cite:gk") {
+            if (!citation) return <sup style={{ color: "var(--text-tertiary)", fontSize: "0.75em" }}>[{n}]</sup>;
+
+            const title = shortenTitle(citation.title || citation.agency);
+            const hasLink = !!citation.source_url;
+
             return (
               <span
-                title="From Claude's training knowledge"
+                role="button"
+                tabIndex={0}
+                onClick={() => onCitationSelect(citation)}
+                onKeyDown={(e) => e.key === "Enter" && onCitationSelect(citation)}
+                aria-label={`Source: ${title}`}
+                title={citation.title || citation.agency}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  padding: "1px 6px",
-                  borderRadius: 10,
-                  background: "var(--bg-page)",
-                  border: "1px solid var(--border-subtle)",
-                  color: "var(--text-tertiary)",
-                  fontSize: "0.72em",
-                  fontWeight: 500,
-                  verticalAlign: "super",
-                  letterSpacing: "0.02em",
-                  whiteSpace: "nowrap"
+                  gap: 3,
+                  padding: "1px 8px",
+                  margin: "0 1px",
+                  borderRadius: 12,
+                  background: "var(--accent-light)",
+                  border: "1px solid rgba(61,138,90,0.2)",
+                  color: "var(--accent)",
+                  fontSize: "0.78em",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  verticalAlign: "baseline",
+                  lineHeight: 1.6,
+                  whiteSpace: "nowrap",
+                  maxWidth: 220,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  transition: "background 0.15s, border-color 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(61,138,90,0.15)";
+                  e.currentTarget.style.borderColor = "var(--accent)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "var(--accent-light)";
+                  e.currentTarget.style.borderColor = "rgba(61,138,90,0.2)";
                 }}
               >
-                General knowledge
+                {hasLink ? (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                  </svg>
+                ) : null}
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{title}</span>
               </span>
             );
           }
+          // Regular code — pass through
           return <code className={className}>{children}</code>;
         }
       }}
@@ -347,34 +310,4 @@ function MarkdownWithCitations({
       {processed}
     </ReactMarkdown>
   );
-}
-
-function getAssistantVariant(content: string): "standard" | "clarification" | "limited" | "general-knowledge" {
-  const normalized = content.toLowerCase();
-  if (normalized.includes("specific policy") || normalized.includes("jelaskan dasar")) {
-    return "clarification";
-  }
-  if (normalized.includes("support is limited") || normalized.includes("sokongan dokumen")) {
-    return "limited";
-  }
-  if (
-    normalized.includes("no indexed government policy documents were found") ||
-    normalized.includes("tiada dokumen dasar kerajaan yang diindeks")
-  ) {
-    return "general-knowledge";
-  }
-  return "standard";
-}
-
-function assistantVariantLabel(variant: ReturnType<typeof getAssistantVariant>): string {
-  switch (variant) {
-    case "clarification":
-      return "Clarification requested";
-    case "limited":
-      return "Limited indexed support";
-    case "general-knowledge":
-      return "General knowledge — not from indexed documents";
-    default:
-      return "";
-  }
 }

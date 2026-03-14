@@ -92,6 +92,7 @@ def build_prompt(
     if not contexts:
         user = f"{question}{live_data_section}"
     else:
+        system += " Cite sources inline with [n] when referencing specific document content."
         reordered = reorder_for_attention(contexts)
         context_block = _format_context_block(contexts, reordered=reordered)
         user = f"{question}\n\n---\n\n{context_block}{live_data_section}"
