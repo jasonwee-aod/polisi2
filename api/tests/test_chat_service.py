@@ -141,14 +141,14 @@ async def run_chat_service_paths() -> None:
     assert clarify_reply.response.citations == []
     assert "specific policy" in clarify_reply.response.answer.lower()
 
-    assert weak_reply.response.kind == "limited-support"
+    assert weak_reply.response.kind == "answer"
     assert weak_reply.response.language == "en"
     assert "[1]" in weak_reply.response.answer
 
 
 def test_fts_only_match_treated_as_weak_support() -> None:
     """A chunk found only via full-text search (cosine sim=0) should use
-    the FTS similarity floor and land in limited-support, not be discarded."""
+    the FTS similarity floor so they are not discarded."""
     asyncio.run(_run_fts_only())
 
 
@@ -168,8 +168,8 @@ async def _run_fts_only() -> None:
     reply = await service.generate_reply(question=question)
 
     # FTS floor (0.50) > min_similarity (0.45) → not discarded
-    # FTS floor (0.50) < weak_similarity (0.65) → weak/limited-support
-    assert reply.response.kind == "limited-support"
+    # FTS floor (0.50) > min_similarity (0.45) → not discarded
+    assert reply.response.kind == "answer"
     assert len(reply.response.citations) > 0
 
 

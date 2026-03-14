@@ -342,9 +342,14 @@ class ChatService:
                 kind="answer", chunks=cited_chunks,
             )
 
-        # --- Standard path (no skill selected) ---
-        if not retrieved or top_similarity < self._settings.retrieval_min_similarity:
-            # Log knowledge gap — the bot couldn't find indexed docs for this query
+        # --- Standard path: pass whatever good context we have and let Claude be Claude ---
+        cited_chunks = apply_adaptive_cutoff(
+            retrieved,
+            self._settings.retrieval_similarity_dropoff,
+            max_chunks=self._settings.reranker_top_n,
+        )
+
+        if not cited_chunks and not live_data_blocks:
             self._log_knowledge_gap(
                 question=question, language=language,
                 conversation_id=conversation_value,
@@ -352,57 +357,20 @@ class ChatService:
                 top_similarity=top_similarity,
             )
 
-            if live_data_blocks:
-                prompt = build_prompt(
-                    question=question, language=language,
-                    contexts=[], support_mode="none", live_data_blocks=live_data_blocks,
-                )
-                t0 = time.monotonic()
-                logger.info("  GENERATE START mode=none+live_data")
-                answer = await self._generator.generate(prompt)
-                logger.info("  GENERATE DONE: %.1fs total_elapsed=%.1fs", time.monotonic() - t0, time.monotonic() - t_start)
-                return self._make_reply(
-                    conversation_value=conversation_value, language=language, answer=answer,
-                    citations=self._build_datagov_citations(datagov_entries),
-                    kind="answer", chunks=[],
-                )
-
-            prompt = build_prompt(
-                question=question, language=language, contexts=[], support_mode="none",
-            )
-            t0 = time.monotonic()
-            logger.info("  GENERATE START mode=general_knowledge")
-            answer = await self._generator.generate(prompt)
-            logger.info("  GENERATE DONE: %.1fs total_elapsed=%.1fs", time.monotonic() - t0, time.monotonic() - t_start)
-            return self._make_reply(
-                conversation_value=conversation_value, language=language, answer=answer,
-                citations=[], kind="general-knowledge", chunks=[],
-            )
-
-        support_mode = (
-            "weak" if top_similarity < self._settings.retrieval_weak_similarity else "strong"
-        )
-        # --- [3.3] Adaptive context window ---
-        cited_chunks = apply_adaptive_cutoff(
-            retrieved,
-            self._settings.retrieval_similarity_dropoff,
-            max_chunks=self._settings.reranker_top_n,
-        )
         prompt = build_prompt(
             question=question, language=language,
-            contexts=cited_chunks, support_mode=support_mode,
+            contexts=cited_chunks, support_mode="strong" if cited_chunks else "none",
             live_data_blocks=live_data_blocks,
         )
         t0 = time.monotonic()
-        logger.info("  GENERATE START mode=%s cited_chunks=%d", support_mode, len(cited_chunks))
+        logger.info("  GENERATE START chunks=%d live_data=%d", len(cited_chunks), len(live_data_blocks))
         answer = await self._generator.generate(prompt)
         logger.info("  GENERATE DONE: %.1fs total_elapsed=%.1fs", time.monotonic() - t0, time.monotonic() - t_start)
-        kind = "limited-support" if support_mode == "weak" else "answer"
 
         return self._make_reply(
             conversation_value=conversation_value, language=language, answer=answer,
             citations=self._build_all_citations(cited_chunks, datagov_entries),
-            kind=kind, chunks=cited_chunks,
+            kind="answer", chunks=cited_chunks,
         )
 
     async def handle_chat(self, *, user_id: str, request: ChatRequest) -> GeneratedReply:
