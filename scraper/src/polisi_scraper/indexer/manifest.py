@@ -87,7 +87,10 @@ class SpacesCorpusManifest:
                 request["ContinuationToken"] = continuation_token
             response = client.list_objects_v2(**request)
             for raw_object in response.get("Contents", []):
-                objects.append(self._normalize_object(raw_object))
+                try:
+                    objects.append(self._normalize_object(raw_object))
+                except ManifestError:
+                    continue  # skip unsupported paths/file types
             if not response.get("IsTruncated"):
                 break
             continuation_token = response.get("NextContinuationToken")
