@@ -877,14 +877,23 @@ class DewanSelangorAdapter(BaseSiteAdapter):
           4. Individual question (/question/{slug}/) — yielded as DiscoveredItem
 
         If listing_url points directly to /question, skip steps 1-2.
+
+        max_pages is a **global budget** shared across all sessions and
+        categories so that the total page fetches for the entire e-QUANS
+        section never exceeds the limit.
         """
         base = self._base_url()
+
+        # Shared mutable counter so _paginate_equans_listing can decrement
+        # the remaining budget across calls.  Using a list as a simple
+        # mutable wrapper: budget[0] = remaining pages.
+        budget = [max_pages]
 
         # Determine entry point: session index or direct question listing
         if "/question" in listing_url:
             # Direct question listing URL — skip session discovery
             yield from self._paginate_equans_listing(
-                listing_url, doc_type, language, since, max_pages,
+                listing_url, doc_type, language, since, budget,
             )
             return
 
@@ -898,9 +907,12 @@ class DewanSelangorAdapter(BaseSiteAdapter):
             return
 
         sessions = _extract_equans_session_index(resp.text, listing_url)
-        pages_fetched = 0
 
         for session in sessions:
+            if budget[0] and budget[0] <= 0:
+                log.info("[dewan_selangor] e-QUANS global budget exhausted")
+                return
+
             session_url = make_absolute(session["href"], base)
 
             # Step 2: Fetch session page to get category listing URLs
@@ -918,9 +930,12 @@ class DewanSelangorAdapter(BaseSiteAdapter):
 
             # Step 3: Walk paginated question listings for each category
             for cat in categories:
+                if budget[0] and budget[0] <= 0:
+                    log.info("[dewan_selangor] e-QUANS global budget exhausted")
+                    return
                 cat_url = cat["href"]
                 yield from self._paginate_equans_listing(
-                    cat_url, doc_type, language, since, max_pages,
+                    cat_url, doc_type, language, since, budget,
                 )
 
     def _paginate_equans_listing(
@@ -929,15 +944,19 @@ class DewanSelangorAdapter(BaseSiteAdapter):
         doc_type: str,
         language: str,
         since: date | None,
-        max_pages: int,
+        budget: list[int],
     ) -> Iterable[DiscoveredItem]:
-        """Paginate through a /question?... listing and yield question items."""
-        pages_fetched = 0
+        """Paginate through a /question?... listing and yield question items.
+
+        ``budget`` is a mutable single-element list ``[remaining_pages]``
+        shared across all calls within one e-QUANS discovery run so that
+        the total page fetches are globally bounded.
+        """
         current_url: Optional[str] = listing_url
 
         while current_url:
-            if max_pages and pages_fetched >= max_pages:
-                log.info("[dewan_selangor] max_pages=%d reached (e-QUANS)", max_pages)
+            if budget[0] and budget[0] <= 0:
+                log.info("[dewan_selangor] e-QUANS global page budget exhausted")
                 return
 
             log.info("[dewan_selangor] fetch e-QUANS listing: %s", current_url)
@@ -948,7 +967,8 @@ class DewanSelangorAdapter(BaseSiteAdapter):
                           current_url, exc)
                 break
 
-            pages_fetched += 1
+            if budget[0]:
+                budget[0] -= 1
             items = _extract_equans_listing(resp.text, current_url)
 
             for item in items:
