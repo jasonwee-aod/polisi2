@@ -22,7 +22,7 @@ echo "[1/2] Starting scraper..." >> "$LOG"
 "$VENV/bin/polisi-scraper" \
   --all \
   --max-pages 200 \
-  --workers 3 \
+  --workers 5 \
   --site-config scraper/configs \
   --manifest-dir scraper/data/manifests \
   >> "$LOG" 2>&1 || echo "Scraper exited with errors (continuing to indexer)" >> "$LOG"
