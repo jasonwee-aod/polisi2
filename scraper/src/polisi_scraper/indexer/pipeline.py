@@ -62,7 +62,7 @@ class IndexingPipeline:
     ) -> IndexingRunResult:
         pending_items = self._select_items(mode=mode)
         if storage_path:
-            pending_items = [item for item in pending_items if item.storage_path == storage_path]
+            pending_items = [item for item in pending_items if item.storage_path.startswith(storage_path)]
         if max_items is not None:
             pending_items = pending_items[:max_items]
 
