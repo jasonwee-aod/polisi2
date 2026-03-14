@@ -255,11 +255,22 @@ function MarkdownWithCitations({
   citations: CitationRecord[];
   onCitationSelect(citation: CitationRecord): void;
 }) {
-  // Replace [n] citation markers and [General knowledge] with inline code
-  // tokens that the custom code renderer intercepts.
-  const processed = content
+  // Find the data.gov.my citation index (if any) for linking prose mentions
+  const datagovCitation = citations.find((c) => c.agency === "data.gov.my");
+
+  // Replace citation markers with inline code tokens for the custom renderer.
+  let processed = content
     .replace(/\[(\d+)\]/g, (_, n) => `\`cite:${n}\``)
-    .replace(/\[General knowledge\]/gi, "");
+    .replace(/\[General knowledge\]/gi, "")
+    .replace(/\[data\.gov\.my\]/gi, datagovCitation ? `\`cite:${datagovCitation.index}\`` : "");
+
+  // Also catch bare "data.gov.my" mentions in prose and make them clickable
+  if (datagovCitation) {
+    processed = processed.replace(
+      /(?<!\`cite:)\bdata\.gov\.my\b(?![`\]])/g,
+      `\`cite:${datagovCitation.index}\``
+    );
+  }
 
   return (
     <ReactMarkdown

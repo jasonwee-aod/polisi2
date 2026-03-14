@@ -50,11 +50,18 @@ type ApiRequestOptions = {
   apiBaseUrl?: string;
 };
 
+export type FileAttachment = {
+  filename: string;
+  content_type: string;
+  data: string; // base64
+};
+
 export type ChatRequestPayload = {
   question: string;
   conversation_id?: string | null;
   create_conversation: boolean;
   skill?: string | null;
+  attachments?: FileAttachment[];
 };
 
 export type SkillInfo = {

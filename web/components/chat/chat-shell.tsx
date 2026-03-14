@@ -10,6 +10,7 @@ import {
   ConversationDetail,
   ConversationMessage,
   ConversationSummary,
+  FileAttachment,
   SkillInfo,
   fetchConversationDetail,
   fetchConversationFeedback,
@@ -51,6 +52,7 @@ type ChatShellProps = {
       conversation_id?: string | null;
       create_conversation: boolean;
       skill?: string | null;
+      attachments?: FileAttachment[];
     };
     apiBaseUrl?: string;
     signal?: AbortSignal;
@@ -110,7 +112,7 @@ export function ChatShell({
     });
   }, [accessToken, activeConversationId, apiBaseUrl, apiClient]);
 
-  async function handleSubmit(question: string) {
+  async function handleSubmit(question: string, attachments?: FileAttachment[]) {
     setIsStreaming(true);
     setSelectedCitation(null);
     setMessages((current) => [
@@ -151,6 +153,7 @@ export function ChatShell({
           conversation_id: activeConversationId,
           create_conversation: !activeConversationId,
           skill: selectedSkill,
+          attachments: attachments?.length ? attachments : undefined,
         },
         onEvent: (event) => {
           if (event.event === "conversation" && event.conversation_id) {

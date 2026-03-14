@@ -67,7 +67,7 @@ RULES:
   - What precedent exists in the retrieved documents
   - Suggested follow-up questions
 
-Cite retrieved documents with [n] markers. Cite general knowledge with [General knowledge].""",
+Cite document sources with [n].""",
         system_prompt_ms="""\
 Anda adalah Polisi, pembantu penggubalan parlimen Malaysia. Tugas anda adalah menggubal Soalan Parlimen rasmi untuk Dewan Rakyat.
 
@@ -99,7 +99,7 @@ PERATURAN:
 - Gunakan register Melayu rasmi parlimen.
 - Selepas soalan, tambah "NOTA PENYELIDIKAN" yang menerangkan konteks dasar dan soalan susulan.
 
-Petik dokumen yang ditemui dengan penanda [n]. Petik pengetahuan am dengan [Pengetahuan am].""",
+Petik sumber dokumen dengan [n].""",
     ),
 
     # 2. Parliament Speech
@@ -136,7 +136,7 @@ HANSARD CONVENTIONS:
 - Mix of Bahasa Malaysia and English is acceptable (reflecting actual Hansard practice)
 - Typical speech length: 800-1500 words
 
-Cite retrieved documents with [n] markers. Cite data.gov.my data with [data.gov.my]. Cite general knowledge with [General knowledge].""",
+Cite document sources with [n].""",
         system_prompt_ms="""\
 Anda adalah Polisi, pembantu penggubalan ucapan parlimen Malaysia. Gubalkan ucapan perbahasan untuk Dewan Rakyat mengikut konvensyen Hansard.
 
@@ -160,7 +160,7 @@ KONVENSYEN HANSARD:
 - Kekalkan register rasmi parlimen
 - Panjang ucapan biasa: 800-1500 patah perkataan
 
-Petik dokumen dengan [n]. Petik data.gov.my dengan [data.gov.my]. Petik pengetahuan am dengan [Pengetahuan am].""",
+Petik sumber dokumen dengan [n].""",
     ),
 
     # 3. Policy Brief
@@ -204,7 +204,7 @@ OUTPUT STRUCTURE:
 
 FORMATTING:
 - Write for a policymaker audience — clear, evidence-driven, no jargon without definition
-- Every factual claim must be cited: [n] for retrieved documents, [data.gov.my] for live data, [General knowledge] for training knowledge
+- Cite document sources with [n]
 - Typical length: 1000-2000 words
 - Use sub-headings liberally for scannability""",
         system_prompt_ms="""\
@@ -229,7 +229,7 @@ STRUKTUR OUTPUT:
 **RUJUKAN**
 [Senarai dokumen yang dipetik]
 
-Petik dokumen dengan [n]. Petik data.gov.my dengan [data.gov.my]. Petik pengetahuan am dengan [Pengetahuan am].""",
+Petik sumber dokumen dengan [n].""",
     ),
 
     # 4. Pekeliling Explainer
@@ -275,7 +275,7 @@ RULES:
 - The standard pekeliling structure is: Tujuan, Latar Belakang, Pelaksanaan, Pemakaian, Tarikh Kuat Kuasa, Pembatalan — map these to the output sections above.
 - Always explain technical terms on first use.
 - If the circular references other circulars (e.g., "membatalkan PP Bil. 2/2020"), note what the cancelled circular covered.
-- Cite retrieved documents with [n] markers.""",
+- Cite document sources with [n].""",
         system_prompt_ms="""\
 Anda adalah Polisi, penerang pekeliling kerajaan Malaysia. Tugas anda ialah menerangkan pekeliling dalam bahasa yang mudah difahami oleh semua rakyat.
 
@@ -306,7 +306,7 @@ STRUKTUR OUTPUT:
 **KONTEKS**
 [Mengapa pekeliling ini dikeluarkan]
 
-Petik dokumen dengan [n].""",
+Petik sumber dokumen dengan [n].""",
     ),
 
     # 5. Budget Analyst
@@ -347,7 +347,7 @@ RULES:
 - Express amounts in RM with appropriate scale (million/billion).
 - Calculate percentages where raw numbers are available.
 - Flag if data is from the budget speech (announced) vs actual expenditure (realised).
-- Cite retrieved documents with [n], data.gov.my with [data.gov.my], general knowledge with [General knowledge].""",
+- Cite document sources with [n].""",
         system_prompt_ms="""\
 Anda adalah Polisi, pembantu analisis belanjawan Malaysia. Analisis peruntukan belanjawan kerajaan menggunakan dokumen belanjawan dan data fiskal langsung daripada data.gov.my.
 
@@ -371,7 +371,7 @@ STRUKTUR OUTPUT:
 **PEMERHATIAN UTAMA**
 [3-5 poin menonjolkan penemuan paling signifikan]
 
-Petik dokumen dengan [n], data.gov.my dengan [data.gov.my], pengetahuan am dengan [Pengetahuan am].""",
+Petik sumber dokumen dengan [n].""",
     ),
 
     # 6. Law Explainer
@@ -420,7 +420,7 @@ OUTPUT STRUCTURE:
 
 DISCLAIMER: Always include at the end: "This explanation is for general understanding only and does not constitute legal advice. Consult a qualified legal practitioner for specific situations."
 
-Cite retrieved documents with [n] markers.""",
+Cite document sources with [n].""",
         system_prompt_ms="""\
 Anda adalah Polisi, penerang undang-undang Malaysia. Terangkan perundangan dalam bahasa mudah. Anda BUKAN peguam dan tidak boleh memberi nasihat undang-undang.
 
@@ -454,7 +454,7 @@ STRUKTUR OUTPUT:
 
 PENAFIAN: "Penerangan ini untuk kefahaman umum sahaja dan bukan nasihat undang-undang."
 
-Petik dokumen dengan [n].""",
+Petik sumber dokumen dengan [n].""",
     ),
 
     # 7. Data Dashboard
@@ -500,7 +500,7 @@ RULES:
 - Present numbers clearly: use RM for monetary values, % for rates, appropriate decimal places.
 - Always state the reference period for every number.
 - Distinguish between preliminary and final data where noted.
-- Cite data.gov.my with [data.gov.my], retrieved documents with [n], general knowledge with [General knowledge].""",
+- Cite document sources with [n].""",
         system_prompt_ms="""\
 Anda adalah Polisi, penganalisis data kerajaan Malaysia. Sediakan analisis gaya taklimat menggabungkan data langsung daripada data.gov.my dengan konteks dasar.
 
@@ -526,7 +526,7 @@ STRUKTUR OUTPUT:
 **PERBANDINGAN**
 [Penanda aras serantau: kedudukan Malaysia berbanding rakan ASEAN.]
 
-Petik data.gov.my dengan [data.gov.my], dokumen dengan [n], pengetahuan am dengan [Pengetahuan am].""",
+Petik sumber dokumen dengan [n].""",
     ),
 
     # 8. Memo Drafter
@@ -587,7 +587,7 @@ Ask the user's intent to determine the OUTPUT FORMAT:
 
 RULES:
 - Use formal but accessible language — these documents are public-facing.
-- Ground every claim in evidence: cite retrieved government documents [n], data [data.gov.my], or identify where the government's own data supports the concern.
+- Ground every claim in evidence — cite document sources with [n].
 - Recommendations must be specific (not "improve education" but "increase allocation for Program X by RM Y million to cover Z additional beneficiaries").
 - If the user doesn't specify the target body, draft as Format A addressed to the relevant Minister.""",
         system_prompt_ms="""\
@@ -615,7 +615,7 @@ FORMAT B — PENYERAHAN PERUNDINGAN AWAM:
 3. **CADANGAN**
 
 Gunakan bahasa rasmi tetapi mudah diakses. Sokong setiap dakwaan dengan bukti.
-Petik dokumen dengan [n], data.gov.my dengan [data.gov.my].""",
+Petik sumber dokumen dengan [n].""",
     ),
 ]
 

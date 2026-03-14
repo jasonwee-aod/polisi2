@@ -6,12 +6,32 @@ from datetime import date, datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 LanguageCode = Literal["ms", "en"]
 ConversationRole = Literal["system", "user", "assistant"]
 AssistantResponseKind = Literal["answer", "clarification", "limited-support", "no-information", "general-knowledge"]
 StreamEventType = Literal["conversation", "message-start", "message-delta", "message-complete", "done"]
+
+# Maximum base64 size per attachment (~10 MB base64 ≈ 7.5 MB file).
+MAX_ATTACHMENT_BASE64_SIZE = 10 * 1024 * 1024
+
+
+class FileAttachment(BaseModel):
+    """A file uploaded alongside a chat message."""
+
+    filename: str
+    content_type: str  # e.g. "application/pdf", "image/png", "text/plain"
+    data: str  # base64-encoded file content
+
+    @model_validator(mode="after")
+    def _check_size(self) -> FileAttachment:
+        if len(self.data) > MAX_ATTACHMENT_BASE64_SIZE:
+            raise ValueError(
+                f"Attachment '{self.filename}' exceeds the 10 MB limit "
+                f"({len(self.data)} bytes base64)."
+            )
+        return self
 
 
 class ChatRequest(BaseModel):
@@ -20,6 +40,7 @@ class ChatRequest(BaseModel):
     create_conversation: bool = False
     language_hint: LanguageCode | None = None
     skill: str | None = None
+    attachments: list[FileAttachment] = Field(default_factory=list)
 
 
 class SkillInfo(BaseModel):

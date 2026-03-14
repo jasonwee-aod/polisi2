@@ -8,6 +8,7 @@ import psycopg
 from fastapi import Depends, HTTPException, status
 
 from polisi_api.auth import AuthenticatedUser, get_current_user
+from polisi_api.chat.file_processor import TOKENS_PER_ATTACHMENT
 from polisi_api.chat.skills import SKILL_BY_ID
 from polisi_api.config import Settings, get_settings
 from polisi_api.models import ChatRequest
@@ -33,6 +34,10 @@ def check_rate_limit(
     # Estimate token cost for this request
     skill_def = SKILL_BY_ID.get(request.skill) if request.skill else None
     tokens_cost = skill_def.max_tokens if skill_def else 1200  # default chat max_tokens
+
+    # Attachments (images, PDFs) are expensive — add extra budget per file.
+    if request.attachments:
+        tokens_cost += len(request.attachments) * TOKENS_PER_ATTACHMENT
 
     try:
         with psycopg.connect(settings.supabase_db_url) as conn:

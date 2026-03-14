@@ -12,7 +12,7 @@ from uuid import UUID, uuid4
 from anthropic import AsyncAnthropic, RateLimitError
 
 from polisi_api.config import Settings
-from polisi_api.models import AssistantResponse, ChatRequest, CitationRecord
+from polisi_api.models import AssistantResponse, ChatRequest, CitationRecord, FileAttachment
 
 from .datagov import (
     CATALOG_BY_ID,
@@ -23,6 +23,7 @@ from .datagov import (
     find_catalog_match,
 )
 from .detector import detect_language, extract_agency, needs_clarification
+from .file_processor import ProcessedAttachment, process_attachments
 from .prompting import (
     PromptPackage,
     build_clarification_text,
@@ -85,7 +86,19 @@ class AnthropicTextGenerator:
 
     async def generate(self, prompt: PromptPackage, *, max_tokens: int | None = None) -> str:
         tools = [self._tool_def] if self._tool_def else []
-        messages: list[dict] = [{"role": "user", "content": prompt.user}]
+
+        # Build the user message content.  When file attachments provide
+        # content blocks (images, PDF document blocks), we use the multi-
+        # block list format that the Anthropic API expects.
+        if prompt.content_blocks:
+            user_content: str | list[dict] = [
+                {"type": "text", "text": prompt.user},
+                *prompt.content_blocks,
+            ]
+        else:
+            user_content = prompt.user
+
+        messages: list[dict] = [{"role": "user", "content": user_content}]
 
         try:
             for _round in range(self._MAX_TOOL_ROUNDS + 1):
@@ -194,11 +207,29 @@ class ChatService:
         conversation_id: str | None = None,
         skill: str | None = None,
         conversation_history: list[tuple[str, str]] | None = None,
+        attachments: list[FileAttachment] | None = None,
     ) -> GeneratedReply:
         t_start = time.monotonic()
         language = detect_language(question)
         conversation_value = conversation_id or str(uuid4())
         skill_def = SKILL_BY_ID.get(skill) if skill else None
+
+        # --- Process file attachments ---
+        content_blocks: list[dict] = []
+        if attachments:
+            processed = process_attachments(attachments)
+            attachment_texts: list[str] = []
+            for pa in processed:
+                if pa.text_content:
+                    attachment_texts.append(pa.text_content)
+                if pa.content_block:
+                    content_blocks.append(pa.content_block)
+            if attachment_texts:
+                question = question + "\n\n" + "\n\n".join(attachment_texts)
+            logger.info(
+                "  attachments: %d files, %d text blocks, %d content blocks",
+                len(attachments), len(attachment_texts), len(content_blocks),
+            )
 
         logger.info(
             "PIPELINE START question=%r skill=%s language=%s",
@@ -331,6 +362,7 @@ class ChatService:
                 question=question, language=language,
                 contexts=cited_chunks, skill=skill_def,
                 live_data_blocks=live_data_blocks,
+                content_blocks=content_blocks or None,
             )
             t0 = time.monotonic()
             logger.info("  GENERATE START skill=%s max_tokens=%d", skill, skill_def.max_tokens)
@@ -361,6 +393,7 @@ class ChatService:
             question=question, language=language,
             contexts=cited_chunks, support_mode="strong" if cited_chunks else "none",
             live_data_blocks=live_data_blocks,
+            content_blocks=content_blocks or None,
         )
         t0 = time.monotonic()
         logger.info("  GENERATE START chunks=%d live_data=%d", len(cited_chunks), len(live_data_blocks))
@@ -406,6 +439,7 @@ class ChatService:
             conversation_id=str(conversation_id),
             skill=request.skill,
             conversation_history=conversation_history,
+            attachments=request.attachments or None,
         )
         assistant_message_id = self._repository.add_message(
             conversation_id=conversation_id,

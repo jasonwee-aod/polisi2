@@ -37,6 +37,7 @@ class PromptPackage:
     system: str
     user: str
     contexts: list[RetrievedChunk]
+    content_blocks: list[dict] | None = None  # Additional Anthropic content blocks (images, PDFs)
 
 
 def reorder_for_attention(
@@ -85,6 +86,7 @@ def build_prompt(
     contexts: list[RetrievedChunk],
     support_mode: SupportMode,
     live_data_blocks: list[str] | None = None,
+    content_blocks: list[dict] | None = None,
 ) -> PromptPackage:
     system = _SYSTEM_MS if language == "ms" else _SYSTEM_EN
     live_data_section = _format_live_data_section(live_data_blocks)
@@ -103,6 +105,7 @@ def build_prompt(
         system=system,
         user=user,
         contexts=contexts,
+        content_blocks=content_blocks or None,
     )
 
 
@@ -127,6 +130,7 @@ def build_skill_prompt(
     contexts: list[RetrievedChunk],
     skill: SkillDefinition,
     live_data_blocks: list[str] | None = None,
+    content_blocks: list[dict] | None = None,
 ) -> PromptPackage:
     """Build a prompt using a skill-specific system prompt."""
     system = skill.system_prompt_ms if language == "ms" else skill.system_prompt_en
@@ -147,4 +151,5 @@ def build_skill_prompt(
         system=system,
         user=user,
         contexts=contexts,
+        content_blocks=content_blocks or None,
     )
