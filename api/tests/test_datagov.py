@@ -128,15 +128,15 @@ def test_build_prompt_with_live_data_and_docs() -> None:
 
 
 def test_build_prompt_without_live_data_unchanged() -> None:
-    """Existing behavior should be unchanged when no live data."""
+    """No live data section in user prompt when no live data provided."""
     prompt = build_prompt(
         question="What is education policy?",
         language="en",
         contexts=[],
         support_mode="none",
     )
-    assert "data.gov.my" not in prompt.system
-    assert "Live data" not in prompt.user
+    assert "Live government data" not in prompt.user
+    assert "Polisi" in prompt.system
 
 
 # ---------------------------------------------------------------------------

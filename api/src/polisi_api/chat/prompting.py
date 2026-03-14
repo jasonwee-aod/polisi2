@@ -12,6 +12,40 @@ from .skills import SkillDefinition
 
 SupportMode = Literal["strong", "weak", "none"]
 
+# ---------------------------------------------------------------------------
+# Core system identity — shared across all modes
+# ---------------------------------------------------------------------------
+
+_IDENTITY_EN = (
+    "You are Polisi, a knowledgeable Malaysian government policy assistant. "
+    "You have deep expertise in Malaysian government policy, legislation, "
+    "economics, and public administration. "
+    "Respond in English. Be direct, confident, and thorough — like a senior "
+    "policy analyst briefing a minister. Never hedge unnecessarily."
+)
+
+_IDENTITY_MS = (
+    "Anda adalah Polisi, pembantu dasar kerajaan Malaysia yang berpengetahuan. "
+    "Anda mempunyai kepakaran mendalam dalam dasar kerajaan, perundangan, "
+    "ekonomi, dan pentadbiran awam Malaysia. "
+    "Jawab dalam Bahasa Malaysia. Bersikap tegas, yakin, dan menyeluruh — "
+    "seperti penganalisis dasar kanan yang memberi taklimat kepada menteri."
+)
+
+_CITATION_RULES = (
+    "\n\nCitation rules:\n"
+    "- When you use information from the provided documents, cite with [n] "
+    "matching the document number.\n"
+    "- Weave citations naturally into your answer (e.g., '...as outlined in "
+    "the 2025 Budget Speech [1]').\n"
+    "- You do NOT need to label every sentence with a source tag. "
+    "Only cite when referencing specific facts, figures, or policy details.\n"
+    "- If you use your own knowledge to provide context, analysis, or "
+    "widely-known facts, just state them naturally without any tag.\n"
+    "- If you fetch live data via tools, mention the source naturally "
+    "(e.g., 'According to data.gov.my, ...')."
+)
+
 
 @dataclass(frozen=True)
 class PromptPackage:
@@ -31,11 +65,6 @@ def reorder_for_attention(
     stable to the *original* position so [n] markers stay consistent.
 
     Lost-in-the-middle pattern: best, worst…, second-best
-    For 1 chunk  → [1]
-    For 2 chunks → [1, 2]
-    For 3 chunks → [1, 3, 2]
-    For 4 chunks → [1, 4, 3, 2]
-    For 5 chunks → [1, 5, 4, 3, 2]
     """
     if len(contexts) <= 2:
         return [(i + 1, c) for i, c in enumerate(contexts)]
@@ -43,7 +72,6 @@ def reorder_for_attention(
     indexed = [(i + 1, c) for i, c in enumerate(contexts)]
     first = indexed[0]
     rest = indexed[1:]
-    # Reverse the rest so second-best ends up last
     rest_reversed = list(reversed(rest))
     return [first] + rest_reversed
 
@@ -85,67 +113,50 @@ def build_prompt(
     support_mode: SupportMode,
     live_data_blocks: list[str] | None = None,
 ) -> PromptPackage:
-    language_name = "Bahasa Malaysia" if language == "ms" else "English"
+    identity = _IDENTITY_MS if language == "ms" else _IDENTITY_EN
     live_data_section = _format_live_data_section(live_data_blocks)
 
-    if support_mode == "none" and not live_data_blocks:
-        # No DB context and no live data — answer from training knowledge + tools
+    if support_mode == "none":
+        # No indexed documents — answer from knowledge + tools
         system = (
-            "You are Polisi, a Malaysian government policy assistant. "
-            f"Respond in {language_name} using a formal yet conversational tone. "
-            "Answer the question directly and confidently. "
-            "You have access to tools that can fetch live government data — use them when relevant. "
-            "Cite factual claims: use [data.gov.my] for live data and [General knowledge] for your training knowledge."
+            f"{identity}\n\n"
+            "Answer the question using your knowledge and any tools available to you. "
+            "If you can fetch relevant live data, do so and integrate it into your answer."
+            f"{_CITATION_RULES}"
         )
-        user = f"Question:\n{question}"
-    elif support_mode == "none" and live_data_blocks:
-        # No document context, but we have live data from data.gov.my
-        system = (
-            "You are Polisi, a Malaysian government policy assistant. "
-            f"Respond in {language_name} using a formal government-brief tone. "
-            "No indexed policy documents were found, but live government data from data.gov.my "
-            "is provided below. Use this data as your primary source. "
-            "Cite data from data.gov.my with [data.gov.my]. "
-            "You may supplement with your training knowledge — cite those claims with [General knowledge]."
-        )
-        user = f"Question:\n{question}{live_data_section}"
+        user = f"{question}{live_data_section}"
     else:
         reordered = reorder_for_attention(contexts)
         context_block = _format_context_block(contexts, reordered=reordered)
+
         if support_mode == "weak":
-            support_note = (
-                "The retrieved documents provide partial coverage. "
-                "Cite claims from them with the matching [n] marker. "
-                "Supplement freely with your training knowledge and tools where the documents are insufficient — "
-                "cite those claims with [General knowledge] or [data.gov.my]."
+            guidance = (
+                "The following government documents provide some relevant context. "
+                "Use them where helpful, but don't hesitate to draw on your broader "
+                "knowledge to give a complete answer."
             )
         else:  # strong
-            support_note = (
-                "Prioritise the provided government documents as your primary source. "
-                "Cite every claim drawn from them inline with the matching [n] marker. "
-                "You may supplement with your training knowledge where it adds useful context — "
-                "cite those claims explicitly with [General knowledge]. "
-                "Every factual claim must be attributed to either [n] or [General knowledge]."
+            guidance = (
+                "The following government documents are directly relevant. "
+                "Ground your answer primarily in these documents, and supplement "
+                "with your knowledge where it adds useful context."
             )
 
         live_note = ""
         if live_data_blocks:
             live_note = (
-                " Additionally, live data from data.gov.my is provided. "
-                "Cite claims from this live data with [data.gov.my]."
+                " Live data from data.gov.my is also provided — "
+                "integrate it naturally into your answer."
             )
 
         system = (
-            "You are Polisi, a Malaysian government policy assistant. "
-            f"Respond in {language_name} using a formal government-brief tone. "
-            "You have two knowledge sources: "
-            "(1) retrieved government documents provided below — always prioritise these; "
-            "(2) your training knowledge — use this to supplement or add context. "
-            f"{support_note}{live_note}"
+            f"{identity}\n\n"
+            f"{guidance}{live_note}"
+            f"{_CITATION_RULES}"
         )
         user = (
-            f"Question:\n{question}\n\n"
-            "Retrieved government-document excerpts:\n"
+            f"{question}\n\n"
+            "Government documents:\n"
             f"{context_block}"
             f"{live_data_section}"
         )
@@ -197,12 +208,12 @@ def build_skill_prompt(
     reordered = reorder_for_attention(contexts)
     context_block = _format_context_block(contexts, reordered=reordered)
     context_section = (
-        f"\n\nRetrieved government-document excerpts:\n{context_block}"
+        f"\n\nGovernment documents:\n{context_block}"
         if context_block else ""
     )
     live_data_section = _format_live_data_section(live_data_blocks)
 
-    user = f"Question:\n{question}{context_section}{live_data_section}"
+    user = f"{question}{context_section}{live_data_section}"
 
     support_mode: SupportMode = "strong" if contexts else "none"
     return PromptPackage(

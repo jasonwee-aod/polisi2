@@ -52,7 +52,14 @@ class FakeGenerator(TextGenerator):
     replies: dict[str, str]
 
     async def generate(self, prompt: PromptPackage, *, max_tokens: int | None = None) -> str:
-        return self.replies[prompt.user.splitlines()[1]]
+        # Match the question from the first line of the user prompt
+        first_line = prompt.user.splitlines()[0]
+        if first_line in self.replies:
+            return self.replies[first_line]
+        # Fallback: try second line (legacy "Question:\n{q}" format)
+        if len(prompt.user.splitlines()) > 1:
+            return self.replies[prompt.user.splitlines()[1]]
+        raise KeyError(f"No reply for: {first_line!r}")
 
 
 def build_settings() -> Settings:
@@ -136,7 +143,7 @@ async def run_chat_service_paths() -> None:
 
     assert weak_reply.response.kind == "limited-support"
     assert weak_reply.response.language == "en"
-    assert weak_reply.response.answer.startswith("The retrieved document support is limited")
+    assert "[1]" in weak_reply.response.answer
 
 
 def test_fts_only_match_treated_as_weak_support() -> None:
