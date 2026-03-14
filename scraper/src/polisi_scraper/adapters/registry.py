@@ -31,6 +31,7 @@ def get_adapter_registry() -> dict[str, Type[BaseSiteAdapter]]:
         moe,
         moh,
         mohe,
+        parlimen,
         perpaduan,
         rmp,
     )

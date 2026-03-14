@@ -1,0 +1,83 @@
+# Unified scraper config for Parlimen Malaysia
+# Malaysian Parliament — dhtmlXTree AJAX API + static HTML
+# Source: https://www.parlimen.gov.my/
+
+site_slug: parlimen
+agency: "Parlimen Malaysia"
+base_url: "https://www.parlimen.gov.my"
+
+allowed_hosts:
+  - "www.parlimen.gov.my"
+  - "parlimen.gov.my"
+
+# Known SSL certificate issues
+verify_ssl: false
+
+request_delay: 1.0
+estimated_pages: 5000
+
+sections:
+
+  # ── Hansard Dewan Rakyat (Parliamentary Debate Records) ────────────────
+  - name: hansard_dr
+    label: "Hansard Dewan Rakyat"
+    doc_type: report
+    language: ms
+    source_type: ajax_tree
+    archive_url: "https://www.parlimen.gov.my/hansard-dewan-rakyat.html?uweb=dr&arkib=yes"
+
+  # ── Hansard Dewan Negara ───────────────────────────────────────────────
+  - name: hansard_dn
+    label: "Hansard Dewan Negara"
+    doc_type: report
+    language: ms
+    source_type: ajax_tree
+    archive_url: "https://www.parlimen.gov.my/hansard-dewan-negara.html?uweb=dn&arkib=yes"
+
+  # ── Jawapan Lisan Dewan Rakyat (Oral Question Replies) ─────────────────
+  - name: jawapan_lisan_dr
+    label: "Jawapan Lisan Dewan Rakyat"
+    doc_type: report
+    language: ms
+    source_type: ajax_tree
+    archive_url: "https://www.parlimen.gov.my/jawapan-lisan-dr.html?uweb=dr&arkib=yes"
+
+  # ── Jawapan Lisan Dewan Negara ─────────────────────────────────────────
+  - name: jawapan_lisan_dn
+    label: "Jawapan Lisan Dewan Negara"
+    doc_type: report
+    language: ms
+    source_type: ajax_tree
+    archive_url: "https://www.parlimen.gov.my/jawapan-lisan-dn.html?uweb=dn&arkib=yes"
+
+  # ── Jawapan Bukan Lisan Dewan Rakyat (Written Question Replies) ────────
+  - name: jawapan_bukan_lisan_dr
+    label: "Jawapan Bukan Lisan Dewan Rakyat"
+    doc_type: report
+    language: ms
+    source_type: ajax_tree
+    archive_url: "https://www.parlimen.gov.my/jawapan-bukan-lisan-dr.html?uweb=dr&arkib=yes"
+
+  # ── Jawapan Bukan Lisan Dewan Negara ───────────────────────────────────
+  - name: jawapan_bukan_lisan_dn
+    label: "Jawapan Bukan Lisan Dewan Negara"
+    doc_type: report
+    language: ms
+    source_type: ajax_tree
+    archive_url: "https://www.parlimen.gov.my/jawapan-bukan-lisan-dn.html?uweb=dn&arkib=yes"
+
+  # ── Akta-Akta Dewan Rakyat (Acts) ─────────────────────────────────────
+  - name: akta_dr
+    label: "Akta-Akta Dewan Rakyat"
+    doc_type: policy
+    language: ms
+    source_type: static
+    url: "https://www.parlimen.gov.my/akta-akta.html?uweb=dr&"
+
+  # ── Akta-Akta Dewan Negara (Acts) ─────────────────────────────────────
+  - name: akta_dn
+    label: "Akta-Akta Dewan Negara"
+    doc_type: policy
+    language: ms
+    source_type: static
+    url: "https://www.parlimen.gov.my/akta-akta-dn.html?uweb=dn&"
