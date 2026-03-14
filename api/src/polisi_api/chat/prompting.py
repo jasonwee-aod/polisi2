@@ -89,14 +89,13 @@ def build_prompt(
     live_data_section = _format_live_data_section(live_data_blocks)
 
     if support_mode == "none" and not live_data_blocks:
-        # No DB context and no live data — answer entirely from Claude's training knowledge
+        # No DB context and no live data — answer from training knowledge + tools
         system = (
             "You are Polisi, a Malaysian government policy assistant. "
-            f"Respond in {language_name} using a formal government-brief tone. "
-            "No relevant documents were found in the indexed government database for this question. "
-            "Answer using your training knowledge. "
-            "Cite every factual claim inline with [General knowledge]. "
-            "Open your answer by noting that no indexed policy documents were found and this draws on general knowledge."
+            f"Respond in {language_name} using a formal yet conversational tone. "
+            "Answer the question directly and confidently. "
+            "You have access to tools that can fetch live government data — use them when relevant. "
+            "Cite factual claims: use [data.gov.my] for live data and [General knowledge] for your training knowledge."
         )
         user = f"Question:\n{question}"
     elif support_mode == "none" and live_data_blocks:
@@ -115,10 +114,10 @@ def build_prompt(
         context_block = _format_context_block(contexts, reordered=reordered)
         if support_mode == "weak":
             support_note = (
-                "The retrieved document support is partial. "
-                "Prioritise the provided excerpts and cite every claim drawn from them with the matching [n] marker. "
-                "Where the documents are insufficient, supplement with your training knowledge and cite those claims with [General knowledge]. "
-                "Note clearly in your answer that the indexed document support is limited."
+                "The retrieved documents provide partial coverage. "
+                "Cite claims from them with the matching [n] marker. "
+                "Supplement freely with your training knowledge and tools where the documents are insufficient — "
+                "cite those claims with [General knowledge] or [data.gov.my]."
             )
         else:  # strong
             support_note = (

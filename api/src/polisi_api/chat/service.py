@@ -303,10 +303,21 @@ class ChatService:
         # --- [1.5] Metadata-boosted ranking ---
         retrieved = apply_metadata_boost(retrieved)
 
+        # Filter out FTS-only results that are just keyword noise.
+        # A real vector match has similarity > 0; FTS-only results have similarity=0
+        # and only the fts_rank to go on.  Low fts_rank means shallow keyword overlap.
+        has_vector_match = any(c.similarity > 0 for c in retrieved)
+        if not has_vector_match:
+            # FTS-only mode: only keep chunks with meaningful fts_rank
+            before = len(retrieved)
+            retrieved = [c for c in retrieved if c.fts_rank >= 0.1]
+            if before != len(retrieved):
+                logger.info("  FTS quality filter: %d -> %d chunks (dropped fts_rank < 0.1)", before, len(retrieved))
+
         top_similarity = retrieved[0].effective_similarity if retrieved else 0.0
         logger.info(
-            "  top_similarity=%.3f chunks=%d elapsed=%.1fs",
-            top_similarity, len(retrieved), time.monotonic() - t_start,
+            "  top_similarity=%.3f chunks=%d has_vector=%s elapsed=%.1fs",
+            top_similarity, len(retrieved), has_vector_match, time.monotonic() - t_start,
         )
 
         # --- Skill path: use the skill-specific prompt regardless of similarity tier ---
@@ -363,7 +374,6 @@ class ChatService:
             logger.info("  GENERATE START mode=general_knowledge")
             answer = await self._generator.generate(prompt)
             logger.info("  GENERATE DONE: %.1fs total_elapsed=%.1fs", time.monotonic() - t0, time.monotonic() - t_start)
-            answer = f"{build_general_knowledge_prefix(language)}\n\n{answer}".strip()
             return self._make_reply(
                 conversation_value=conversation_value, language=language, answer=answer,
                 citations=[], kind="general-knowledge", chunks=[],
@@ -387,11 +397,7 @@ class ChatService:
         logger.info("  GENERATE START mode=%s cited_chunks=%d", support_mode, len(cited_chunks))
         answer = await self._generator.generate(prompt)
         logger.info("  GENERATE DONE: %.1fs total_elapsed=%.1fs", time.monotonic() - t0, time.monotonic() - t_start)
-        if support_mode == "weak":
-            answer = f"{build_weak_support_prefix(language)}\n\n{answer}".strip()
-            kind = "limited-support"
-        else:
-            kind = "answer"
+        kind = "limited-support" if support_mode == "weak" else "answer"
 
         return self._make_reply(
             conversation_value=conversation_value, language=language, answer=answer,
