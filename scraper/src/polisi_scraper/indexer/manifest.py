@@ -137,9 +137,15 @@ class SpacesCorpusManifest:
     def _normalize_object(self, raw_object: dict[str, Any]) -> SpacesObject:
         key = raw_object["Key"]
         parts = key.split("/")
-        # Support both gov-my/{agency}/{year}/{file} and polisi/gov-my/{agency}/{year}/{file}
-        if len(parts) == 5 and parts[0] == "polisi" and parts[1] == "gov-my":
+        # gov-docs/{slug}/raw/YYYY/MM/DD/{sha256}_{filename}  (7 parts)
+        if len(parts) == 7 and parts[0] == "gov-docs" and parts[2] == "raw":
+            agency_part = parts[1]
+            year_month_part = f"{parts[3]}-{parts[4]}"
+            filename_part = parts[6]
+        # polisi/gov-my/{agency}/{year-month}/{file}  (5 parts, legacy)
+        elif len(parts) == 5 and parts[0] == "polisi" and parts[1] == "gov-my":
             agency_part, year_month_part, filename_part = parts[2], parts[3], parts[4]
+        # gov-my/{agency}/{year-month}/{file}  (4 parts, legacy)
         elif len(parts) == 4 and parts[0] == "gov-my":
             agency_part, year_month_part, filename_part = parts[1], parts[2], parts[3]
         else:
@@ -147,7 +153,7 @@ class SpacesCorpusManifest:
 
         filename = filename_part
         suffix = Path(filename).suffix.lower()
-        if suffix not in {".html", ".pdf", ".docx", ".xlsx"}:
+        if suffix not in {".html", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"}:
             raise ManifestError(f"Unsupported file type in storage path: {key}")
 
         metadata = _normalize_metadata(raw_object.get("Metadata"))

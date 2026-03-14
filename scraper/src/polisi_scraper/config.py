@@ -59,7 +59,7 @@ class ScraperSettings:
     scraper_state_db_path: str = ".cache/scraper_state.sqlite3"
     scraper_temp_dir: str = ".cache/tmp"
     scraper_politeness_delay_seconds: float = 0.5
-    indexer_spaces_prefix: str = "gov-my/"
+    indexer_spaces_prefix: str = "gov-docs/"
     indexer_batch_size: int = 16
     indexer_max_items_per_run: int = 0
     indexer_chunk_size: int = 1400
@@ -105,7 +105,7 @@ class ScraperSettings:
             scraper_politeness_delay_seconds=_coerce_float(
                 source.get("SCRAPER_POLITENESS_DELAY_SECONDS"), 0.5
             ),
-            indexer_spaces_prefix=source.get("INDEXER_SPACES_PREFIX", "gov-my/"),
+            indexer_spaces_prefix=source.get("INDEXER_SPACES_PREFIX", "gov-docs/"),
             indexer_batch_size=_coerce_int(source.get("INDEXER_BATCH_SIZE"), 16),
             indexer_max_items_per_run=_coerce_int(source.get("INDEXER_MAX_ITEMS_PER_RUN"), 0),
             indexer_chunk_size=_coerce_int(source.get("INDEXER_CHUNK_SIZE"), 1400),
