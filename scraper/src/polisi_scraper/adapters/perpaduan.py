@@ -12,7 +12,8 @@ from bs4 import BeautifulSoup
 from polisi_scraper.adapters.base import BaseSiteAdapter, DiscoveredItem, DocumentCandidate
 from polisi_scraper.adapters.registry import register_adapter
 from polisi_scraper.core.dates import parse_malay_date
-from polisi_scraper.core.urls import canonical_url, guess_content_type
+from polisi_scraper.core.extractors import extract_document_links
+from polisi_scraper.core.urls import canonical_url, guess_content_type, make_absolute
 
 log = logging.getLogger(__name__)
 
@@ -85,7 +86,17 @@ class PerpaduanAdapter(BaseSiteAdapter):
                 )
 
     def fetch_and_extract(self, item: DiscoveredItem) -> Iterable[DocumentCandidate]:
-        """Perpaduan is HTML-only archival — yield the page itself."""
+        """Fetch page HTML, yield it, then yield any embedded document links."""
+        try:
+            resp = self.http.get(item.source_url)
+            html = resp.text
+        except Exception as e:
+            log.warning("[perpaduan] Failed to fetch %s: %s", item.source_url, e)
+            return
+
+        base = self.config.get("base_url", "https://www.perpaduan.gov.my")
+
+        # Yield the HTML page itself
         yield DocumentCandidate(
             url=item.source_url,
             source_page_url=item.source_url,
@@ -95,3 +106,16 @@ class PerpaduanAdapter(BaseSiteAdapter):
             content_type="text/html",
             language=item.language,
         )
+
+        # Yield embedded document links (PDF, DOC, etc.)
+        for dl in extract_document_links(html, base):
+            ct = guess_content_type(dl.url)
+            yield DocumentCandidate(
+                url=dl.url,
+                source_page_url=item.source_url,
+                title=item.title,
+                published_at=item.published_at,
+                doc_type=item.doc_type,
+                content_type=ct,
+                language=item.language,
+            )
