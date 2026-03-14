@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+import time
 from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID, uuid4
@@ -43,6 +45,9 @@ from .retrieval import (
     apply_metadata_boost,
     deduplicate_chunks,
 )
+
+
+logger = logging.getLogger("polisi.pipeline")
 
 
 class TextGenerator(Protocol):
@@ -93,7 +98,14 @@ class AnthropicTextGenerator:
                 if tools:
                     kwargs["tools"] = tools
 
+                t0 = time.monotonic()
+                logger.info("    LLM CALL round=%d model=%s max_tokens=%d tools=%d", _round, self._model, kwargs["max_tokens"], len(tools))
                 response = await self._client.messages.create(**kwargs)
+                logger.info(
+                    "    LLM RESP round=%d: %.1fs stop=%s usage=%s",
+                    _round, time.monotonic() - t0, response.stop_reason,
+                    getattr(response, "usage", "n/a"),
+                )
 
                 # If no tool use requested, extract text and return
                 if response.stop_reason != "tool_use":
@@ -107,9 +119,12 @@ class AnthropicTextGenerator:
                 tool_results: list[dict] = []
                 for block in response.content:
                     if getattr(block, "type", None) == "tool_use":
+                        t_tool = time.monotonic()
+                        logger.info("    TOOL CALL round=%d name=%s input=%r", _round, block.name, block.input)
                         result_text = await self._handle_tool_call(
                             block.name, block.input
                         )
+                        logger.info("    TOOL DONE round=%d: %.1fs result_len=%d", _round, time.monotonic() - t_tool, len(result_text))
                         tool_results.append({
                             "type": "tool_result",
                             "tool_use_id": block.id,
@@ -121,10 +136,15 @@ class AnthropicTextGenerator:
                 messages.append({"role": "user", "content": tool_results})
 
             # Exhausted rounds — extract whatever text we have
+            logger.warning("    LLM exhausted %d tool rounds", self._MAX_TOOL_ROUNDS)
             return "[Data retrieval completed — see above results.]"
 
         except RateLimitError:
+            logger.warning("    LLM rate limited")
             return "[Rate limit reached — please try again in a moment.]"
+        except Exception as exc:
+            logger.exception("    LLM ERROR: %s", exc)
+            raise
 
     async def _handle_tool_call(self, name: str, tool_input: dict) -> str:
         if name == "query_government_data" and self._datagov:
@@ -162,9 +182,15 @@ class ChatService:
         skill: str | None = None,
         conversation_history: list[tuple[str, str]] | None = None,
     ) -> GeneratedReply:
+        t_start = time.monotonic()
         language = detect_language(question)
         conversation_value = conversation_id or str(uuid4())
         skill_def = SKILL_BY_ID.get(skill) if skill else None
+
+        logger.info(
+            "PIPELINE START question=%r skill=%s language=%s",
+            question[:80], skill, language,
+        )
 
         # Skip clarification check when a skill is active — the user has a clear intent
         if not skill_def and needs_clarification(question):
@@ -180,12 +206,14 @@ class ChatService:
             conversation_history
             and self._anthropic
         ):
+            t0 = time.monotonic()
             retrieval_query = await reformulate_with_history(
                 question,
                 conversation_history,
                 self._anthropic,
                 self._settings.query_expansion_model,
             )
+            logger.info("  [1.3] reformulate: %.1fs query=%r", time.monotonic() - t0, retrieval_query[:80])
 
         # Extract agency filter from the question when possible
         agency_filter = extract_agency(question)
@@ -203,30 +231,40 @@ class ChatService:
             and self._anthropic
             and hasattr(self._retriever, "retrieve_multi")
         ):
+            t0 = time.monotonic()
             expanded_queries = await expand_query(
                 retrieval_query,
                 language,
                 self._anthropic,
                 self._settings.query_expansion_model,
             )
+            logger.info("  [1.2] expand_query: %.1fs queries=%r", time.monotonic() - t0, expanded_queries)
+            t0 = time.monotonic()
             retrieved = await self._retriever.retrieve_multi(
                 expanded_queries, limit=retrieval_limit, filters=filters,
             )
+            logger.info("  [1.2] retrieve_multi: %.1fs chunks=%d", time.monotonic() - t0, len(retrieved))
         else:
+            t0 = time.monotonic()
             retrieved = await self._retriever.retrieve(
                 retrieval_query, limit=retrieval_limit, filters=filters,
             )
+            logger.info("  retrieve: %.1fs chunks=%d", time.monotonic() - t0, len(retrieved))
 
         # --- [3.2] Deduplicate chunks ---
+        before_dedup = len(retrieved)
         retrieved = deduplicate_chunks(retrieved)
+        logger.info("  [3.2] dedup: %d -> %d chunks", before_dedup, len(retrieved))
 
         # --- [1.1] Cross-encoder reranking ---
         if self._reranker and retrieved:
+            t0 = time.monotonic()
             retrieved = await self._reranker.rerank(
                 retrieval_query,
                 retrieved,
                 top_n=self._settings.reranker_top_n,
             )
+            logger.info("  [1.1] rerank: %.1fs chunks=%d", time.monotonic() - t0, len(retrieved))
 
         # Check if any retrieved chunks match a data.gov.my catalog entry
         live_data_blocks: list[str] = []
@@ -241,16 +279,22 @@ class ChatService:
 
         # Fetch live data for matched datasets (concurrently)
         if datagov_entries:
+            t0 = time.monotonic()
             fetch_results = await asyncio.gather(
                 *(self._datagov.fetch_dataset(entry) for entry in datagov_entries)
             )
             for entry, rows in zip(datagov_entries, fetch_results):
                 live_data_blocks.append(self._datagov.format_rows_for_context(entry, rows))
+            logger.info("  datagov fetch: %.1fs datasets=%d", time.monotonic() - t0, len(datagov_entries))
 
         # --- [1.5] Metadata-boosted ranking ---
         retrieved = apply_metadata_boost(retrieved)
 
         top_similarity = retrieved[0].effective_similarity if retrieved else 0.0
+        logger.info(
+            "  top_similarity=%.3f chunks=%d elapsed=%.1fs",
+            top_similarity, len(retrieved), time.monotonic() - t_start,
+        )
 
         # --- Skill path: use the skill-specific prompt regardless of similarity tier ---
         if skill_def:
@@ -264,7 +308,10 @@ class ChatService:
                 contexts=cited_chunks, skill=skill_def,
                 live_data_blocks=live_data_blocks,
             )
+            t0 = time.monotonic()
+            logger.info("  GENERATE START skill=%s max_tokens=%d", skill, skill_def.max_tokens)
             answer = await self._generator.generate(prompt, max_tokens=skill_def.max_tokens)
+            logger.info("  GENERATE DONE: %.1fs total_elapsed=%.1fs", time.monotonic() - t0, time.monotonic() - t_start)
             return self._make_reply(
                 conversation_value=conversation_value, language=language, answer=answer,
                 citations=self._build_all_citations(cited_chunks, datagov_entries),
@@ -286,7 +333,10 @@ class ChatService:
                     question=question, language=language,
                     contexts=[], support_mode="none", live_data_blocks=live_data_blocks,
                 )
+                t0 = time.monotonic()
+                logger.info("  GENERATE START mode=none+live_data")
                 answer = await self._generator.generate(prompt)
+                logger.info("  GENERATE DONE: %.1fs total_elapsed=%.1fs", time.monotonic() - t0, time.monotonic() - t_start)
                 return self._make_reply(
                     conversation_value=conversation_value, language=language, answer=answer,
                     citations=self._build_datagov_citations(datagov_entries),
@@ -296,7 +346,10 @@ class ChatService:
             prompt = build_prompt(
                 question=question, language=language, contexts=[], support_mode="none",
             )
+            t0 = time.monotonic()
+            logger.info("  GENERATE START mode=general_knowledge")
             answer = await self._generator.generate(prompt)
+            logger.info("  GENERATE DONE: %.1fs total_elapsed=%.1fs", time.monotonic() - t0, time.monotonic() - t_start)
             answer = f"{build_general_knowledge_prefix(language)}\n\n{answer}".strip()
             return self._make_reply(
                 conversation_value=conversation_value, language=language, answer=answer,
@@ -317,7 +370,10 @@ class ChatService:
             contexts=cited_chunks, support_mode=support_mode,
             live_data_blocks=live_data_blocks,
         )
+        t0 = time.monotonic()
+        logger.info("  GENERATE START mode=%s cited_chunks=%d", support_mode, len(cited_chunks))
         answer = await self._generator.generate(prompt)
+        logger.info("  GENERATE DONE: %.1fs total_elapsed=%.1fs", time.monotonic() - t0, time.monotonic() - t_start)
         if support_mode == "weak":
             answer = f"{build_weak_support_prefix(language)}\n\n{answer}".strip()
             kind = "limited-support"
