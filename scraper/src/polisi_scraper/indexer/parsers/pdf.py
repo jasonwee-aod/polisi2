@@ -38,31 +38,7 @@ class PdfParser(DocumentParser):
         *,
         metadata: dict[str, object] | None = None,
     ) -> ParsedDocument:
-        api_key = os.environ.get("LLAMA_CLOUD_API_KEY")
-        budget = _get_llamaparse_budget()
-        if api_key:
-            # Check budget before sending to LlamaParse
-            with _llamaparse_lock:
-                global _llamaparse_pages_used
-                if budget and _llamaparse_pages_used >= budget:
-                    log.warning(
-                        "[pdf] LlamaParse page budget exhausted (%d/%d), falling back to pypdf",
-                        _llamaparse_pages_used, budget,
-                    )
-                    return self._parse_pypdf(payload, metadata=metadata)
-            try:
-                result = self._parse_llamaparse(payload, api_key, metadata=metadata)
-                # Track pages used
-                with _llamaparse_lock:
-                    _llamaparse_pages_used += len(result.blocks)
-                    if budget:
-                        log.info(
-                            "[pdf] LlamaParse pages used: %d/%d",
-                            _llamaparse_pages_used, budget,
-                        )
-                return result
-            except Exception:
-                pass  # fall through to pypdf
+        # Always use pypdf for PDFs — LlamaParse reserved for spreadsheets only
         return self._parse_pypdf(payload, metadata=metadata)
 
     def _parse_llamaparse(
