@@ -886,8 +886,8 @@ class DewanSelangorAdapter(BaseSiteAdapter):
 
         # Shared mutable counter so _paginate_equans_listing can decrement
         # the remaining budget across calls.  Using a list as a simple
-        # mutable wrapper: budget[0] = remaining pages.
-        budget = [max_pages]
+        # mutable wrapper: budget[0] = remaining pages, or None if unlimited.
+        budget = [max_pages if max_pages else None]
 
         # Determine entry point: session index or direct question listing
         if "/question" in listing_url:
@@ -909,7 +909,7 @@ class DewanSelangorAdapter(BaseSiteAdapter):
         sessions = _extract_equans_session_index(resp.text, listing_url)
 
         for session in sessions:
-            if budget[0] and budget[0] <= 0:
+            if budget[0] is not None and budget[0] <= 0:
                 log.info("[dewan_selangor] e-QUANS global budget exhausted")
                 return
 
@@ -930,7 +930,7 @@ class DewanSelangorAdapter(BaseSiteAdapter):
 
             # Step 3: Walk paginated question listings for each category
             for cat in categories:
-                if budget[0] and budget[0] <= 0:
+                if budget[0] is not None and budget[0] <= 0:
                     log.info("[dewan_selangor] e-QUANS global budget exhausted")
                     return
                 cat_url = cat["href"]
@@ -955,7 +955,7 @@ class DewanSelangorAdapter(BaseSiteAdapter):
         current_url: Optional[str] = listing_url
 
         while current_url:
-            if budget[0] and budget[0] <= 0:
+            if budget[0] is not None and budget[0] <= 0:
                 log.info("[dewan_selangor] e-QUANS global page budget exhausted")
                 return
 
@@ -967,7 +967,7 @@ class DewanSelangorAdapter(BaseSiteAdapter):
                           current_url, exc)
                 break
 
-            if budget[0]:
+            if budget[0] is not None:
                 budget[0] -= 1
             items = _extract_equans_listing(resp.text, current_url)
 
