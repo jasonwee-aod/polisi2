@@ -130,6 +130,8 @@ def build_skill_prompt(
 ) -> PromptPackage:
     """Build a prompt using a skill-specific system prompt."""
     system = skill.system_prompt_ms if language == "ms" else skill.system_prompt_en
+    if contexts:
+        system += " Cite sources inline with [n] when referencing specific document content."
 
     reordered = reorder_for_attention(contexts)
     context_block = _format_context_block(contexts, reordered=reordered)
