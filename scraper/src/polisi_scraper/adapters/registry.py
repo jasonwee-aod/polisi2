@@ -22,6 +22,7 @@ def get_adapter_registry() -> dict[str, Type[BaseSiteAdapter]]:
     # Import all adapter modules to trigger registration
     from polisi_scraper.adapters import (  # noqa: F401
         bheuu,
+        data_gov_my,
         dewan_johor,
         dewan_selangor,
         idfr,

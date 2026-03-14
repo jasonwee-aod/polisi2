@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from polisi_scraper.indexer.parsers.base import DocumentParser, ParsedBlock, ParsedDocument
+from polisi_scraper.indexer.parsers.csv_parser import CsvParser
 from polisi_scraper.indexer.parsers.docx import DocxParser
 from polisi_scraper.indexer.parsers.html import HtmlParser
 from polisi_scraper.indexer.parsers.pdf import PdfParser
@@ -14,6 +15,8 @@ _PARSERS: dict[str, DocumentParser] = {
     "pdf": PdfParser(),
     "docx": DocxParser(),
     "xlsx": XlsxParser(),
+    "xls": XlsxParser(),
+    "csv": CsvParser(),
 }
 
 
@@ -25,6 +28,7 @@ def get_parser(file_type: str) -> DocumentParser:
 
 
 __all__ = [
+    "CsvParser",
     "DocxParser",
     "DocumentParser",
     "HtmlParser",

@@ -1,0 +1,15 @@
+# Malaysian Open Data Portal (archive.data.gov.my)
+# CKAN API-based — no HTML scraping needed
+
+site_slug: data-gov-my
+agency: "Malaysian Open Data Portal (MAMPU)"
+base_url: "https://archive.data.gov.my"
+
+allowed_hosts:
+  - "archive.data.gov.my"
+
+verify_ssl: true
+request_delay: 0.5
+estimated_pages: 15
+
+sections: []

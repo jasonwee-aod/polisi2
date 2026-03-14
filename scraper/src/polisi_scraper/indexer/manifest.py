@@ -156,7 +156,7 @@ class SpacesCorpusManifest:
 
         filename = filename_part
         suffix = Path(filename).suffix.lower()
-        if suffix not in {".html", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"}:
+        if suffix not in {".html", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".csv"}:
             raise ManifestError(f"Unsupported file type in storage path: {key}")
 
         metadata = _normalize_metadata(raw_object.get("Metadata"))

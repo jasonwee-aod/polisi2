@@ -1,31 +1,28 @@
-"""XLSX parser — LlamaParse for messy spreadsheets, openpyxl fallback.
-
-LlamaParse uses spreadsheet_extract_sub_tables and output_tables_as_HTML
-to handle merged cells, irregular layouts, and multi-table sheets.
-Falls back to openpyxl (free) when budget is exhausted or key is missing.
-"""
+"""CSV parser — reads rows with header-value pairs, falls back to raw rows."""
 
 from __future__ import annotations
 
+import csv
+import io
 import logging
 import os
 import tempfile
-from io import BytesIO
-
-from openpyxl import load_workbook
+import threading
 
 from polisi_scraper.indexer.parsers.base import DocumentParser, ParsedBlock, ParsedDocument
+
+log = logging.getLogger(__name__)
+
+# Reuse the LlamaParse budget from the PDF parser module.
 from polisi_scraper.indexer.parsers.pdf import (
     _get_llamaparse_budget,
     _llamaparse_lock,
     _llamaparse_pages_used,
 )
 
-log = logging.getLogger(__name__)
 
-
-class XlsxParser(DocumentParser):
-    file_type = "xlsx"
+class CsvParser(DocumentParser):
+    file_type = "csv"
 
     def parse_bytes(
         self,
@@ -40,18 +37,18 @@ class XlsxParser(DocumentParser):
             with _llamaparse_lock:
                 global _llamaparse_pages_used
                 if budget and _llamaparse_pages_used >= budget:
-                    return self._parse_openpyxl(payload, metadata=metadata)
+                    return self._parse_stdlib(payload, metadata=metadata)
             try:
                 result = self._parse_llamaparse(payload, api_key, metadata=metadata)
                 with _llamaparse_lock:
                     _llamaparse_pages_used += max(len(result.blocks), 1)
                     if budget:
-                        log.info("[xlsx] LlamaParse pages used: %d/%d", _llamaparse_pages_used, budget)
+                        log.info("[csv] LlamaParse pages used: %d/%d", _llamaparse_pages_used, budget)
                 return result
             except Exception as exc:
-                log.warning("[xlsx] LlamaParse failed, falling back to openpyxl: %s", exc)
+                log.warning("[csv] LlamaParse failed, falling back to stdlib: %s", exc)
 
-        return self._parse_openpyxl(payload, metadata=metadata)
+        return self._parse_stdlib(payload, metadata=metadata)
 
     def _parse_llamaparse(
         self,
@@ -71,7 +68,7 @@ class XlsxParser(DocumentParser):
             output_tables_as_HTML=False,
         )
 
-        fd, tmp_path = tempfile.mkstemp(suffix=".xlsx")
+        fd, tmp_path = tempfile.mkstemp(suffix=".csv")
         try:
             os.write(fd, payload)
             os.close(fd)
@@ -83,9 +80,7 @@ class XlsxParser(DocumentParser):
         for index, doc in enumerate(documents, start=1):
             text = doc.text.strip()
             if text:
-                blocks.append(
-                    ParsedBlock(text=text, block_type="table", page_number=index)
-                )
+                blocks.append(ParsedBlock(text=text, block_type="table", page_number=index))
 
         return ParsedDocument(
             file_type=self.file_type,
@@ -94,40 +89,57 @@ class XlsxParser(DocumentParser):
             metadata=dict(metadata or {}),
         )
 
-    def _parse_openpyxl(
+    def _parse_stdlib(
         self,
         payload: bytes,
         *,
         metadata: dict[str, object] | None = None,
     ) -> ParsedDocument:
-        workbook = load_workbook(BytesIO(payload), data_only=True)
+        """Parse CSV using Python stdlib — header-value pairs per row."""
+        # Try common encodings
+        text = None
+        for enc in ("utf-8", "utf-8-sig", "latin-1", "cp1252"):
+            try:
+                text = payload.decode(enc)
+                break
+            except (UnicodeDecodeError, ValueError):
+                continue
+        if text is None:
+            text = payload.decode("utf-8", errors="replace")
+
+        # Detect dialect
+        try:
+            dialect = csv.Sniffer().sniff(text[:4096])
+        except csv.Error:
+            dialect = csv.excel
+
+        reader = csv.reader(io.StringIO(text), dialect)
+        rows = list(reader)
+        if not rows:
+            return ParsedDocument(file_type=self.file_type, blocks=[], metadata=dict(metadata or {}))
+
+        headers = rows[0]
         blocks: list[ParsedBlock] = []
 
-        for sheet in workbook.worksheets:
-            rows = list(sheet.iter_rows(values_only=True))
-            if not rows:
+        for row_number, row in enumerate(rows[1:], start=2):
+            if not any(cell.strip() for cell in row):
                 continue
-            headers = [_stringify(value) for value in rows[0]]
-            for row_number, row in enumerate(rows[1:], start=2):
-                values = [_stringify(value) for value in row]
-                if not any(values):
-                    continue
-                row_pairs = []
-                for header, value in zip(headers, values):
-                    if value:
-                        label = header or f"Column {len(row_pairs) + 1}"
-                        row_pairs.append(f"{label}: {value}")
-                text = " | ".join(row_pairs) if row_pairs else " | ".join(values)
-                row_label = values[0] or headers[0] or f"Row {row_number}"
-                blocks.append(
-                    ParsedBlock(
-                        text=text,
-                        block_type="row",
-                        sheet_name=sheet.title,
-                        row_number=row_number,
-                        row_label=row_label,
-                    )
+            pairs = []
+            for header, value in zip(headers, row):
+                value = value.strip()
+                if value:
+                    label = header.strip() or f"Column {len(pairs) + 1}"
+                    pairs.append(f"{label}: {value}")
+            text = " | ".join(pairs) if pairs else " | ".join(row)
+            row_label = row[0].strip() if row else f"Row {row_number}"
+            blocks.append(
+                ParsedBlock(
+                    text=text,
+                    block_type="row",
+                    row_number=row_number,
+                    row_label=row_label,
                 )
+            )
 
         return ParsedDocument(
             file_type=self.file_type,
@@ -135,9 +147,3 @@ class XlsxParser(DocumentParser):
             blocks=blocks,
             metadata=dict(metadata or {}),
         )
-
-
-def _stringify(value: object) -> str:
-    if value is None:
-        return ""
-    return str(value).strip()
