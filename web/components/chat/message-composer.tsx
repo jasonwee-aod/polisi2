@@ -8,7 +8,9 @@ import { SkillSelector } from "./skill-selector";
 
 type MessageComposerProps = {
   disabled?: boolean;
+  isStreaming?: boolean;
   onSubmit(question: string): Promise<void> | void;
+  onStop?(): void;
   skills?: SkillInfo[];
   selectedSkill: string | null;
   onSkillSelect(skillId: string | null): void;
@@ -16,7 +18,9 @@ type MessageComposerProps = {
 
 export function MessageComposer({
   disabled,
+  isStreaming = false,
   onSubmit,
+  onStop,
   skills = [],
   selectedSkill,
   onSkillSelect,
@@ -41,7 +45,7 @@ export function MessageComposer({
     }
   }
 
-  const canSubmit = !!draft.trim() && !disabled;
+  const canSubmit = !!draft.trim() && !disabled && !isStreaming;
 
   return (
     <div
@@ -73,7 +77,7 @@ export function MessageComposer({
                 : "Message Polisi.ai"
             }
             rows={1}
-            disabled={disabled}
+            disabled={disabled || isStreaming}
             style={{
               flex: 1,
               border: "none",
@@ -85,37 +89,71 @@ export function MessageComposer({
               lineHeight: 1.5
             }}
           />
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            aria-label="Ask"
-            style={{
-              width: 36,
-              height: 36,
-              flexShrink: 0,
-              borderRadius: "50%",
-              border: "none",
-              background: canSubmit ? "var(--accent)" : "var(--border-subtle)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: canSubmit ? "pointer" : "not-allowed",
-              transition: "background 0.15s"
-            }}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+
+          {isStreaming ? (
+            /* Stop button */
+            <button
+              type="button"
+              onClick={onStop}
+              aria-label="Stop generating"
+              style={{
+                width: 36,
+                height: 36,
+                flexShrink: 0,
+                borderRadius: "50%",
+                border: "2px solid var(--text-tertiary)",
+                background: "transparent",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                transition: "border-color 0.15s",
+              }}
             >
-              <path d="m5 12 7-7 7 7M12 19V5" />
-            </svg>
-          </button>
+              {/* Square stop icon */}
+              <div
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 2,
+                  background: "var(--text-tertiary)",
+                }}
+              />
+            </button>
+          ) : (
+            /* Submit button */
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              aria-label="Ask"
+              style={{
+                width: 36,
+                height: 36,
+                flexShrink: 0,
+                borderRadius: "50%",
+                border: "none",
+                background: canSubmit ? "var(--accent)" : "var(--border-subtle)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: canSubmit ? "pointer" : "not-allowed",
+                transition: "background 0.15s"
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m5 12 7-7 7 7M12 19V5" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Toolbar row */}
@@ -133,57 +171,9 @@ export function MessageComposer({
               skills={skills}
               selectedSkill={selectedSkill}
               onSelect={onSkillSelect}
-              disabled={disabled}
+              disabled={disabled || isStreaming}
             />
           )}
-
-          <div style={{ flex: 1 }} />
-
-          {[
-            {
-              label: "Attach file",
-              d: "m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"
-            },
-            {
-              label: "Web search",
-              d: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20M2 12h20M12 2c-2.76 0-5 4.48-5 10s2.24 10 5 10 5-4.48 5-10S14.76 2 12 2"
-            },
-            {
-              label: "Add image",
-              d: "M21 15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h4l2-3h4l2 3h4a2 2 0 0 1 2 2zM12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"
-            }
-          ].map(({ label, d }) => (
-            <button
-              key={label}
-              type="button"
-              aria-label={label}
-              style={{
-                width: 32,
-                height: 32,
-                border: "none",
-                background: "none",
-                borderRadius: 8,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--icon-default)",
-                cursor: "pointer"
-              }}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d={d} />
-              </svg>
-            </button>
-          ))}
         </div>
       </form>
     </div>

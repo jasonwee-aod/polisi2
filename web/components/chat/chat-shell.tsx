@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 import {
   AssistantResponse,
@@ -53,6 +53,7 @@ type ChatShellProps = {
       skill?: string | null;
     };
     apiBaseUrl?: string;
+    signal?: AbortSignal;
     onEvent(event: StreamEvent): void;
   }) => Promise<void>;
   navigate?: (path: string) => void;
@@ -76,6 +77,7 @@ export function ChatShell({
   const [selectedCitation, setSelectedCitation] = useState<CitationRecord | null>(null);
   const [isLoadingConversation, startConversationTransition] = useTransition();
   const [isStreaming, setIsStreaming] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
   const [skills, setSkills] = useState<SkillInfo[]>([]);
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   const [feedbackRatings, setFeedbackRatings] = useState<Record<string, number>>({});
@@ -136,10 +138,14 @@ export function ChatShell({
       }
     ]);
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       await streamChat({
         accessToken,
         apiBaseUrl,
+        signal: controller.signal,
         payload: {
           question,
           conversation_id: activeConversationId,
@@ -171,19 +177,24 @@ export function ChatShell({
         }
       });
     } catch (error) {
-      const rateLimitMessage =
-        error instanceof RateLimitError
-          ? `**Daily limit reached.** ${error.detail.message}\n\nYour free tier allows ${error.detail.limit} ${error.detail.error === "daily_request_limit" ? "requests" : "tokens"} per day. Usage resets at midnight.`
-          : "Something went wrong. Please try again.";
+      if (error instanceof DOMException && error.name === "AbortError") {
+        // User clicked stop — keep whatever partial content we have
+      } else {
+        const rateLimitMessage =
+          error instanceof RateLimitError
+            ? `**Daily limit reached.** ${error.detail.message}\n\nYour free tier allows ${error.detail.limit} ${error.detail.error === "daily_request_limit" ? "requests" : "tokens"} per day. Usage resets at midnight.`
+            : "Something went wrong. Please try again.";
 
-      setMessages((current) =>
-        current.map((message) =>
-          message.id === assistantDraftId
-            ? { ...message, content: rateLimitMessage }
-            : message
-        )
-      );
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === assistantDraftId
+              ? { ...message, content: message.content || rateLimitMessage }
+              : message
+          )
+        );
+      }
     } finally {
+      abortRef.current = null;
       setIsStreaming(false);
       try {
         const nextConversations = await apiClient.fetchConversations({ accessToken, apiBaseUrl });
@@ -226,6 +237,10 @@ export function ChatShell({
     // Optimistic update
     setFeedbackRatings((prev) => ({ ...prev, [messageId]: rating }));
     void submitFeedback({ accessToken, messageId, rating, apiBaseUrl });
+  }
+
+  function handleStop() {
+    abortRef.current?.abort();
   }
 
   function handleNewConversation() {
@@ -360,8 +375,10 @@ export function ChatShell({
         >
           <div style={{ width: "100%", maxWidth: 680 }}>
             <MessageComposer
-              disabled={isStreaming || isLoadingConversation}
+              disabled={isLoadingConversation}
+              isStreaming={isStreaming}
               onSubmit={handleSubmit}
+              onStop={handleStop}
               skills={skills}
               selectedSkill={selectedSkill}
               onSkillSelect={setSelectedSkill}

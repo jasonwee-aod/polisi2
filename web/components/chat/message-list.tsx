@@ -6,36 +6,57 @@ import remarkGfm from "remark-gfm";
 
 import { CitationRecord, ConversationMessage } from "@/lib/api/client";
 
-const THINKING_PHASES = ["Searching documents...", "Thinking...", "Generating..."];
+/**
+ * Pipeline stage indicator — progresses through stages based on elapsed time.
+ * Mimics the real backend pipeline: search → analyse → fetch data → write.
+ */
+const PIPELINE_STAGES = [
+  { label: "Searching documents", delay: 0 },
+  { label: "Analysing relevance", delay: 2500 },
+  { label: "Fetching live data", delay: 5000 },
+  { label: "Writing response", delay: 8000 },
+];
 
 function ThinkingIndicator() {
-  const [phaseIndex, setPhaseIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
+  const [stageIndex, setStageIndex] = useState(0);
+  const [dots, setDots] = useState(1);
 
   useEffect(() => {
-    const cycle = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setPhaseIndex((i) => (i + 1) % THINKING_PHASES.length);
-        setVisible(true);
-      }, 300);
-    }, 1800);
-    return () => clearInterval(cycle);
+    // Progress through stages based on elapsed time
+    const timers = PIPELINE_STAGES.slice(1).map((stage, i) =>
+      setTimeout(() => setStageIndex(i + 1), stage.delay)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((d) => (d % 3) + 1);
+    }, 400);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <span
+    <div
       style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
         fontSize: 14,
         color: "var(--text-tertiary)",
-        fontStyle: "italic",
-        opacity: visible ? 1 : 0,
-        transition: "opacity 0.3s ease",
-        display: "inline-block"
       }}
     >
-      {THINKING_PHASES[phaseIndex]}
-    </span>
+      {/* Animated spinner */}
+      <svg width="16" height="16" viewBox="0 0 16 16" style={{ animation: "spin 1s linear infinite" }}>
+        <circle cx="8" cy="8" r="6" fill="none" stroke="var(--border-subtle)" strokeWidth="2" />
+        <path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+      <span>
+        {PIPELINE_STAGES[stageIndex].label}
+        {".".repeat(dots)}
+      </span>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
   );
 }
 
