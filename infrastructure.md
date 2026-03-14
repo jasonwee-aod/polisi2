@@ -201,3 +201,73 @@ Embedding costs at initial indexing are a one-time batch cost. Re-indexing only 
 2. **Indexing layer** — LlamaIndex pipeline reading from Spaces, writing to Supabase
 3. **API backend** — FastAPI wrapper around LlamaIndex + Claude, with citation response schema
 4. **Frontend** — Next.js app with Supabase auth and chat UI
+
+---
+
+## Retrieval Quality Roadmap
+
+Improvements to make the chatbot smarter, listed from highest-impact/lowest-effort to most ambitious.
+
+### Phase 1 — Hybrid Search + Metadata Filtering (DONE)
+
+**Status:** Implemented via migration `20260314_01_hybrid_search.sql`
+
+Added full-text search (PostgreSQL tsvector with GIN index) alongside vector similarity, fused with Reciprocal Rank Fusion (RRF). Also added agency-based metadata filtering extracted from user questions.
+
+**What changed:**
+- `documents.fts` tsvector column populated on insert via trigger
+- `hybrid_match_documents()` SQL function: runs both vector + FTS, merges via RRF, supports agency/date filters
+- `HybridPostgresRetriever` in the API — now the default retriever
+- `extract_agency()` in `detector.py` — detects agency mentions and passes filter to retrieval
+- `RetrievedChunk.effective_similarity` — normalises FTS-only matches so they aren't discarded
+
+**Key parameters:**
+- `RETRIEVAL_RRF_K` (default 60) — RRF smoothing constant
+- `RETRIEVAL_FTS_MIN_SIMILARITY` (default 0.50) — similarity floor for FTS-only matches
+
+### Phase 2 — Cross-Encoder Reranking (Future)
+
+**Goal:** After hybrid retrieval returns top-N candidates, run a cross-encoder to rerank by actual relevance to the question. This eliminates irrelevant chunks that happen to share vocabulary but aren't answering the right question.
+
+**Approach:**
+- Retrieve top 20 candidates via hybrid search
+- Score each with a cross-encoder (e.g., `ms-marco-MiniLM-L-12-v2`) or a lightweight Claude Haiku call
+- Return top 5 reranked results to the prompt
+
+**Estimated effort:** 2 days. Main work is adding the reranker step to `HybridPostgresRetriever.retrieve()` and a new `Reranker` protocol.
+
+**Tradeoff:** Adds ~200ms latency per query (cross-encoder) or ~1s + cost (Claude call). Worth it if irrelevant chunk dilution is a frequent problem.
+
+### Phase 3 — Agentic RAG: Query Planning + Conversation Context (Future)
+
+**Goal:** Handle complex multi-part questions and follow-up questions that the current single-shot retrieval can't answer well.
+
+**Approach:**
+- **Query planner:** Before retrieval, make a fast Claude Haiku call that decomposes the question into sub-queries and detects metadata filters (agency, date range, topic). Example: "Compare education subsidies between 2023 and 2024" → two sub-queries with date filters.
+- **Multi-retrieval:** Run each sub-query independently through hybrid search, merge results.
+- **Conversation-aware:** Pass the last 3-5 messages as context to the query planner so follow-up questions like "what about eligibility?" understand what "it" refers to.
+
+**Estimated effort:** 3-4 days. Requires a new `QueryPlanner` class, changes to `ChatService.generate_reply()` to pass conversation history, and updates to the streaming route.
+
+**Tradeoff:** Adds 1-2 extra LLM calls per query. Use Haiku for the planner to keep cost/latency low. The conversation history loading requires changes to `handle_chat()`.
+
+### Phase 4 — Knowledge Graph Layer (Future)
+
+**Goal:** Enable navigational and relational queries that neither vector nor keyword search can handle. "What policies does MOE manage?", "What programs are related to BR1M?", "Show me all housing-related benefits."
+
+**Approach (Postgres-native, no new infra):**
+- **Entity extraction during indexing:** Use Claude or a NER model to extract structured entities from each document: policy names, programs, agencies, monetary amounts, dates, eligibility criteria.
+- **Schema:**
+  ```sql
+  policy_entities (id, entity_type, name, canonical_name, metadata)
+  entity_relationships (source_id, target_id, relationship_type, confidence)
+  document_entities (document_id, entity_id, chunk_index, mention_text)
+  ```
+- **Query-time flow:** Extract entities from the user's question → query the graph for related entities/documents → merge graph-retrieved documents with hybrid search results → pass to LLM.
+- **Incremental build:** Run entity extraction as a post-indexing step; can backfill existing documents.
+
+**Estimated effort:** 1-2 weeks. The entity extraction pipeline is the bulk of the work. Graph traversal via recursive CTEs in Postgres is straightforward.
+
+**Alternative:** Use Neo4j for richer graph traversal. Only justified if the Postgres approach hits performance limits at scale.
+
+**Tradeoff:** Significant upfront investment in entity extraction quality. Valuable if users frequently ask relational/navigational questions rather than factual lookups.

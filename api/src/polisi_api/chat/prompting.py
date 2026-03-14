@@ -27,11 +27,19 @@ def build_prompt(
     language: LanguageCode,
     contexts: list[RetrievedChunk],
     support_mode: SupportMode,
+    live_data_blocks: list[str] | None = None,
 ) -> PromptPackage:
     language_name = "Bahasa Malaysia" if language == "ms" else "English"
 
-    if support_mode == "none":
-        # No DB context — answer entirely from Claude's training knowledge
+    live_data_section = ""
+    if live_data_blocks:
+        live_data_section = (
+            "\n\nLive government data (fetched from data.gov.my in real time):\n"
+            + "\n\n".join(live_data_blocks)
+        )
+
+    if support_mode == "none" and not live_data_blocks:
+        # No DB context and no live data — answer entirely from Claude's training knowledge
         system = (
             "You are Polisi, a Malaysian government policy assistant. "
             f"Respond in {language_name} using a formal government-brief tone. "
@@ -41,6 +49,17 @@ def build_prompt(
             "Open your answer by noting that no indexed policy documents were found and this draws on general knowledge."
         )
         user = f"Question:\n{question}"
+    elif support_mode == "none" and live_data_blocks:
+        # No document context, but we have live data from data.gov.my
+        system = (
+            "You are Polisi, a Malaysian government policy assistant. "
+            f"Respond in {language_name} using a formal government-brief tone. "
+            "No indexed policy documents were found, but live government data from data.gov.my "
+            "is provided below. Use this data as your primary source. "
+            "Cite data from data.gov.my with [data.gov.my]. "
+            "You may supplement with your training knowledge — cite those claims with [General knowledge]."
+        )
+        user = f"Question:\n{question}{live_data_section}"
     else:
         context_block = "\n\n".join(
             f"[{index}] {chunk.title} | {chunk.agency}\n{chunk.chunk_text}"
@@ -61,18 +80,27 @@ def build_prompt(
                 "cite those claims explicitly with [General knowledge]. "
                 "Every factual claim must be attributed to either [n] or [General knowledge]."
             )
+
+        live_note = ""
+        if live_data_blocks:
+            live_note = (
+                " Additionally, live data from data.gov.my is provided. "
+                "Cite claims from this live data with [data.gov.my]."
+            )
+
         system = (
             "You are Polisi, a Malaysian government policy assistant. "
             f"Respond in {language_name} using a formal government-brief tone. "
             "You have two knowledge sources: "
             "(1) retrieved government documents provided below — always prioritise these; "
             "(2) your training knowledge — use this to supplement or add context. "
-            f"{support_note}"
+            f"{support_note}{live_note}"
         )
         user = (
             f"Question:\n{question}\n\n"
             "Retrieved government-document excerpts:\n"
             f"{context_block}"
+            f"{live_data_section}"
         )
 
     return PromptPackage(

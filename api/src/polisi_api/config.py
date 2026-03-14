@@ -46,12 +46,22 @@ class Settings(BaseSettings):
     )
     openai_api_key: str | None = Field(default=None, validation_alias=AliasChoices("OPENAI_API_KEY"))
 
+    datagov_api_token: str | None = Field(
+        default=None, validation_alias=AliasChoices("DATAGOV_API_TOKEN")
+    )
+
     retrieval_limit: int = Field(default=5, validation_alias=AliasChoices("RETRIEVAL_LIMIT"))
     retrieval_min_similarity: float = Field(
         default=0.45, validation_alias=AliasChoices("RETRIEVAL_MIN_SIMILARITY")
     )
     retrieval_weak_similarity: float = Field(
         default=0.65, validation_alias=AliasChoices("RETRIEVAL_WEAK_SIMILARITY")
+    )
+    retrieval_rrf_k: int = Field(
+        default=60, validation_alias=AliasChoices("RETRIEVAL_RRF_K")
+    )
+    retrieval_fts_min_similarity: float = Field(
+        default=0.50, validation_alias=AliasChoices("RETRIEVAL_FTS_MIN_SIMILARITY")
     )
 
     @field_validator("api_allowed_origins", mode="before")

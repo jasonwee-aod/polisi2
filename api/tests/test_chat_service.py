@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from polisi_api.auth import AuthenticatedUser, get_current_user
 from polisi_api.chat.repository import InMemoryChatRepository
 from polisi_api.chat.prompting import PromptPackage
-from polisi_api.chat.retrieval import RetrievedChunk, PostgresRetriever
+from polisi_api.chat.retrieval import RetrievalFilters, RetrievedChunk, PostgresRetriever
 from polisi_api.chat.service import ChatService, TextGenerator
 from polisi_api.config import Settings
 from polisi_api.dependencies import get_chat_service
@@ -19,7 +19,13 @@ from polisi_api.dependencies import get_chat_service
 class FakeRetriever:
     responses: dict[str, list[RetrievedChunk]]
 
-    async def retrieve(self, question: str, *, limit: int) -> list[RetrievedChunk]:
+    async def retrieve(
+        self,
+        question: str,
+        *,
+        limit: int,
+        filters: RetrievalFilters | None = None,
+    ) -> list[RetrievedChunk]:
         return self.responses.get(question, [])[:limit]
 
 
@@ -39,11 +45,21 @@ def build_settings() -> Settings:
             "SUPABASE_JWT_SECRET": "test-secret",
             "ANTHROPIC_API_KEY": "test-key",
             "OPENAI_API_KEY": "test-openai-key",
+            "RETRIEVAL_MIN_SIMILARITY": "0.45",
+            "RETRIEVAL_WEAK_SIMILARITY": "0.65",
         }
     )
 
 
-def chunk(title: str, agency: str, question: str, similarity: float) -> RetrievedChunk:
+def chunk(
+    title: str,
+    agency: str,
+    question: str,
+    similarity: float,
+    *,
+    fts_rank: float = 0.0,
+    rrf_score: float = 0.0,
+) -> RetrievedChunk:
     return RetrievedChunk(
         document_id="00000000-0000-0000-0000-000000000001",
         title=title,
@@ -52,6 +68,8 @@ def chunk(title: str, agency: str, question: str, similarity: float) -> Retrieve
         chunk_text=f"Evidence for {question}",
         similarity=similarity,
         chunk_index=0,
+        fts_rank=fts_rank,
+        rrf_score=rrf_score,
     )
 
 
@@ -101,6 +119,33 @@ async def run_chat_service_paths() -> None:
     assert weak_reply.response.kind == "limited-support"
     assert weak_reply.response.language == "en"
     assert weak_reply.response.answer.startswith("The retrieved document support is limited")
+
+
+def test_fts_only_match_treated_as_weak_support() -> None:
+    """A chunk found only via full-text search (cosine sim=0) should use
+    the FTS similarity floor and land in limited-support, not be discarded."""
+    asyncio.run(_run_fts_only())
+
+
+async def _run_fts_only() -> None:
+    question = "What is BR1M eligibility?"
+    retriever = FakeRetriever(
+        responses={
+            question: [
+                chunk("BR1M Guidelines", "MOF", question, similarity=0.0, fts_rank=0.12, rrf_score=0.015),
+            ],
+        }
+    )
+    generator = FakeGenerator(
+        replies={question: "BR1M eligibility is determined by household income [1]."}
+    )
+    service = ChatService(settings=build_settings(), retriever=retriever, generator=generator)
+    reply = await service.generate_reply(question=question)
+
+    # FTS floor (0.50) > min_similarity (0.45) → not discarded
+    # FTS floor (0.50) < weak_similarity (0.65) → weak/limited-support
+    assert reply.response.kind == "limited-support"
+    assert len(reply.response.citations) > 0
 
 
 def test_streaming_chat_persists_messages_and_citations() -> None:

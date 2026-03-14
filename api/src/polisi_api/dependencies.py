@@ -6,8 +6,9 @@ from functools import lru_cache
 
 from fastapi import Depends
 
+from polisi_api.chat.datagov import DataGovMyClient
 from polisi_api.chat.repository import PostgresChatRepository
-from polisi_api.chat.retrieval import PostgresRetriever
+from polisi_api.chat.retrieval import HybridPostgresRetriever
 from polisi_api.chat.service import AnthropicTextGenerator, ChatService
 from polisi_api.config import Settings, get_settings
 
@@ -22,7 +23,7 @@ def get_repository(settings: Settings = Depends(get_settings)) -> PostgresChatRe
 
 
 @lru_cache(maxsize=4)
-def get_retriever(settings_key: tuple[str, str | None, int, float, float]) -> PostgresRetriever:
+def get_retriever(settings_key: tuple[str, str | None, int, float, float]) -> HybridPostgresRetriever:
     db_url, openai_key, limit, min_similarity, weak_similarity = settings_key
     settings = Settings.from_env(
         {
@@ -34,7 +35,7 @@ def get_retriever(settings_key: tuple[str, str | None, int, float, float]) -> Po
             "RETRIEVAL_WEAK_SIMILARITY": str(weak_similarity),
         }
     )
-    return PostgresRetriever(settings)
+    return HybridPostgresRetriever(settings)
 
 
 def get_chat_service(settings: Settings = Depends(get_settings)) -> ChatService:
@@ -48,5 +49,12 @@ def get_chat_service(settings: Settings = Depends(get_settings)) -> ChatService:
         )
     )
     repository = get_repository(settings)
-    generator = AnthropicTextGenerator(settings)
-    return ChatService(settings=settings, retriever=retriever, generator=generator, repository=repository)
+    datagov_client = DataGovMyClient(api_token=settings.datagov_api_token)
+    generator = AnthropicTextGenerator(settings, datagov_client=datagov_client)
+    return ChatService(
+        settings=settings,
+        retriever=retriever,
+        generator=generator,
+        repository=repository,
+        datagov_client=datagov_client,
+    )
