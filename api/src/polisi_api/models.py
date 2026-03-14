@@ -19,6 +19,16 @@ class ChatRequest(BaseModel):
     conversation_id: UUID | None = None
     create_conversation: bool = False
     language_hint: LanguageCode | None = None
+    skill: str | None = None
+
+
+class SkillInfo(BaseModel):
+    id: str
+    name: str
+    name_ms: str
+    description: str
+    description_ms: str
+    icon: str
 
 
 class CitationRecord(BaseModel):

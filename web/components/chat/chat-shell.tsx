@@ -10,10 +10,14 @@ import {
   ConversationDetail,
   ConversationMessage,
   ConversationSummary,
+  SkillInfo,
   fetchConversationDetail,
-  fetchConversations
+  fetchConversationFeedback,
+  fetchConversations,
+  fetchSkills,
+  submitFeedback,
 } from "@/lib/api/client";
-import { readChatStream, StreamEvent } from "@/lib/chat/stream";
+import { RateLimitError, readChatStream, StreamEvent } from "@/lib/chat/stream";
 
 import { CitationPanel } from "./citation-panel";
 import { ConversationSidebar } from "./conversation-sidebar";
@@ -46,6 +50,7 @@ type ChatShellProps = {
       question: string;
       conversation_id?: string | null;
       create_conversation: boolean;
+      skill?: string | null;
     };
     apiBaseUrl?: string;
     onEvent(event: StreamEvent): void;
@@ -71,6 +76,9 @@ export function ChatShell({
   const [selectedCitation, setSelectedCitation] = useState<CitationRecord | null>(null);
   const [isLoadingConversation, startConversationTransition] = useTransition();
   const [isStreaming, setIsStreaming] = useState(false);
+  const [skills, setSkills] = useState<SkillInfo[]>([]);
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [feedbackRatings, setFeedbackRatings] = useState<Record<string, number>>({});
 
   useEffect(() => {
     void apiClient
@@ -80,8 +88,13 @@ export function ChatShell({
   }, [accessToken, apiBaseUrl, apiClient]);
 
   useEffect(() => {
+    void fetchSkills({ apiBaseUrl }).then(setSkills).catch(() => setSkills([]));
+  }, [apiBaseUrl]);
+
+  useEffect(() => {
     if (!activeConversationId) {
       setMessages([]);
+      setFeedbackRatings({});
       return;
     }
     startConversationTransition(() => {
@@ -89,6 +102,9 @@ export function ChatShell({
         .fetchConversationDetail(activeConversationId, { accessToken, apiBaseUrl })
         .then((detail) => setMessages(detail.messages))
         .catch(() => setMessages([]));
+      void fetchConversationFeedback({
+        accessToken, conversationId: activeConversationId, apiBaseUrl,
+      }).then(setFeedbackRatings).catch(() => setFeedbackRatings({}));
     });
   }, [accessToken, activeConversationId, apiBaseUrl, apiClient]);
 
@@ -120,38 +136,54 @@ export function ChatShell({
       }
     ]);
 
-    await streamChat({
-      accessToken,
-      apiBaseUrl,
-      payload: {
-        question,
-        conversation_id: activeConversationId,
-        create_conversation: !activeConversationId
-      },
-      onEvent: (event) => {
-        if (event.event === "conversation" && event.conversation_id) {
-          setActiveConversationId(event.conversation_id);
-          const path = `/chat/${event.conversation_id}`;
-          if (navigate) {
-            navigate(path);
-          } else {
-            router.replace(path);
+    try {
+      await streamChat({
+        accessToken,
+        apiBaseUrl,
+        payload: {
+          question,
+          conversation_id: activeConversationId,
+          create_conversation: !activeConversationId,
+          skill: selectedSkill,
+        },
+        onEvent: (event) => {
+          if (event.event === "conversation" && event.conversation_id) {
+            setActiveConversationId(event.conversation_id);
+            const path = `/chat/${event.conversation_id}`;
+            if (navigate) {
+              navigate(path);
+            } else {
+              router.replace(path);
+            }
+          }
+          if (event.event === "message-delta" && event.delta) {
+            setMessages((current) =>
+              current.map((message) =>
+                message.id === assistantDraftId
+                  ? { ...message, content: `${message.content}${event.delta}` }
+                  : message
+              )
+            );
+          }
+          if (event.event === "message-complete" && event.response) {
+            syncFinalAssistantMessage(assistantDraftId, event.response);
           }
         }
-        if (event.event === "message-delta" && event.delta) {
-          setMessages((current) =>
-            current.map((message) =>
-              message.id === assistantDraftId
-                ? { ...message, content: `${message.content}${event.delta}` }
-                : message
-            )
-          );
-        }
-        if (event.event === "message-complete" && event.response) {
-          syncFinalAssistantMessage(assistantDraftId, event.response);
-        }
-      }
-    }).finally(async () => {
+      });
+    } catch (error) {
+      const rateLimitMessage =
+        error instanceof RateLimitError
+          ? `**Daily limit reached.** ${error.detail.message}\n\nYour free tier allows ${error.detail.limit} ${error.detail.error === "daily_request_limit" ? "requests" : "tokens"} per day. Usage resets at midnight.`
+          : "Something went wrong. Please try again.";
+
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === assistantDraftId
+            ? { ...message, content: rateLimitMessage }
+            : message
+        )
+      );
+    } finally {
       setIsStreaming(false);
       try {
         const nextConversations = await apiClient.fetchConversations({ accessToken, apiBaseUrl });
@@ -159,7 +191,7 @@ export function ChatShell({
       } catch {
         // Keep the optimistic list if reload fails.
       }
-    });
+    }
   }
 
   function syncFinalAssistantMessage(tempId: string, response: AssistantResponse) {
@@ -190,10 +222,17 @@ export function ChatShell({
     router.push(path);
   }
 
+  function handleFeedback(messageId: string, rating: 1 | -1) {
+    // Optimistic update
+    setFeedbackRatings((prev) => ({ ...prev, [messageId]: rating }));
+    void submitFeedback({ accessToken, messageId, rating, apiBaseUrl });
+  }
+
   function handleNewConversation() {
     setSelectedCitation(null);
     setActiveConversationId(null);
     setMessages([]);
+    setSelectedSkill(null);
     if (navigate) {
       navigate("/chat");
       return;
@@ -297,7 +336,13 @@ export function ChatShell({
         ) : (
           <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "32px 40px" }}>
             <div style={{ maxWidth: 720, margin: "0 auto" }}>
-              <MessageList messages={messages} isStreaming={isStreaming} onCitationSelect={setSelectedCitation} />
+              <MessageList
+                messages={messages}
+                isStreaming={isStreaming}
+                onCitationSelect={setSelectedCitation}
+                feedbackRatings={feedbackRatings}
+                onFeedback={handleFeedback}
+              />
             </div>
           </div>
         )}
@@ -317,6 +362,9 @@ export function ChatShell({
             <MessageComposer
               disabled={isStreaming || isLoadingConversation}
               onSubmit={handleSubmit}
+              skills={skills}
+              selectedSkill={selectedSkill}
+              onSkillSelect={setSelectedSkill}
             />
           </div>
           <span

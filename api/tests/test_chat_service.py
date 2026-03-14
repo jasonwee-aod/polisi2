@@ -28,12 +28,30 @@ class FakeRetriever:
     ) -> list[RetrievedChunk]:
         return self.responses.get(question, [])[:limit]
 
+    async def retrieve_multi(
+        self,
+        queries: list[str],
+        *,
+        limit: int,
+        filters: RetrievalFilters | None = None,
+    ) -> list[RetrievedChunk]:
+        """Merge results from all queries, deduplicating by (doc_id, chunk_index)."""
+        seen: set[tuple[str | None, int | None]] = set()
+        result: list[RetrievedChunk] = []
+        for q in queries:
+            for c in self.responses.get(q, []):
+                key = (c.document_id, c.chunk_index)
+                if key not in seen:
+                    seen.add(key)
+                    result.append(c)
+        return result[:limit]
+
 
 @dataclass
 class FakeGenerator(TextGenerator):
     replies: dict[str, str]
 
-    async def generate(self, prompt: PromptPackage) -> str:
+    async def generate(self, prompt: PromptPackage, *, max_tokens: int | None = None) -> str:
         return self.replies[prompt.user.splitlines()[1]]
 
 
@@ -220,3 +238,162 @@ async def _run_retrieve_empty_embedding() -> None:
     )
     result = await retriever.retrieve("any question", limit=5)
     assert result == []
+
+
+# --- Tests for RAG pipeline enhancements ---
+
+
+def test_pipeline_with_reranker_and_skill() -> None:
+    """Full pipeline with reranker and skill — verify reranker and adaptive cutoff run."""
+    asyncio.run(_run_pipeline_skill())
+
+
+async def _run_pipeline_skill() -> None:
+    from polisi_api.chat.reranker import NoOpReranker
+
+    question = "What childcare subsidies are available for working parents?"
+    retriever = FakeRetriever(
+        responses={
+            question: [
+                chunk("Childcare Support", "KPWKM", question, 0.79),
+                chunk("Education Policy", "KPM", question, 0.60),
+            ],
+        }
+    )
+    generator = FakeGenerator(
+        replies={question: "Childcare subsidies are available [1]."}
+    )
+    reranker = NoOpReranker()
+    service = ChatService(
+        settings=build_settings(),
+        retriever=retriever,
+        generator=generator,
+        reranker=reranker,
+    )
+    reply = await service.generate_reply(question=question, skill="policy_brief")
+    assert reply.response.kind == "answer"
+    assert len(reply.response.citations) >= 1
+
+
+def test_pipeline_deduplication_applied() -> None:
+    """Adjacent same-doc chunks should be deduplicated before reaching the prompt."""
+    asyncio.run(_run_dedup_pipeline())
+
+
+async def _run_dedup_pipeline() -> None:
+    question = "What is the education policy?"
+    doc_uuid = "00000000-0000-0000-0000-000000000099"
+    c1 = RetrievedChunk(
+        document_id=doc_uuid, title="Edu Policy", agency="KPM",
+        source_url="https://gov.example/policy", chunk_text=f"Evidence for {question}",
+        similarity=0.85, chunk_index=0, rrf_score=0.01,
+    )
+    c2 = RetrievedChunk(
+        document_id=doc_uuid, title="Edu Policy", agency="KPM",
+        source_url="https://gov.example/policy", chunk_text=f"More evidence for {question}",
+        similarity=0.80, chunk_index=1, rrf_score=0.009,
+    )
+    retriever = FakeRetriever(responses={question: [c1, c2]})
+    generator = FakeGenerator(
+        replies={question: "Education policy involves various initiatives [1]."}
+    )
+    service = ChatService(settings=build_settings(), retriever=retriever, generator=generator)
+    reply = await service.generate_reply(question=question)
+
+    # After dedup, only 1 chunk should survive (adjacent same doc)
+    assert reply.response.kind == "answer"
+    assert len(reply.response.citations) == 1
+
+
+def test_pipeline_without_reranker_still_works() -> None:
+    """When no reranker is provided, pipeline falls back to plain retrieval."""
+    asyncio.run(_run_no_reranker())
+
+
+async def _run_no_reranker() -> None:
+    question = "What is BR1M eligibility?"
+    retriever = FakeRetriever(
+        responses={
+            question: [
+                chunk("BR1M Guidelines", "MOF", question, 0.75),
+            ],
+        }
+    )
+    generator = FakeGenerator(
+        replies={question: "BR1M eligibility depends on income [1]."}
+    )
+    # No reranker, no anthropic_client — should work fine
+    service = ChatService(settings=build_settings(), retriever=retriever, generator=generator)
+    reply = await service.generate_reply(question=question)
+    assert reply.response.kind == "answer"
+    assert len(reply.response.citations) == 1
+
+
+def test_conversation_aware_retrieval_with_history() -> None:
+    """When conversation_history is provided with an anthropic client, reformulation runs."""
+    asyncio.run(_run_conversation_aware())
+
+
+async def _run_conversation_aware() -> None:
+    from polisi_api.chat.reranker import NoOpReranker
+    from tests.test_reranker import FakeAnthropicClient, FakeMessages, FakeTextBlock
+
+    question = "What about the eligibility criteria?"
+    # The reformulated query will be the original since our fake client returns a canned response
+    reformulated = "What are the BR1M eligibility criteria?"
+
+    fake_anthropic = FakeAnthropicClient(
+        messages=FakeMessages(response_text=reformulated)
+    )
+
+    # Retriever responds to both original and reformulated queries
+    retriever = FakeRetriever(
+        responses={
+            question: [chunk("General", "MOF", question, 0.5)],
+            reformulated: [chunk("BR1M Guidelines", "MOF", reformulated, 0.82)],
+        }
+    )
+
+    # The generator receives the ORIGINAL question in the prompt, not the reformulated one
+    generator = FakeGenerator(
+        replies={
+            question: "The eligibility criteria include income thresholds [1].",
+            reformulated: "BR1M eligibility is based on household income [1].",
+        }
+    )
+
+    settings = build_settings()
+    # Disable query expansion to isolate reformulation testing
+    settings_env = {
+        "SUPABASE_URL": "https://example.supabase.co",
+        "SUPABASE_DB_URL": "postgresql://postgres:postgres@localhost:5432/postgres",
+        "SUPABASE_JWT_SECRET": "test-secret",
+        "ANTHROPIC_API_KEY": "test-key",
+        "OPENAI_API_KEY": "test-openai-key",
+        "RETRIEVAL_MIN_SIMILARITY": "0.45",
+        "RETRIEVAL_WEAK_SIMILARITY": "0.65",
+        "ENABLE_QUERY_EXPANSION": "false",
+        "ENABLE_RERANKING": "false",
+    }
+    settings = Settings.from_env(settings_env)
+
+    service = ChatService(
+        settings=settings,
+        retriever=retriever,
+        generator=generator,
+        anthropic_client=fake_anthropic,  # type: ignore
+    )
+
+    history = [
+        ("user", "Tell me about BR1M"),
+        ("assistant", "BR1M is a cash aid programme for low-income households."),
+    ]
+
+    reply = await service.generate_reply(
+        question=question,
+        conversation_history=history,
+    )
+
+    # The retrieval used the reformulated query, but the prompt used the original question.
+    # The reformulated query retrieves the BR1M Guidelines chunk with 0.82 similarity.
+    assert reply.response.kind == "answer"

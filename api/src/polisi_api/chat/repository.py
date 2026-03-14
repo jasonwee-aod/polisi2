@@ -38,6 +38,8 @@ class ChatRepository(Protocol):
 
     def get_conversation_detail(self, *, user_id: str, conversation_id: str) -> ConversationDetail | None: ...
 
+    def get_recent_messages(self, *, conversation_id: str, limit: int = 6) -> list[tuple[str, str]]: ...
+
 
 class PostgresChatRepository:
     def __init__(self, db_url: str) -> None:
@@ -145,6 +147,22 @@ class PostgresChatRepository:
             )
             for row in rows
         ]
+
+    def get_recent_messages(self, *, conversation_id: str, limit: int = 6) -> list[tuple[str, str]]:
+        with psycopg.connect(self._db_url) as conn:
+            rows = conn.execute(
+                """
+                select role, content
+                from public.messages
+                where conversation_id = %s
+                order by created_at desc
+                limit %s
+                """,
+                (conversation_id, limit),
+            ).fetchall()
+        # Reverse so oldest first
+        rows.reverse()
+        return [(row[0], row[1]) for row in rows]
 
     def get_conversation_detail(self, *, user_id: str, conversation_id: str) -> ConversationDetail | None:
         with psycopg.connect(self._db_url) as conn:
@@ -263,6 +281,17 @@ class InMemoryChatRepository:
                 )
             )
         return summaries
+
+    def get_recent_messages(self, *, conversation_id: str, limit: int = 6) -> list[tuple[str, str]]:
+        conversation_uuid = UUID(conversation_id)
+        convo_messages = [
+            msg for msg in self.messages
+            if msg["conversation_id"] == conversation_uuid
+        ]
+        # Sort by created_at ascending, then take last `limit`
+        convo_messages.sort(key=lambda m: m["created_at"])
+        recent = convo_messages[-limit:]
+        return [(str(msg["role"]), str(msg["content"])) for msg in recent]
 
     def get_conversation_detail(self, *, user_id: str, conversation_id: str) -> ConversationDetail | None:
         conversation_uuid = UUID(conversation_id)

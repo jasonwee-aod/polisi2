@@ -8,6 +8,15 @@ export type StreamEvent = {
   response?: AssistantResponse | null;
 };
 
+export class RateLimitError extends Error {
+  detail: { error: string; message: string; limit: number; used: number };
+  constructor(detail: { error: string; message: string; limit: number; used: number }) {
+    super(detail.message);
+    this.name = "RateLimitError";
+    this.detail = detail;
+  }
+}
+
 type ReadChatStreamOptions = {
   accessToken: string;
   payload: ChatRequestPayload;
@@ -26,6 +35,13 @@ export async function readChatStream({
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload)
   });
+
+  if (response.status === 429) {
+    const body = await response.json().catch(() => ({
+      detail: { error: "rate_limit", message: "Rate limit exceeded. Please try again tomorrow.", limit: 0, used: 0 }
+    }));
+    throw new RateLimitError(body.detail);
+  }
 
   if (!response.ok || !response.body) {
     const body = await response.text().catch(() => "");

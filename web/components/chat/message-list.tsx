@@ -43,9 +43,17 @@ type MessageListProps = {
   messages: ConversationMessage[];
   isStreaming?: boolean;
   onCitationSelect(citation: CitationRecord): void;
+  feedbackRatings?: Record<string, number>;
+  onFeedback?(messageId: string, rating: 1 | -1): void;
 };
 
-export function MessageList({ messages, isStreaming = false, onCitationSelect }: MessageListProps) {
+export function MessageList({
+  messages,
+  isStreaming = false,
+  onCitationSelect,
+  feedbackRatings = {},
+  onFeedback,
+}: MessageListProps) {
   if (messages.length === 0) {
     return null;
   }
@@ -61,6 +69,8 @@ export function MessageList({ messages, isStreaming = false, onCitationSelect }:
             message={message}
             isThinking={isStreaming && index === messages.length - 1 && message.content === ""}
             onCitationSelect={onCitationSelect}
+            currentRating={feedbackRatings[message.id] ?? null}
+            onFeedback={onFeedback}
           />
         )
       )}
@@ -105,11 +115,15 @@ function UserMessage({ message }: { message: ConversationMessage }) {
 function AssistantMessage({
   message,
   isThinking = false,
-  onCitationSelect
+  onCitationSelect,
+  currentRating,
+  onFeedback,
 }: {
   message: ConversationMessage;
   isThinking?: boolean;
   onCitationSelect(citation: CitationRecord): void;
+  currentRating: number | null;
+  onFeedback?(messageId: string, rating: 1 | -1): void;
 }) {
   const variant = getAssistantVariant(message.content);
   return (
@@ -181,7 +195,65 @@ function AssistantMessage({
             ))}
           </div>
         ) : null}
+        {!isThinking && message.content && onFeedback ? (
+          <FeedbackButtons
+            messageId={message.id}
+            currentRating={currentRating}
+            onFeedback={onFeedback}
+          />
+        ) : null}
       </div>
+    </div>
+  );
+}
+
+function FeedbackButtons({
+  messageId,
+  currentRating,
+  onFeedback,
+}: {
+  messageId: string;
+  currentRating: number | null;
+  onFeedback(messageId: string, rating: 1 | -1): void;
+}) {
+  return (
+    <div style={{ marginTop: 8, display: "flex", gap: 4 }}>
+      <button
+        type="button"
+        onClick={() => onFeedback(messageId, 1)}
+        aria-label="Helpful"
+        title="Helpful"
+        style={{
+          border: 0,
+          background: "transparent",
+          cursor: "pointer",
+          padding: "4px 6px",
+          borderRadius: 6,
+          opacity: currentRating === -1 ? 0.3 : 1,
+          color: currentRating === 1 ? "var(--accent)" : "var(--text-tertiary)",
+          fontSize: 16,
+        }}
+      >
+        {currentRating === 1 ? "\u{1F44D}" : "\u{1F44D}\u{FE0E}"}
+      </button>
+      <button
+        type="button"
+        onClick={() => onFeedback(messageId, -1)}
+        aria-label="Not helpful"
+        title="Not helpful"
+        style={{
+          border: 0,
+          background: "transparent",
+          cursor: "pointer",
+          padding: "4px 6px",
+          borderRadius: 6,
+          opacity: currentRating === 1 ? 0.3 : 1,
+          color: currentRating === -1 ? "#c0392b" : "var(--text-tertiary)",
+          fontSize: 16,
+        }}
+      >
+        {currentRating === -1 ? "\u{1F44E}" : "\u{1F44E}\u{FE0E}"}
+      </button>
     </div>
   );
 }

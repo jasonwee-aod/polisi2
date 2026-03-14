@@ -27,6 +27,7 @@ dependencies = [
   "tenacity>=8.2,<9",
   "python-dateutil>=2.9,<3",
   "python-dotenv>=1.0,<2",
+  "anthropic>=0.40,<1",
 ]
 
 [project.scripts]

@@ -8,6 +8,7 @@ from typing import Literal
 from polisi_api.models import LanguageCode
 
 from .retrieval import RetrievedChunk
+from .skills import SkillDefinition
 
 SupportMode = Literal["strong", "weak", "none"]
 
@@ -21,6 +22,61 @@ class PromptPackage:
     contexts: list[RetrievedChunk]
 
 
+def reorder_for_attention(
+    contexts: list[RetrievedChunk],
+) -> list[tuple[int, RetrievedChunk]]:
+    """Reorder chunks so rank-1 is first, rank-2 is last, worst in middle.
+
+    Returns (original_1_based_index, chunk) pairs.  Citation indices remain
+    stable to the *original* position so [n] markers stay consistent.
+
+    Lost-in-the-middle pattern: best, worst…, second-best
+    For 1 chunk  → [1]
+    For 2 chunks → [1, 2]
+    For 3 chunks → [1, 3, 2]
+    For 4 chunks → [1, 4, 3, 2]
+    For 5 chunks → [1, 5, 4, 3, 2]
+    """
+    if len(contexts) <= 2:
+        return [(i + 1, c) for i, c in enumerate(contexts)]
+
+    indexed = [(i + 1, c) for i, c in enumerate(contexts)]
+    first = indexed[0]
+    rest = indexed[1:]
+    # Reverse the rest so second-best ends up last
+    rest_reversed = list(reversed(rest))
+    return [first] + rest_reversed
+
+
+def _format_context_block(
+    contexts: list[RetrievedChunk],
+    *,
+    reordered: list[tuple[int, RetrievedChunk]] | None = None,
+) -> str:
+    if reordered is not None:
+        if not reordered:
+            return ""
+        return "\n\n".join(
+            f"[{idx}] {chunk.title} | {chunk.agency}\n{chunk.chunk_text}"
+            for idx, chunk in reordered
+        )
+    if not contexts:
+        return ""
+    return "\n\n".join(
+        f"[{index}] {chunk.title} | {chunk.agency}\n{chunk.chunk_text}"
+        for index, chunk in enumerate(contexts, start=1)
+    )
+
+
+def _format_live_data_section(live_data_blocks: list[str] | None) -> str:
+    if not live_data_blocks:
+        return ""
+    return (
+        "\n\nLive government data (fetched from data.gov.my in real time):\n"
+        + "\n\n".join(live_data_blocks)
+    )
+
+
 def build_prompt(
     *,
     question: str,
@@ -30,13 +86,7 @@ def build_prompt(
     live_data_blocks: list[str] | None = None,
 ) -> PromptPackage:
     language_name = "Bahasa Malaysia" if language == "ms" else "English"
-
-    live_data_section = ""
-    if live_data_blocks:
-        live_data_section = (
-            "\n\nLive government data (fetched from data.gov.my in real time):\n"
-            + "\n\n".join(live_data_blocks)
-        )
+    live_data_section = _format_live_data_section(live_data_blocks)
 
     if support_mode == "none" and not live_data_blocks:
         # No DB context and no live data — answer entirely from Claude's training knowledge
@@ -61,10 +111,8 @@ def build_prompt(
         )
         user = f"Question:\n{question}{live_data_section}"
     else:
-        context_block = "\n\n".join(
-            f"[{index}] {chunk.title} | {chunk.agency}\n{chunk.chunk_text}"
-            for index, chunk in enumerate(contexts, start=1)
-        )
+        reordered = reorder_for_attention(contexts)
+        context_block = _format_context_block(contexts, reordered=reordered)
         if support_mode == "weak":
             support_note = (
                 "The retrieved document support is partial. "
@@ -134,3 +182,34 @@ def build_weak_support_prefix(language: LanguageCode) -> str:
     if language == "ms":
         return "Sokongan dokumen yang ditemui terhad, jadi jawapan ini bergantung pada petikan yang tersedia:"
     return "The retrieved document support is limited, so this answer relies on the available excerpts:"
+
+
+def build_skill_prompt(
+    *,
+    question: str,
+    language: LanguageCode,
+    contexts: list[RetrievedChunk],
+    skill: SkillDefinition,
+    live_data_blocks: list[str] | None = None,
+) -> PromptPackage:
+    """Build a prompt using a skill-specific system prompt."""
+    system = skill.system_prompt_ms if language == "ms" else skill.system_prompt_en
+
+    reordered = reorder_for_attention(contexts)
+    context_block = _format_context_block(contexts, reordered=reordered)
+    context_section = (
+        f"\n\nRetrieved government-document excerpts:\n{context_block}"
+        if context_block else ""
+    )
+    live_data_section = _format_live_data_section(live_data_blocks)
+
+    user = f"Question:\n{question}{context_section}{live_data_section}"
+
+    support_mode: SupportMode = "strong" if contexts else "none"
+    return PromptPackage(
+        language=language,
+        support_mode=support_mode,
+        system=system,
+        user=user,
+        contexts=contexts,
+    )

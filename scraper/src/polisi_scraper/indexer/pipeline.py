@@ -7,6 +7,11 @@ from typing import Protocol
 
 from polisi_scraper.core.dedup import compute_sha256
 from polisi_scraper.indexer.chunking import build_chunks
+from polisi_scraper.indexer.contextual import (
+    AnthropicMessagesClient,
+    generate_chunk_contexts_batch,
+    _get_config as _get_contextual_config,
+)
 from polisi_scraper.indexer.manifest import PendingIndexItem, SpacesCorpusManifest
 from polisi_scraper.indexer.parsers import get_parser
 from polisi_scraper.indexer.store import DocumentsStore
@@ -39,11 +44,14 @@ class IndexingPipeline:
         fetcher: ObjectFetcher,
         embeddings: EmbeddingsClient,
         store: DocumentsStore,
+        *,
+        anthropic_client: AnthropicMessagesClient | None = None,
     ) -> None:
         self._manifest = manifest
         self._fetcher = fetcher
         self._embeddings = embeddings
         self._store = store
+        self._anthropic_client = anthropic_client
 
     def run(
         self,
@@ -114,6 +122,23 @@ class IndexingPipeline:
         )
         chunks = build_chunks(parsed)
         chunk_texts = [chunk.text for chunk in chunks]
+        parent_texts = [chunk.parent_text for chunk in chunks]
+
+        # Contextual retrieval: prepend LLM-generated context to each chunk
+        contextual_enabled, contextual_model = _get_contextual_config()
+        if contextual_enabled and self._anthropic_client is not None:
+            document_text = parsed.text
+            contexts = generate_chunk_contexts_batch(
+                document_text,
+                chunk_texts,
+                client=self._anthropic_client,
+                model=contextual_model,
+            )
+            chunk_texts = [
+                f"{ctx}\n\n{text}" if ctx else text
+                for ctx, text in zip(contexts, chunk_texts, strict=True)
+            ]
+
         embeddings = self._embeddings.embed_texts(chunk_texts)
         self._store.persist_chunks(
             item,
@@ -121,5 +146,6 @@ class IndexingPipeline:
             chunks=chunk_texts,
             embeddings=embeddings,
             chunk_metadata=[chunk.metadata for chunk in chunks],
+            parent_texts=parent_texts,
         )
         return len(chunks)

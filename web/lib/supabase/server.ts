@@ -12,7 +12,7 @@ export async function createServerSupabaseClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(entries) {
+        setAll(entries: { name: string; value: string; options: Record<string, unknown> }[]) {
           entries.forEach(({ name, value, options }) => {
             cookieStore.set(name, value, options);
           });

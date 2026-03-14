@@ -28,6 +28,7 @@ class StoredChunk:
     chunk_text: str
     embedding: list[float]
     metadata: dict[str, object] = field(default_factory=dict)
+    parent_chunk_text: str | None = None
 
 
 @dataclass(frozen=True)
@@ -96,10 +97,12 @@ class DocumentsStore(IndexedFingerprintStore):
         chunks: list[str],
         embeddings: list[list[float]],
         chunk_metadata: list[dict[str, object]],
+        parent_texts: list[str | None] | None = None,
     ) -> list[StoredChunk]:
         stored: list[StoredChunk] = []
-        for index, (chunk_text, embedding, metadata) in enumerate(
-            zip(chunks, embeddings, chunk_metadata, strict=True)
+        _parent_texts = parent_texts or [None] * len(chunks)
+        for index, (chunk_text, embedding, metadata, parent_text) in enumerate(
+            zip(chunks, embeddings, chunk_metadata, _parent_texts, strict=True)
         ):
             stored.append(
                 StoredChunk(
@@ -115,6 +118,7 @@ class DocumentsStore(IndexedFingerprintStore):
                     chunk_text=chunk_text,
                     embedding=embedding,
                     metadata=dict(metadata),
+                    parent_chunk_text=parent_text,
                 )
             )
 
@@ -135,9 +139,10 @@ class DocumentsStore(IndexedFingerprintStore):
                           chunk_index,
                           chunk_text,
                           embedding,
-                          metadata
+                          metadata,
+                          parent_chunk_text
                         ) values (
-                          %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::vector, %s::jsonb
+                          %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::vector, %s::jsonb, %s
                         )
                         on conflict (storage_path, version_token, chunk_index)
                         do update set
@@ -149,7 +154,8 @@ class DocumentsStore(IndexedFingerprintStore):
                           sha256 = excluded.sha256,
                           chunk_text = excluded.chunk_text,
                           embedding = excluded.embedding,
-                          metadata = excluded.metadata
+                          metadata = excluded.metadata,
+                          parent_chunk_text = excluded.parent_chunk_text
                         """,
                         (
                             record.title,
@@ -164,6 +170,7 @@ class DocumentsStore(IndexedFingerprintStore):
                             record.chunk_text,
                             _vector_literal(record.embedding),
                             json.dumps(record.metadata, sort_keys=True),
+                            record.parent_chunk_text,
                         ),
                     )
                 conn.commit()

@@ -54,6 +54,16 @@ export type ChatRequestPayload = {
   question: string;
   conversation_id?: string | null;
   create_conversation: boolean;
+  skill?: string | null;
+};
+
+export type SkillInfo = {
+  id: string;
+  name: string;
+  name_ms: string;
+  description: string;
+  description_ms: string;
+  icon: string;
 };
 
 export async function fetchConversations({
@@ -85,6 +95,54 @@ export async function fetchConversationDetail(
     throw new Error("Failed to load conversation");
   }
   return (await response.json()) as ConversationDetail;
+}
+
+export async function fetchSkills({
+  apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+}: { apiBaseUrl?: string } = {}): Promise<SkillInfo[]> {
+  const response = await fetch(`${apiBaseUrl}/api/skills`, {
+    cache: "no-store"
+  });
+  if (!response.ok) {
+    return [];
+  }
+  return (await response.json()) as SkillInfo[];
+}
+
+export async function submitFeedback({
+  accessToken,
+  messageId,
+  rating,
+  apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+}: {
+  accessToken: string;
+  messageId: string;
+  rating: 1 | -1;
+  apiBaseUrl?: string;
+}): Promise<void> {
+  await fetch(`${apiBaseUrl}/api/feedback`, {
+    method: "POST",
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ message_id: messageId, rating }),
+  });
+}
+
+export async function fetchConversationFeedback({
+  accessToken,
+  conversationId,
+  apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+}: {
+  accessToken: string;
+  conversationId: string;
+  apiBaseUrl?: string;
+}): Promise<Record<string, number>> {
+  const response = await fetch(
+    `${apiBaseUrl}/api/feedback/conversation/${conversationId}`,
+    { headers: authHeaders(accessToken), cache: "no-store" }
+  );
+  if (!response.ok) return {};
+  const data = await response.json();
+  return data.ratings ?? {};
 }
 
 export function authHeaders(accessToken: string): HeadersInit {

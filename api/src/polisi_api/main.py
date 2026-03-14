@@ -9,6 +9,9 @@ from polisi_api.config import Settings, get_settings
 from polisi_api.models import StreamingEventEnvelope
 from polisi_api.routes.chat import router as chat_router
 from polisi_api.routes.conversations import router as conversations_router
+from polisi_api.routes.feedback import router as feedback_router
+from polisi_api.routes.skills import router as skills_router
+from polisi_api.routes.usage import router as usage_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -40,6 +43,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(chat_router)
     app.include_router(conversations_router)
+    app.include_router(feedback_router)
+    app.include_router(skills_router)
+    app.include_router(usage_router)
 
     @app.get(
         "/api/contracts/chat-stream",

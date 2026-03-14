@@ -3,12 +3,24 @@
 import React from "react";
 import { FormEvent, useState } from "react";
 
+import type { SkillInfo } from "@/lib/api/client";
+import { SkillSelector } from "./skill-selector";
+
 type MessageComposerProps = {
   disabled?: boolean;
   onSubmit(question: string): Promise<void> | void;
+  skills?: SkillInfo[];
+  selectedSkill: string | null;
+  onSkillSelect(skillId: string | null): void;
 };
 
-export function MessageComposer({ disabled, onSubmit }: MessageComposerProps) {
+export function MessageComposer({
+  disabled,
+  onSubmit,
+  skills = [],
+  selectedSkill,
+  onSkillSelect,
+}: MessageComposerProps) {
   const [draft, setDraft] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -55,7 +67,11 @@ export function MessageComposer({ disabled, onSubmit }: MessageComposerProps) {
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Message Polisi.ai"
+            placeholder={
+              selectedSkill
+                ? `Describe what you need (${skills.find(s => s.id === selectedSkill)?.name || "skill"} mode)`
+                : "Message Polisi.ai"
+            }
             rows={1}
             disabled={disabled}
             style={{
@@ -111,6 +127,18 @@ export function MessageComposer({ disabled, onSubmit }: MessageComposerProps) {
             padding: "4px 12px 10px"
           }}
         >
+          {/* Skill selector */}
+          {skills.length > 0 && (
+            <SkillSelector
+              skills={skills}
+              selectedSkill={selectedSkill}
+              onSelect={onSkillSelect}
+              disabled={disabled}
+            />
+          )}
+
+          <div style={{ flex: 1 }} />
+
           {[
             {
               label: "Attach file",

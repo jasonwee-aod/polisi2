@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID, uuid4
@@ -25,14 +26,27 @@ from .prompting import (
     build_clarification_text,
     build_general_knowledge_prefix,
     build_prompt,
+    build_skill_prompt,
     build_weak_support_prefix,
 )
+from .feedback import FeedbackRepository
+from .query_expansion import expand_query
+from .reranker import Reranker
+from .reformulation import reformulate_with_history
+from .skills import SKILL_BY_ID
 from .repository import ChatRepository
-from .retrieval import RetrievalFilters, RetrievedChunk, Retriever
+from .retrieval import (
+    RetrievalFilters,
+    RetrievedChunk,
+    Retriever,
+    apply_adaptive_cutoff,
+    apply_metadata_boost,
+    deduplicate_chunks,
+)
 
 
 class TextGenerator(Protocol):
-    async def generate(self, prompt: PromptPackage) -> str: ...
+    async def generate(self, prompt: PromptPackage, *, max_tokens: int | None = None) -> str: ...
 
 
 @dataclass
@@ -64,7 +78,7 @@ class AnthropicTextGenerator:
         self._datagov = datagov_client
         self._tool_def = build_tool_definition() if datagov_client else None
 
-    async def generate(self, prompt: PromptPackage) -> str:
+    async def generate(self, prompt: PromptPackage, *, max_tokens: int | None = None) -> str:
         tools = [self._tool_def] if self._tool_def else []
         messages: list[dict] = [{"role": "user", "content": prompt.user}]
 
@@ -72,7 +86,7 @@ class AnthropicTextGenerator:
             for _round in range(self._MAX_TOOL_ROUNDS + 1):
                 kwargs: dict = dict(
                     model=self._model,
-                    max_tokens=1200,
+                    max_tokens=max_tokens or 1200,
                     system=prompt.system,
                     messages=messages,
                 )
@@ -127,35 +141,92 @@ class ChatService:
         generator: TextGenerator,
         repository: ChatRepository | None = None,
         datagov_client: DataGovMyClient | None = None,
+        feedback_repo: FeedbackRepository | None = None,
+        reranker: Reranker | None = None,
+        anthropic_client: AsyncAnthropic | None = None,
     ) -> None:
         self._settings = settings
         self._retriever = retriever
         self._generator = generator
         self._repository = repository
         self._datagov = datagov_client or DataGovMyClient(api_token=settings.datagov_api_token)
+        self._feedback = feedback_repo
+        self._reranker = reranker
+        self._anthropic = anthropic_client
 
-    async def generate_reply(self, *, question: str, conversation_id: str | None = None) -> GeneratedReply:
+    async def generate_reply(
+        self,
+        *,
+        question: str,
+        conversation_id: str | None = None,
+        skill: str | None = None,
+        conversation_history: list[tuple[str, str]] | None = None,
+    ) -> GeneratedReply:
         language = detect_language(question)
         conversation_value = conversation_id or str(uuid4())
+        skill_def = SKILL_BY_ID.get(skill) if skill else None
 
-        if needs_clarification(question):
-            response = AssistantResponse(
-                conversation_id=conversation_value,
-                message_id=uuid4(),
-                language=language,
+        # Skip clarification check when a skill is active — the user has a clear intent
+        if not skill_def and needs_clarification(question):
+            return self._make_reply(
+                conversation_value=conversation_value, language=language,
                 answer=build_clarification_text(language),
-                citations=[],
-                kind="clarification",
+                citations=[], kind="clarification", chunks=[],
             )
-            return GeneratedReply(response=response, kind="clarification", retrieved_chunks=[])
+
+        # --- [1.3] Conversation-aware reformulation ---
+        retrieval_query = question
+        if (
+            conversation_history
+            and self._anthropic
+        ):
+            retrieval_query = await reformulate_with_history(
+                question,
+                conversation_history,
+                self._anthropic,
+                self._settings.query_expansion_model,
+            )
 
         # Extract agency filter from the question when possible
         agency_filter = extract_agency(question)
         filters = RetrievalFilters(agency=agency_filter) if agency_filter else None
 
-        retrieved = await self._retriever.retrieve(
-            question, limit=self._settings.retrieval_limit, filters=filters,
+        # --- [1.2] Query expansion with bilingual translation ---
+        retrieval_limit = (
+            self._settings.retrieval_prefetch_limit
+            if self._reranker
+            else self._settings.retrieval_limit
         )
+
+        if (
+            self._settings.enable_query_expansion
+            and self._anthropic
+            and hasattr(self._retriever, "retrieve_multi")
+        ):
+            expanded_queries = await expand_query(
+                retrieval_query,
+                language,
+                self._anthropic,
+                self._settings.query_expansion_model,
+            )
+            retrieved = await self._retriever.retrieve_multi(
+                expanded_queries, limit=retrieval_limit, filters=filters,
+            )
+        else:
+            retrieved = await self._retriever.retrieve(
+                retrieval_query, limit=retrieval_limit, filters=filters,
+            )
+
+        # --- [3.2] Deduplicate chunks ---
+        retrieved = deduplicate_chunks(retrieved)
+
+        # --- [1.1] Cross-encoder reranking ---
+        if self._reranker and retrieved:
+            retrieved = await self._reranker.rerank(
+                retrieval_query,
+                retrieved,
+                top_n=self._settings.reranker_top_n,
+            )
 
         # Check if any retrieved chunks match a data.gov.my catalog entry
         live_data_blocks: list[str] = []
@@ -168,64 +239,82 @@ class ChatService:
                     seen_ids.add(entry.dataset_id)
                     datagov_entries.append(entry)
 
-        # Fetch live data for matched datasets
-        for entry in datagov_entries:
-            rows = await self._datagov.fetch_dataset(entry)
-            block = self._datagov.format_rows_for_context(entry, rows)
-            live_data_blocks.append(block)
+        # Fetch live data for matched datasets (concurrently)
+        if datagov_entries:
+            fetch_results = await asyncio.gather(
+                *(self._datagov.fetch_dataset(entry) for entry in datagov_entries)
+            )
+            for entry, rows in zip(datagov_entries, fetch_results):
+                live_data_blocks.append(self._datagov.format_rows_for_context(entry, rows))
+
+        # --- [1.5] Metadata-boosted ranking ---
+        retrieved = apply_metadata_boost(retrieved)
 
         top_similarity = retrieved[0].effective_similarity if retrieved else 0.0
+
+        # --- Skill path: use the skill-specific prompt regardless of similarity tier ---
+        if skill_def:
+            cited_chunks = apply_adaptive_cutoff(
+                retrieved,
+                self._settings.retrieval_similarity_dropoff,
+                max_chunks=self._settings.reranker_top_n,
+            )
+            prompt = build_skill_prompt(
+                question=question, language=language,
+                contexts=cited_chunks, skill=skill_def,
+                live_data_blocks=live_data_blocks,
+            )
+            answer = await self._generator.generate(prompt, max_tokens=skill_def.max_tokens)
+            return self._make_reply(
+                conversation_value=conversation_value, language=language, answer=answer,
+                citations=self._build_all_citations(cited_chunks, datagov_entries),
+                kind="answer", chunks=cited_chunks,
+            )
+
+        # --- Standard path (no skill selected) ---
         if not retrieved or top_similarity < self._settings.retrieval_min_similarity:
+            # Log knowledge gap — the bot couldn't find indexed docs for this query
+            self._log_knowledge_gap(
+                question=question, language=language,
+                conversation_id=conversation_value,
+                gap_type="no_match" if not retrieved else "low_similarity",
+                top_similarity=top_similarity,
+            )
+
             if live_data_blocks:
-                # No strong document match, but we have live data
                 prompt = build_prompt(
-                    question=question,
-                    language=language,
-                    contexts=[],
-                    support_mode="none",
-                    live_data_blocks=live_data_blocks,
+                    question=question, language=language,
+                    contexts=[], support_mode="none", live_data_blocks=live_data_blocks,
                 )
                 answer = await self._generator.generate(prompt)
-                response = AssistantResponse(
-                    conversation_id=conversation_value,
-                    message_id=uuid4(),
-                    language=language,
-                    answer=answer,
+                return self._make_reply(
+                    conversation_value=conversation_value, language=language, answer=answer,
                     citations=self._build_datagov_citations(datagov_entries),
-                    kind="answer",
+                    kind="answer", chunks=[],
                 )
-                return GeneratedReply(response=response, kind="answer", retrieved_chunks=[])
 
-            # No DB match and no live data — answer from Claude's general knowledge
             prompt = build_prompt(
-                question=question,
-                language=language,
-                contexts=[],
-                support_mode="none",
+                question=question, language=language, contexts=[], support_mode="none",
             )
             answer = await self._generator.generate(prompt)
             answer = f"{build_general_knowledge_prefix(language)}\n\n{answer}".strip()
-            response = AssistantResponse(
-                conversation_id=conversation_value,
-                message_id=uuid4(),
-                language=language,
-                answer=answer,
-                citations=[],
-                kind="general-knowledge",
+            return self._make_reply(
+                conversation_value=conversation_value, language=language, answer=answer,
+                citations=[], kind="general-knowledge", chunks=[],
             )
-            return GeneratedReply(response=response, kind="general-knowledge", retrieved_chunks=[])
 
         support_mode = (
-            "weak"
-            if top_similarity < self._settings.retrieval_weak_similarity
-            else "strong"
+            "weak" if top_similarity < self._settings.retrieval_weak_similarity else "strong"
         )
-        cited_chunks = retrieved[: min(3, len(retrieved))]
+        # --- [3.3] Adaptive context window ---
+        cited_chunks = apply_adaptive_cutoff(
+            retrieved,
+            self._settings.retrieval_similarity_dropoff,
+            max_chunks=self._settings.reranker_top_n,
+        )
         prompt = build_prompt(
-            question=question,
-            language=language,
-            contexts=cited_chunks,
-            support_mode=support_mode,
+            question=question, language=language,
+            contexts=cited_chunks, support_mode=support_mode,
             live_data_blocks=live_data_blocks,
         )
         answer = await self._generator.generate(prompt)
@@ -235,19 +324,11 @@ class ChatService:
         else:
             kind = "answer"
 
-        citations = self._build_citations(cited_chunks)
-        if datagov_entries:
-            citations.extend(self._build_datagov_citations(datagov_entries, start_index=len(citations) + 1))
-
-        response = AssistantResponse(
-            conversation_id=conversation_value,
-            message_id=uuid4(),
-            language=language,
-            answer=answer,
-            citations=citations,
-            kind=kind,
+        return self._make_reply(
+            conversation_value=conversation_value, language=language, answer=answer,
+            citations=self._build_all_citations(cited_chunks, datagov_entries),
+            kind=kind, chunks=cited_chunks,
         )
-        return GeneratedReply(response=response, kind=kind, retrieved_chunks=cited_chunks)
 
     async def handle_chat(self, *, user_id: str, request: ChatRequest) -> GeneratedReply:
         if self._repository is None:
@@ -268,9 +349,20 @@ class ChatService:
             language=provisional_language,
         )
 
+        # Load conversation history for context-aware retrieval
+        conversation_history: list[tuple[str, str]] | None = None
+        if hasattr(self._repository, "get_recent_messages"):
+            turns_limit = self._settings.conversation_context_turns * 2
+            conversation_history = self._repository.get_recent_messages(
+                conversation_id=str(conversation_id),
+                limit=turns_limit,
+            )
+
         generated = await self.generate_reply(
             question=request.question,
             conversation_id=str(conversation_id),
+            skill=request.skill,
+            conversation_history=conversation_history,
         )
         assistant_message_id = self._repository.add_message(
             conversation_id=conversation_id,
@@ -289,6 +381,58 @@ class ChatService:
             }
         )
         return generated
+
+    def _make_reply(
+        self,
+        *,
+        conversation_value: str,
+        language: str,
+        answer: str,
+        citations: list[CitationRecord],
+        kind: str,
+        chunks: list[RetrievedChunk],
+    ) -> GeneratedReply:
+        response = AssistantResponse(
+            conversation_id=conversation_value,
+            message_id=uuid4(),
+            language=language,
+            answer=answer,
+            citations=citations,
+            kind=kind,
+        )
+        return GeneratedReply(response=response, kind=kind, retrieved_chunks=chunks)
+
+    def _log_knowledge_gap(
+        self,
+        *,
+        question: str,
+        language: str,
+        conversation_id: str | None,
+        gap_type: str,
+        top_similarity: float,
+    ) -> None:
+        if not self._feedback:
+            return
+        try:
+            self._feedback.log_knowledge_gap(
+                question=question,
+                language=language,
+                conversation_id=conversation_id,
+                gap_type=gap_type,
+                top_similarity=top_similarity,
+            )
+        except Exception:
+            pass  # Non-critical — don't fail the chat response
+
+    def _build_all_citations(
+        self,
+        chunks: list[RetrievedChunk],
+        datagov_entries: list[CatalogEntry],
+    ) -> list[CitationRecord]:
+        citations = self._build_citations(chunks)
+        if datagov_entries:
+            citations.extend(self._build_datagov_citations(datagov_entries, start_index=len(citations) + 1))
+        return citations
 
     def _build_citations(self, chunks: list[RetrievedChunk]) -> list[CitationRecord]:
         citations: list[CitationRecord] = []

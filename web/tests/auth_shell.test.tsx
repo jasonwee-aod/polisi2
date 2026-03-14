@@ -21,7 +21,7 @@ describe("auth shell", () => {
 
     render(
       <AuthForm
-        authClient={{ auth: { signUp, signInWithPassword } }}
+        authClient={{ auth: { signUp, signInWithPassword, signInWithOAuth: vi.fn().mockResolvedValue({ error: null }) } }}
         navigate={navigate}
       />
     );

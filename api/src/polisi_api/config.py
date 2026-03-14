@@ -63,6 +63,45 @@ class Settings(BaseSettings):
     retrieval_fts_min_similarity: float = Field(
         default=0.50, validation_alias=AliasChoices("RETRIEVAL_FTS_MIN_SIMILARITY")
     )
+    retrieval_similarity_dropoff: float = Field(
+        default=0.60, validation_alias=AliasChoices("RETRIEVAL_SIMILARITY_DROPOFF")
+    )
+
+    # Cross-encoder reranking
+    enable_reranking: bool = Field(
+        default=True, validation_alias=AliasChoices("ENABLE_RERANKING")
+    )
+    reranker_model: str = Field(
+        default="claude-3-5-haiku-latest",
+        validation_alias=AliasChoices("RERANKER_MODEL"),
+    )
+    reranker_top_n: int = Field(
+        default=5, validation_alias=AliasChoices("RERANKER_TOP_N")
+    )
+    retrieval_prefetch_limit: int = Field(
+        default=20, validation_alias=AliasChoices("RETRIEVAL_PREFETCH_LIMIT")
+    )
+
+    # Query expansion
+    enable_query_expansion: bool = Field(
+        default=True, validation_alias=AliasChoices("ENABLE_QUERY_EXPANSION")
+    )
+    query_expansion_model: str = Field(
+        default="claude-3-5-haiku-latest",
+        validation_alias=AliasChoices("QUERY_EXPANSION_MODEL"),
+    )
+
+    # Conversation-aware retrieval
+    conversation_context_turns: int = Field(
+        default=3, validation_alias=AliasChoices("CONVERSATION_CONTEXT_TURNS")
+    )
+
+    rate_limit_daily_requests: int = Field(
+        default=25, validation_alias=AliasChoices("RATE_LIMIT_DAILY_REQUESTS")
+    )
+    rate_limit_daily_tokens: int = Field(
+        default=15000, validation_alias=AliasChoices("RATE_LIMIT_DAILY_TOKENS")
+    )
 
     @field_validator("api_allowed_origins", mode="before")
     @classmethod

@@ -246,7 +246,14 @@ class DataGovMyClient:
     """Async client for the data.gov.my REST API."""
 
     api_token: str | None = None
-    _http: httpx.AsyncClient | None = field(default=None, repr=False)
+
+    def _get_client(self) -> httpx.AsyncClient:
+        """Return a shared httpx client (lazy-created, reuses connections)."""
+        if not hasattr(self, "_client_instance"):
+            self._client_instance = httpx.AsyncClient(
+                timeout=_DEFAULT_TIMEOUT, follow_redirects=True
+            )
+        return self._client_instance
 
     async def fetch_dataset(
         self,
@@ -279,10 +286,10 @@ class DataGovMyClient:
             headers["Authorization"] = f"Token {self.api_token}"
 
         try:
-            async with httpx.AsyncClient(timeout=_DEFAULT_TIMEOUT, follow_redirects=True) as client:
-                resp = await client.get(url, params=params, headers=headers)
-                resp.raise_for_status()
-                data = resp.json()
+            client = self._get_client()
+            resp = await client.get(url, params=params, headers=headers)
+            resp.raise_for_status()
+            data = resp.json()
         except httpx.HTTPStatusError as exc:
             log.warning(
                 "data.gov.my API error for %s: %s %s",

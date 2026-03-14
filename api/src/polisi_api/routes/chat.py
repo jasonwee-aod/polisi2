@@ -7,9 +7,10 @@ from collections.abc import Iterator
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
-from polisi_api.auth import AuthenticatedUser, get_current_user
+from polisi_api.auth import AuthenticatedUser
 from polisi_api.dependencies import get_chat_service
 from polisi_api.models import ChatRequest, StreamingEventEnvelope
+from polisi_api.ratelimit import check_rate_limit
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -17,7 +18,7 @@ router = APIRouter(prefix="/api/chat", tags=["chat"])
 @router.post("")
 async def create_chat_completion(
     request: ChatRequest,
-    user: AuthenticatedUser = Depends(get_current_user),
+    user: AuthenticatedUser = Depends(check_rate_limit),
     service=Depends(get_chat_service),
 ) -> StreamingResponse:
     generated = await service.handle_chat(user_id=user.user_id, request=request)

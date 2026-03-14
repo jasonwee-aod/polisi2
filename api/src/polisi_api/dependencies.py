@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from anthropic import AsyncAnthropic
 from fastapi import Depends
 
 from polisi_api.chat.datagov import DataGovMyClient
+from polisi_api.chat.feedback import FeedbackRepository
+from polisi_api.chat.reranker import ClaudeReranker, NoOpReranker, Reranker
 from polisi_api.chat.repository import PostgresChatRepository
 from polisi_api.chat.retrieval import HybridPostgresRetriever
 from polisi_api.chat.service import AnthropicTextGenerator, ChatService
@@ -51,10 +54,24 @@ def get_chat_service(settings: Settings = Depends(get_settings)) -> ChatService:
     repository = get_repository(settings)
     datagov_client = DataGovMyClient(api_token=settings.datagov_api_token)
     generator = AnthropicTextGenerator(settings, datagov_client=datagov_client)
+    feedback_repo = FeedbackRepository(settings.supabase_db_url)
+
+    # Build shared Anthropic client for reranking, query expansion, reformulation
+    anthropic_client = AsyncAnthropic(api_key=settings.anthropic_api_key or "")
+
+    reranker: Reranker
+    if settings.enable_reranking:
+        reranker = ClaudeReranker(anthropic_client, model=settings.reranker_model)
+    else:
+        reranker = NoOpReranker()
+
     return ChatService(
         settings=settings,
         retriever=retriever,
         generator=generator,
         repository=repository,
         datagov_client=datagov_client,
+        feedback_repo=feedback_repo,
+        reranker=reranker,
+        anthropic_client=anthropic_client,
     )
