@@ -96,6 +96,8 @@ def main():
             if suffix not in ("csv", "xlsx", "xls"):
                 skipped += 1
                 continue
+            # Treat .xls as .xlsx for the parser (openpyxl handles both via xlrd fallback)
+            parser_type = "xlsx" if suffix == "xls" else suffix
 
             # Version token from ETag
             etag = (obj.get("ETag") or "").strip('"') or key
@@ -114,7 +116,7 @@ def main():
                 payload = resp["Body"].read()
 
                 sha256 = compute_sha256(payload)
-                file_parser = get_parser(suffix)
+                file_parser = get_parser(parser_type)
                 parsed = file_parser.parse_bytes(
                     payload,
                     metadata={
@@ -138,7 +140,21 @@ def main():
                     skipped += 1
                     continue
 
-                embeddings_list = embeddings.embed_texts(chunk_texts)
+                # Batch embeddings to stay under OpenAI's 300K token limit
+                # ~4 chars per token, 300K tokens = ~1.2M chars, use 800K as safe limit
+                EMBED_CHAR_LIMIT = 800_000
+                embeddings_list = []
+                batch_texts: list[str] = []
+                batch_chars = 0
+                for ct in chunk_texts:
+                    if batch_texts and batch_chars + len(ct) > EMBED_CHAR_LIMIT:
+                        embeddings_list.extend(embeddings.embed_texts(batch_texts))
+                        batch_texts = []
+                        batch_chars = 0
+                    batch_texts.append(ct)
+                    batch_chars += len(ct)
+                if batch_texts:
+                    embeddings_list.extend(embeddings.embed_texts(batch_texts))
 
                 # Build a minimal item for persist_chunks
                 from polisi_scraper.indexer.manifest import PendingIndexItem
