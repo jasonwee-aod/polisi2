@@ -135,9 +135,22 @@ class AnthropicTextGenerator:
                 messages.append({"role": "assistant", "content": response.content})
                 messages.append({"role": "user", "content": tool_results})
 
-            # Exhausted rounds — extract whatever text we have
-            logger.warning("    LLM exhausted %d tool rounds", self._MAX_TOOL_ROUNDS)
-            return "[Data retrieval completed — see above results.]"
+            # Exhausted tool rounds — force a final call WITHOUT tools so the
+            # model synthesises an answer from the data it already collected.
+            logger.warning("    LLM exhausted %d tool rounds — forcing final answer", self._MAX_TOOL_ROUNDS)
+            t0 = time.monotonic()
+            final = await self._client.messages.create(
+                model=self._model,
+                max_tokens=max_tokens or 1200,
+                system=prompt.system,
+                messages=messages,  # includes all prior tool results
+            )
+            logger.info("    LLM FINAL (no tools): %.1fs stop=%s", time.monotonic() - t0, final.stop_reason)
+            text_parts: list[str] = []
+            for block in final.content:
+                if getattr(block, "type", None) == "text":
+                    text_parts.append(block.text)
+            return "".join(text_parts).strip() or "[Unable to generate a response — please try again.]"
 
         except RateLimitError:
             logger.warning("    LLM rate limited")
