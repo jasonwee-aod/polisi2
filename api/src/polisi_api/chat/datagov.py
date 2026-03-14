@@ -99,13 +99,32 @@ CATALOG: list[CatalogEntry] = [
         category="national_accounts",
     ),
     CatalogEntry(
+        dataset_id="population_malaysia",
+        endpoint="opendosm",
+        title_en="Population Table: Malaysia",
+        title_ms="Jadual Penduduk: Malaysia",
+        description_en=(
+            "National-level population for Malaysia with breakdowns by age group, "
+            "sex, and ethnicity. Use this for total population or national demographics. "
+            "Filter 'overall@age,both@sex,overall@ethnicity' for the headline total."
+        ),
+        description_ms=(
+            "Penduduk peringkat nasional Malaysia dengan pecahan mengikut kumpulan umur, "
+            "jantina, dan etnik. Guna ini untuk jumlah penduduk atau demografi nasional."
+        ),
+        columns=["date", "age", "sex", "ethnicity", "population"],
+        frequency="annual",
+        category="demography",
+    ),
+    CatalogEntry(
         dataset_id="population_state",
         endpoint="opendosm",
         title_en="Population by State",
         title_ms="Penduduk Mengikut Negeri",
         description_en=(
             "Annual population estimates by state in Malaysia, "
-            "including breakdowns by sex and ethnicity."
+            "including breakdowns by sex and ethnicity. "
+            "Use this for state-level comparisons, not national totals."
         ),
         description_ms=(
             "Anggaran penduduk tahunan mengikut negeri di Malaysia, "
