@@ -193,6 +193,75 @@ def _merge_rrf(
     return [best_chunk[k_] for k_ in sorted_keys]
 
 
+@dataclass(frozen=True)
+class ExpandedDocument:
+    """A source document with its full text assembled from surrounding chunks."""
+    title: str
+    agency: str
+    source_url: str | None
+    storage_path: str
+    text: str  # Full assembled text from the chunk window
+    matched_chunk_index: int
+
+
+def expand_to_documents(
+    chunks: list[RetrievedChunk],
+    db_url: str,
+    *,
+    max_documents: int = 5,
+    chunk_window: int = 10,
+) -> list[ExpandedDocument]:
+    """Group chunks by source document and expand to full document context.
+
+    For each unique source document in *chunks* (up to *max_documents*),
+    pulls a window of ±chunk_window chunks around the match point and
+    assembles the full text. This gives Claude complete document sections
+    instead of isolated fragments.
+    """
+    if not chunks:
+        return []
+
+    # Group by storage_path, keeping the best-ranked match per document
+    seen: dict[str, RetrievedChunk] = {}
+    for chunk in chunks:
+        path = (chunk.metadata or {}).get("storage_path", "") if chunk.metadata else ""
+        if not path:
+            continue
+        if path not in seen:
+            seen[path] = chunk
+
+    # Take top N documents by order of appearance (which is rank order)
+    top_docs = list(seen.items())[:max_documents]
+    if not top_docs:
+        return []
+
+    results: list[ExpandedDocument] = []
+    try:
+        with psycopg.connect(db_url) as conn:
+            for storage_path, chunk in top_docs:
+                center = chunk.chunk_index or 0
+                rows = conn.execute(
+                    "SELECT chunk_index, chunk_text, title FROM public.expand_document_context(%s, %s, %s)",
+                    (storage_path, center, chunk_window),
+                ).fetchall()
+                if not rows:
+                    continue
+                assembled = "\n\n".join(row[1] for row in rows if row[1])
+                title = rows[0][2] or chunk.title
+                results.append(ExpandedDocument(
+                    title=title,
+                    agency=chunk.agency,
+                    source_url=chunk.source_url,
+                    storage_path=storage_path,
+                    text=assembled,
+                    matched_chunk_index=center,
+                ))
+    except Exception:
+        pass  # Fail gracefully — fall back to chunk-level context
+
+    return results
+
+
 class Retriever(Protocol):
     async def retrieve(
         self,

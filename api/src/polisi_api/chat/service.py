@@ -39,12 +39,14 @@ from .reformulation import reformulate_with_history
 from .skills import SKILL_BY_ID
 from .repository import ChatRepository
 from .retrieval import (
+    ExpandedDocument,
     RetrievalFilters,
     RetrievedChunk,
     Retriever,
     apply_adaptive_cutoff,
     apply_metadata_boost,
     deduplicate_chunks,
+    expand_to_documents,
 )
 
 
@@ -374,7 +376,7 @@ class ChatService:
                 kind="answer", chunks=cited_chunks,
             )
 
-        # --- Standard path: pass whatever good context we have and let Claude be Claude ---
+        # --- Standard path: expand to full document sections, let Claude digest them ---
         cited_chunks = apply_adaptive_cutoff(
             retrieved,
             self._settings.retrieval_similarity_dropoff,
@@ -389,14 +391,42 @@ class ChatService:
                 top_similarity=top_similarity,
             )
 
+        # Expand matched chunks to full document sections (±10 chunks around match)
+        expanded_docs: list[ExpandedDocument] = []
+        if cited_chunks:
+            t0 = time.monotonic()
+            expanded_docs = expand_to_documents(
+                cited_chunks, self._settings.supabase_db_url,
+                max_documents=5, chunk_window=10,
+            )
+            logger.info("  expand_to_documents: %.1fs docs=%d", time.monotonic() - t0, len(expanded_docs))
+
+        # Build expanded context for the prompt — full document sections instead of fragments
+        if expanded_docs:
+            expanded_chunks = [
+                RetrievedChunk(
+                    document_id=None,
+                    title=doc.title,
+                    agency=doc.agency,
+                    source_url=doc.source_url,
+                    chunk_text=doc.text[:8000],  # Cap at ~8k chars per document
+                    similarity=1.0,
+                    chunk_index=doc.matched_chunk_index,
+                )
+                for doc in expanded_docs
+            ]
+            prompt_contexts = expanded_chunks
+        else:
+            prompt_contexts = cited_chunks
+
         prompt = build_prompt(
             question=question, language=language,
-            contexts=cited_chunks, support_mode="strong" if cited_chunks else "none",
+            contexts=prompt_contexts, support_mode="strong" if prompt_contexts else "none",
             live_data_blocks=live_data_blocks,
             content_blocks=content_blocks or None,
         )
         t0 = time.monotonic()
-        logger.info("  GENERATE START chunks=%d live_data=%d", len(cited_chunks), len(live_data_blocks))
+        logger.info("  GENERATE START docs=%d chunks=%d live_data=%d", len(expanded_docs), len(cited_chunks), len(live_data_blocks))
         answer = await self._generator.generate(prompt)
         logger.info("  GENERATE DONE: %.1fs total_elapsed=%.1fs", time.monotonic() - t0, time.monotonic() - t_start)
 
