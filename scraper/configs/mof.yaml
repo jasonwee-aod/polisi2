@@ -1,0 +1,139 @@
+# Unified scraper config for Ministry of Finance Malaysia
+# www.mof.gov.my — Joomla + static HTML archives
+# Covers: budget archives, news/media, treasury directives, tax docs, statistics
+
+site_slug: mof
+agency: "Kementerian Kewangan Malaysia"
+base_url: "https://www.mof.gov.my"
+
+allowed_hosts:
+  - "www.mof.gov.my"
+  - "mof.gov.my"
+
+request_delay: 1.0
+estimated_pages: 3000
+
+sections:
+
+  # ── Legacy Budget Archives (highest value — hundreds of PDFs) ──────────
+
+  - name: arkib_ekonomi
+    label: "Economic Reports Archive (1995-2022)"
+    doc_type: report
+    language: ms
+    source_type: archive_hub
+    url: "https://www.mof.gov.my/portal/arkib/ekonomi/ek_main.html"
+
+  - name: arkib_hasil
+    label: "Revenue Estimates Archive"
+    doc_type: report
+    language: ms
+    source_type: archive_hub
+    url: "https://www.mof.gov.my/portal/arkib/hasil/h_main.html"
+
+  - name: arkib_perbelanjaan
+    label: "Expenditure Estimates Archive"
+    doc_type: report
+    language: ms
+    source_type: archive_hub
+    url: "https://www.mof.gov.my/portal/arkib/perbelanjaan/expMain.html"
+
+  - name: arkib_belanjawan
+    label: "Budget Speeches Archive"
+    doc_type: speech
+    language: ms
+    source_type: archive_hub
+    url: "https://www.mof.gov.my/portal/arkib/belanjawan/ub_Main.html"
+
+  - name: arkib_fiscal
+    label: "Fiscal Summaries Archive"
+    doc_type: report
+    language: ms
+    source_type: archive_hub
+    url: "https://www.mof.gov.my/portal/arkib/fiscal/fiscal_Main.html"
+
+  # ── News & Media Archives (paginated Joomla listings) ──────────────────
+
+  - name: siaran_media
+    label: "Press Releases"
+    doc_type: press_release
+    language: ms
+    source_type: listing
+    url: "https://www.mof.gov.my/portal/ms/arkib3/siaran-media"
+    page_size: 100
+    max_listing_pages: 20
+
+  - name: ucapan
+    label: "Speeches"
+    doc_type: speech
+    language: ms
+    source_type: listing
+    url: "https://www.mof.gov.my/portal/ms/arkib3/ucapan"
+    page_size: 100
+    max_listing_pages: 20
+
+  - name: pengumuman
+    label: "Announcements"
+    doc_type: notice
+    language: ms
+    source_type: listing
+    url: "https://www.mof.gov.my/portal/ms/arkib3/pengumuman"
+    page_size: 100
+    max_listing_pages: 20
+
+  # ── Treasury Directives ────────────────────────────────────────────────
+
+  - name: arahan_perbendaharaan
+    label: "Treasury Directives (Arahan Perbendaharaan)"
+    doc_type: policy
+    language: ms
+    source_type: static
+    url: "https://www.mof.gov.my/portal/arahan-perbendaharaan"
+
+  # ── Tax Documents ──────────────────────────────────────────────────────
+
+  - name: insentif_cukai
+    label: "Tax Incentives"
+    doc_type: policy
+    language: ms
+    source_type: static
+    url: "https://www.mof.gov.my/portal/cukai/insentif-cukai"
+
+  - name: dasar_cukai
+    label: "Current Tax Policies"
+    doc_type: policy
+    language: ms
+    source_type: static
+    url: "https://www.mof.gov.my/portal/cukai/dasar-terkini"
+
+  # ── Statistics & Performance ───────────────────────────────────────────
+
+  - name: statistik
+    label: "Statistics & Performance Reports"
+    doc_type: report
+    language: ms
+    source_type: static
+    url: "https://www.mof.gov.my/portal/statistik"
+
+  # ── Economic Data Index Pages ──────────────────────────────────────────
+
+  - name: suku_tahunan
+    label: "Quarterly Economic Indicators"
+    doc_type: report
+    language: ms
+    source_type: index
+    url: "https://www.mof.gov.my/portal/pdf/ekonomi/suku-tahunan"
+
+  - name: ringkasan_fiskal
+    label: "Fiscal Summaries (Quarterly)"
+    doc_type: report
+    language: ms
+    source_type: index
+    url: "https://www.mof.gov.my/portal/pdf/ekonomi/ringkasan-fiskal"
+
+  - name: indikator_ekonomi
+    label: "Monthly Economic Indicators"
+    doc_type: report
+    language: ms
+    source_type: index
+    url: "https://www.mof.gov.my/portal/pdf/ekonomi/indikator"
