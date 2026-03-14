@@ -140,8 +140,12 @@ def main():
                     skipped += 1
                     continue
 
+                # Truncate individual chunks that exceed OpenAI's token limit
+                # ~4 chars per token, 300K tokens = ~1.2M chars, cap at 1M per chunk
+                MAX_CHUNK_CHARS = 1_000_000
+                chunk_texts = [ct[:MAX_CHUNK_CHARS] for ct in chunk_texts]
+
                 # Batch embeddings to stay under OpenAI's 300K token limit
-                # ~4 chars per token, 300K tokens = ~1.2M chars, use 800K as safe limit
                 EMBED_CHAR_LIMIT = 800_000
                 embeddings_list = []
                 batch_texts: list[str] = []
