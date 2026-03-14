@@ -40,6 +40,17 @@ class ChatRepository(Protocol):
 
     def get_recent_messages(self, *, conversation_id: str, limit: int = 6) -> list[tuple[str, str]]: ...
 
+    def update_conversation(
+        self,
+        *,
+        conversation_id: str,
+        user_id: str,
+        title: str | None = None,
+        pinned: bool | None = None,
+    ) -> bool: ...
+
+    def delete_conversation(self, *, conversation_id: str, user_id: str) -> bool: ...
+
 
 class PostgresChatRepository:
     def __init__(self, db_url: str) -> None:
@@ -125,28 +136,57 @@ class PostgresChatRepository:
 
     def list_conversations(self, *, user_id: str) -> list[ConversationSummary]:
         with psycopg.connect(self._db_url) as conn:
-            rows = conn.execute(
-                """
-                select c.id, c.title, c.language, c.created_at, c.updated_at, count(m.id) as message_count
-                from public.conversations c
-                left join public.messages m on m.conversation_id = c.id
-                where c.user_id = %s
-                group by c.id
-                order by c.updated_at desc, c.created_at desc
-                """,
-                (user_id,),
-            ).fetchall()
-        return [
-            ConversationSummary(
-                id=row[0],
-                title=row[1],
-                language=row[2],
-                created_at=row[3],
-                updated_at=row[4],
-                message_count=int(row[5]),
-            )
-            for row in rows
-        ]
+            # Try query with pinned column; fall back if it doesn't exist yet.
+            try:
+                rows = conn.execute(
+                    """
+                    select c.id, c.title, c.language, c.created_at, c.updated_at,
+                           count(m.id) as message_count, coalesce(c.pinned, false) as pinned
+                    from public.conversations c
+                    left join public.messages m on m.conversation_id = c.id
+                    where c.user_id = %s
+                    group by c.id
+                    order by c.pinned desc nulls last, c.updated_at desc, c.created_at desc
+                    """,
+                    (user_id,),
+                ).fetchall()
+                return [
+                    ConversationSummary(
+                        id=row[0],
+                        title=row[1],
+                        language=row[2],
+                        created_at=row[3],
+                        updated_at=row[4],
+                        message_count=int(row[5]),
+                        pinned=bool(row[6]),
+                    )
+                    for row in rows
+                ]
+            except psycopg.errors.UndefinedColumn:
+                conn.rollback()
+                rows = conn.execute(
+                    """
+                    select c.id, c.title, c.language, c.created_at, c.updated_at, count(m.id) as message_count
+                    from public.conversations c
+                    left join public.messages m on m.conversation_id = c.id
+                    where c.user_id = %s
+                    group by c.id
+                    order by c.updated_at desc, c.created_at desc
+                    """,
+                    (user_id,),
+                ).fetchall()
+                return [
+                    ConversationSummary(
+                        id=row[0],
+                        title=row[1],
+                        language=row[2],
+                        created_at=row[3],
+                        updated_at=row[4],
+                        message_count=int(row[5]),
+                        pinned=False,
+                    )
+                    for row in rows
+                ]
 
     def get_recent_messages(self, *, conversation_id: str, limit: int = 6) -> list[tuple[str, str]]:
         with psycopg.connect(self._db_url) as conn:
@@ -188,6 +228,81 @@ class PostgresChatRepository:
                 (conversation_id,),
             ).fetchall()
         return _conversation_detail_from_rows(conversation, message_rows)
+
+    def update_conversation(
+        self,
+        *,
+        conversation_id: str,
+        user_id: str,
+        title: str | None = None,
+        pinned: bool | None = None,
+    ) -> bool:
+        with psycopg.connect(self._db_url) as conn:
+            # Verify ownership
+            row = conn.execute(
+                "select id from public.conversations where id = %s and user_id = %s",
+                (conversation_id, user_id),
+            ).fetchone()
+            if row is None:
+                return False
+
+            if title is not None:
+                conn.execute(
+                    "update public.conversations set title = %s, updated_at = timezone('utc', now()) where id = %s",
+                    (title, conversation_id),
+                )
+            if pinned is not None:
+                try:
+                    conn.execute(
+                        "update public.conversations set pinned = %s, updated_at = timezone('utc', now()) where id = %s",
+                        (pinned, conversation_id),
+                    )
+                except psycopg.errors.UndefinedColumn:
+                    # pinned column doesn't exist yet — silently skip
+                    conn.rollback()
+            conn.commit()
+            return True
+
+    def delete_conversation(self, *, conversation_id: str, user_id: str) -> bool:
+        with psycopg.connect(self._db_url) as conn:
+            row = conn.execute(
+                "select id from public.conversations where id = %s and user_id = %s",
+                (conversation_id, user_id),
+            ).fetchone()
+            if row is None:
+                return False
+            # Delete citations first (FK: citations -> messages -> conversations)
+            conn.execute(
+                """
+                delete from public.citations
+                where message_id in (
+                    select id from public.messages where conversation_id = %s
+                )
+                """,
+                (conversation_id,),
+            )
+            conn.execute(
+                "delete from public.messages where conversation_id = %s",
+                (conversation_id,),
+            )
+            conn.execute(
+                "delete from public.conversations where id = %s",
+                (conversation_id,),
+            )
+            conn.commit()
+            return True
+
+    def _try_read_pinned(self, conn: psycopg.Connection, conversation_id: object) -> bool:
+        """Try to read the pinned column; return False if it doesn't exist."""
+        try:
+            row = conn.execute(
+                "select pinned from public.conversations where id = %s",
+                (conversation_id,),
+            ).fetchone()
+            return bool(row[0]) if row else False
+        except psycopg.errors.UndefinedColumn:
+            conn.rollback()
+            return False
 
 
 class InMemoryChatRepository:
@@ -264,7 +379,21 @@ class InMemoryChatRepository:
             for conversation in self.conversations.values()
             if conversation["user_id"] == user_id
         ]
+        # Sort pinned first, then by updated_at descending
+        matches.sort(
+            key=lambda item: (
+                not item.get("pinned", False),
+                item["updated_at"],
+            ),
+            reverse=False,
+        )
+        # Secondary sort: within each pinned group, newest first
+        matches.sort(
+            key=lambda item: (not item.get("pinned", False), item["updated_at"]),
+        )
+        # Simpler approach: pinned first (desc=True), then updated_at desc
         matches.sort(key=lambda item: item["updated_at"], reverse=True)
+        matches.sort(key=lambda item: item.get("pinned", False), reverse=True)
         summaries: list[ConversationSummary] = []
         for conversation in matches:
             message_count = sum(
@@ -278,9 +407,44 @@ class InMemoryChatRepository:
                     created_at=conversation["created_at"],
                     updated_at=conversation["updated_at"],
                     message_count=message_count,
+                    pinned=bool(conversation.get("pinned", False)),
                 )
             )
         return summaries
+
+    def update_conversation(
+        self,
+        *,
+        conversation_id: str,
+        user_id: str,
+        title: str | None = None,
+        pinned: bool | None = None,
+    ) -> bool:
+        conversation_uuid = UUID(conversation_id)
+        conversation = self.conversations.get(conversation_uuid)
+        if conversation is None or conversation["user_id"] != user_id:
+            return False
+        if title is not None:
+            conversation["title"] = title
+            conversation["updated_at"] = datetime.now(UTC)
+        if pinned is not None:
+            conversation["pinned"] = pinned
+            conversation["updated_at"] = datetime.now(UTC)
+        return True
+
+    def delete_conversation(self, *, conversation_id: str, user_id: str) -> bool:
+        conversation_uuid = UUID(conversation_id)
+        conversation = self.conversations.get(conversation_uuid)
+        if conversation is None or conversation["user_id"] != user_id:
+            return False
+        # Remove citations for messages in this conversation
+        message_ids = {
+            msg["id"] for msg in self.messages if msg["conversation_id"] == conversation_uuid
+        }
+        self.citations = [c for c in self.citations if c["message_id"] not in message_ids]
+        self.messages = [m for m in self.messages if m["conversation_id"] != conversation_uuid]
+        del self.conversations[conversation_uuid]
+        return True
 
     def get_recent_messages(self, *, conversation_id: str, limit: int = 6) -> list[tuple[str, str]]:
         conversation_uuid = UUID(conversation_id)

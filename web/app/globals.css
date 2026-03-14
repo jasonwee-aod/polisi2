@@ -61,8 +61,14 @@ input, textarea {
 .prose ul, .prose ol { margin: 0 0 8px; padding-left: 22px; }
 .prose li { margin: 3px 0; }
 .prose hr { border: none; border-top: 1px solid var(--border-subtle); margin: 16px 0; }
-.prose table { border-collapse: collapse; width: 100%; margin: 8px 0 12px; font-size: 13px; }
-.prose th { background: var(--bg-hover); font-weight: 600; padding: 7px 12px; text-align: left; border: 1px solid var(--border-subtle); }
+.prose .table-scroll-wrapper { overflow-x: auto; max-width: 100%; margin: 8px 0 12px; border-radius: 6px; border: 1px solid var(--border-subtle); }
+.prose table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 0; }
+.prose th { background: var(--bg-hover); font-weight: 600; padding: 7px 12px; text-align: left; border: 1px solid var(--border-subtle); position: sticky; top: 0; z-index: 1; }
 .prose td { padding: 6px 12px; border: 1px solid var(--border-subtle); vertical-align: top; }
+.prose tr:nth-child(even) td { background: rgba(0,0,0,0.015); }
+.prose tr:hover td { background: rgba(0,0,0,0.03); }
+.prose td:has(~ td):last-child, .prose td[data-align="right"] { text-align: right; }
+/* Right-align cells that look numeric */
+.prose td.num-cell { text-align: right; font-variant-numeric: tabular-nums; }
 .prose blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--text-secondary); margin: 8px 0; }
 .prose code { font-family: 'Courier New', monospace; background: var(--bg-hover); padding: 2px 5px; border-radius: 3px; font-size: 0.88em; }

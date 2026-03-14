@@ -12,11 +12,13 @@ import {
   ConversationSummary,
   FileAttachment,
   SkillInfo,
+  deleteConversation,
   fetchConversationDetail,
   fetchConversationFeedback,
   fetchConversations,
   fetchSkills,
   submitFeedback,
+  updateConversation,
 } from "@/lib/api/client";
 import { RateLimitError, readChatStream, StreamEvent } from "@/lib/chat/stream";
 
@@ -258,6 +260,50 @@ export function ChatShell({
     router.push("/chat");
   }
 
+  function handleRenameConversation(conversationId: string, newTitle: string) {
+    // Optimistic update
+    setConversations((prev) =>
+      prev.map((c) => (c.id === conversationId ? { ...c, title: newTitle } : c))
+    );
+    // Persist to API
+    void updateConversation(conversationId, { title: newTitle }, { accessToken, apiBaseUrl });
+  }
+
+  function handleDeleteConversation(conversationId: string) {
+    // Optimistic update
+    setConversations((prev) => prev.filter((c) => c.id !== conversationId));
+    // If the deleted conversation is the active one, navigate away
+    if (activeConversationId === conversationId) {
+      setActiveConversationId(null);
+      setMessages([]);
+      setSelectedCitation(null);
+      if (navigate) {
+        navigate("/chat");
+      } else {
+        router.push("/chat");
+      }
+    }
+    // Persist to API
+    void deleteConversation(conversationId, { accessToken, apiBaseUrl });
+  }
+
+  function handlePinConversation(conversationId: string, pinned: boolean) {
+    // Optimistic update: toggle pinned and re-sort (pinned first)
+    setConversations((prev) => {
+      const updated = prev.map((c) =>
+        c.id === conversationId ? { ...c, pinned } : c
+      );
+      // Sort: pinned first, then by updated_at descending
+      return updated.sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      });
+    });
+    // Persist to API
+    void updateConversation(conversationId, { pinned }, { accessToken, apiBaseUrl });
+  }
+
   const showWelcome = !activeConversationId && messages.length === 0;
 
   return (
@@ -275,6 +321,9 @@ export function ChatShell({
         activeConversationId={activeConversationId}
         onSelect={handleSelectConversation}
         onNewConversation={handleNewConversation}
+        onRename={handleRenameConversation}
+        onDelete={handleDeleteConversation}
+        onPin={handlePinConversation}
         userEmail={userEmail}
       />
 

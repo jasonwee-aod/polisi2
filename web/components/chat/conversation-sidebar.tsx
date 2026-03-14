@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { ConversationSummary } from "@/lib/api/client";
 
@@ -9,6 +9,9 @@ type ConversationSidebarProps = {
   activeConversationId?: string | null;
   onSelect(conversationId: string): void;
   onNewConversation(): void;
+  onRename?(conversationId: string, newTitle: string): void;
+  onDelete?(conversationId: string): void;
+  onPin?(conversationId: string, pinned: boolean): void;
   userEmail?: string | null;
 };
 
@@ -18,19 +21,24 @@ function groupByDate(conversations: ConversationSummary[]) {
   const yesterdayStart = new Date(todayStart.getTime() - 86_400_000);
   const sevenDaysAgo = new Date(todayStart.getTime() - 7 * 86_400_000);
 
+  const pinned: ConversationSummary[] = [];
   const today: ConversationSummary[] = [];
   const yesterday: ConversationSummary[] = [];
   const week: ConversationSummary[] = [];
   const older: ConversationSummary[] = [];
 
   for (const c of conversations) {
+    if (c.pinned) {
+      pinned.push(c);
+      continue;
+    }
     const d = new Date(c.updated_at);
     if (d >= todayStart) today.push(c);
     else if (d >= yesterdayStart) yesterday.push(c);
     else if (d >= sevenDaysAgo) week.push(c);
     else older.push(c);
   }
-  return { today, yesterday, week, older };
+  return { pinned, today, yesterday, week, older };
 }
 
 function getInitials(email?: string | null): string {
@@ -42,16 +50,292 @@ function getInitials(email?: string | null): string {
     : name.slice(0, 2).toUpperCase();
 }
 
+/* ------------------------------------------------------------------ */
+/*  Context Menu                                                       */
+/* ------------------------------------------------------------------ */
+
+type ContextMenuProps = {
+  x: number;
+  y: number;
+  isPinned: boolean;
+  onPin(): void;
+  onRename(): void;
+  onDelete(): void;
+  onClose(): void;
+};
+
+function ContextMenu({ x, y, isPinned, onPin, onRename, onDelete, onClose }: ContextMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose]);
+
+  const menuItemStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    width: "100%",
+    padding: "8px 12px",
+    border: "none",
+    background: "none",
+    fontSize: 13,
+    color: "var(--text-primary)",
+    cursor: "pointer",
+    borderRadius: 4,
+    textAlign: "left",
+  };
+
+  return (
+    <div
+      ref={menuRef}
+      style={{
+        position: "fixed",
+        top: y,
+        left: x,
+        zIndex: 1000,
+        minWidth: 160,
+        padding: 4,
+        background: "var(--bg-surface)",
+        border: "1px solid var(--border-subtle)",
+        borderRadius: 8,
+        boxShadow: "0 4px 16px rgba(26,25,24,0.12)",
+      }}
+    >
+      <button
+        type="button"
+        style={menuItemStyle}
+        onClick={() => { onPin(); onClose(); }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}
+      >
+        <span style={{ width: 16, textAlign: "center" }}>{isPinned ? "📌" : "📌"}</span>
+        {isPinned ? "Unpin" : "Pin"}
+      </button>
+      <button
+        type="button"
+        style={menuItemStyle}
+        onClick={() => { onRename(); onClose(); }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}
+      >
+        <span style={{ width: 16, textAlign: "center" }}>✏️</span>
+        Rename
+      </button>
+      <div style={{ height: 1, background: "var(--border-subtle)", margin: "4px 0" }} />
+      <button
+        type="button"
+        style={{ ...menuItemStyle, color: "#c0392b" }}
+        onClick={() => { onDelete(); onClose(); }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}
+      >
+        <span style={{ width: 16, textAlign: "center" }}>🗑️</span>
+        Delete
+      </button>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Chat Item                                                          */
+/* ------------------------------------------------------------------ */
+
+type ChatItemProps = {
+  conversation: ConversationSummary;
+  isActive: boolean;
+  onSelect(): void;
+  onRename?(newTitle: string): void;
+  onDelete?(): void;
+  onPin?(pinned: boolean): void;
+};
+
+function ChatItem({ conversation, isActive, onSelect, onRename, onDelete, onPin }: ChatItemProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState(conversation.title ?? "");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dotsRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (isRenaming && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isRenaming]);
+
+  function handleDotsClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (dotsRef.current) {
+      const rect = dotsRef.current.getBoundingClientRect();
+      setMenuPos({ x: rect.left, y: rect.bottom + 4 });
+    }
+  }
+
+  function handleRenameSubmit() {
+    const trimmed = renameValue.trim();
+    if (trimmed && trimmed !== conversation.title) {
+      onRename?.(trimmed);
+    }
+    setIsRenaming(false);
+  }
+
+  function handleDeleteClick() {
+    if (window.confirm("Delete this chat?")) {
+      onDelete?.();
+    }
+  }
+
+  return (
+    <>
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          borderRadius: 8,
+          background: isActive ? "var(--bg-hover)" : isHovered ? "rgba(0,0,0,0.03)" : "transparent",
+          cursor: "pointer",
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {isRenaming ? (
+          <input
+            ref={inputRef}
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onBlur={handleRenameSubmit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleRenameSubmit();
+              if (e.key === "Escape") { setIsRenaming(false); setRenameValue(conversation.title ?? ""); }
+            }}
+            style={{
+              flex: 1,
+              border: "1px solid var(--accent)",
+              borderRadius: 6,
+              padding: "8px 10px",
+              fontSize: 13,
+              background: "var(--bg-surface)",
+              color: "var(--text-primary)",
+              outline: "none",
+              margin: "2px 4px",
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={onSelect}
+            style={{
+              flex: 1,
+              textAlign: "left",
+              border: "none",
+              background: "transparent",
+              borderRadius: 8,
+              padding: "10px 12px",
+              color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
+              fontSize: 13,
+              fontWeight: isActive ? 500 : 400,
+              cursor: "pointer",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              paddingRight: conversation.pinned ? 28 : undefined,
+            }}
+          >
+            {conversation.pinned && (
+              <span style={{ marginRight: 4, fontSize: 11 }}>📌</span>
+            )}
+            {conversation.title ?? "Untitled conversation"}
+          </button>
+        )}
+
+        {/* Three-dot button — visible on hover or when menu is open */}
+        {(isHovered || menuPos) && !isRenaming && (
+          <button
+            ref={dotsRef}
+            type="button"
+            onClick={handleDotsClick}
+            aria-label="Conversation options"
+            style={{
+              position: "absolute",
+              right: 4,
+              top: "50%",
+              transform: "translateY(-50%)",
+              border: "none",
+              background: "var(--bg-hover)",
+              borderRadius: 4,
+              padding: "2px 4px",
+              cursor: "pointer",
+              color: "var(--text-tertiary)",
+              lineHeight: 1,
+              fontSize: 14,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="none"
+            >
+              <circle cx="12" cy="5" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="12" cy="19" r="2" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Context menu */}
+      {menuPos && (
+        <ContextMenu
+          x={menuPos.x}
+          y={menuPos.y}
+          isPinned={!!conversation.pinned}
+          onPin={() => onPin?.(!conversation.pinned)}
+          onRename={() => {
+            setRenameValue(conversation.title ?? "");
+            setIsRenaming(true);
+          }}
+          onDelete={handleDeleteClick}
+          onClose={() => setMenuPos(null)}
+        />
+      )}
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Chat Group                                                         */
+/* ------------------------------------------------------------------ */
+
 function ChatGroup({
   label,
   items,
   activeId,
-  onSelect
+  onSelect,
+  onRename,
+  onDelete,
+  onPin,
 }: {
   label: string;
   items: ConversationSummary[];
   activeId?: string | null;
   onSelect(id: string): void;
+  onRename?(id: string, title: string): void;
+  onDelete?(id: string): void;
+  onPin?(id: string, pinned: boolean): void;
 }) {
   if (!items.length) return null;
   return (
@@ -68,42 +352,33 @@ function ChatGroup({
       >
         {label}
       </div>
-      {items.map((c) => {
-        const isActive = c.id === activeId;
-        return (
-          <button
-            key={c.id}
-            type="button"
-            onClick={() => onSelect(c.id)}
-            style={{
-              width: "100%",
-              textAlign: "left",
-              border: "none",
-              borderRadius: 8,
-              padding: "10px 12px",
-              background: isActive ? "var(--bg-hover)" : "transparent",
-              color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
-              fontSize: 13,
-              fontWeight: isActive ? 500 : 400,
-              cursor: "pointer",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap"
-            }}
-          >
-            {c.title ?? "Untitled conversation"}
-          </button>
-        );
-      })}
+      {items.map((c) => (
+        <ChatItem
+          key={c.id}
+          conversation={c}
+          isActive={c.id === activeId}
+          onSelect={() => onSelect(c.id)}
+          onRename={(title) => onRename?.(c.id, title)}
+          onDelete={() => onDelete?.(c.id)}
+          onPin={(pinned) => onPin?.(c.id, pinned)}
+        />
+      ))}
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Sidebar                                                            */
+/* ------------------------------------------------------------------ */
 
 export function ConversationSidebar({
   conversations,
   activeConversationId,
   onSelect,
   onNewConversation,
+  onRename,
+  onDelete,
+  onPin,
   userEmail
 }: ConversationSidebarProps) {
   const [search, setSearch] = useState("");
@@ -261,28 +536,49 @@ export function ConversationSidebar({
         ) : (
           <>
             <ChatGroup
+              label="Pinned"
+              items={groups.pinned}
+              activeId={activeConversationId}
+              onSelect={onSelect}
+              onRename={onRename}
+              onDelete={onDelete}
+              onPin={onPin}
+            />
+            <ChatGroup
               label="Today"
               items={groups.today}
               activeId={activeConversationId}
               onSelect={onSelect}
+              onRename={onRename}
+              onDelete={onDelete}
+              onPin={onPin}
             />
             <ChatGroup
               label="Yesterday"
               items={groups.yesterday}
               activeId={activeConversationId}
               onSelect={onSelect}
+              onRename={onRename}
+              onDelete={onDelete}
+              onPin={onPin}
             />
             <ChatGroup
               label="Previous 7 Days"
               items={groups.week}
               activeId={activeConversationId}
               onSelect={onSelect}
+              onRename={onRename}
+              onDelete={onDelete}
+              onPin={onPin}
             />
             <ChatGroup
               label="Older"
               items={groups.older}
               activeId={activeConversationId}
               onSelect={onSelect}
+              onRename={onRename}
+              onDelete={onDelete}
+              onPin={onPin}
             />
           </>
         )}

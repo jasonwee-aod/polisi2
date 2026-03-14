@@ -96,6 +96,7 @@ class ConversationSummary(BaseModel):
     created_at: datetime
     updated_at: datetime
     message_count: int = 0
+    pinned: bool = False
 
 
 class ConversationDetail(BaseModel):
@@ -105,3 +106,8 @@ class ConversationDetail(BaseModel):
     created_at: datetime
     updated_at: datetime
     messages: list[ConversationMessage]
+
+
+class ConversationUpdate(BaseModel):
+    title: str | None = None
+    pinned: bool | None = None

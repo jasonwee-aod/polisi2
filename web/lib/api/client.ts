@@ -25,6 +25,7 @@ export type ConversationSummary = {
   created_at: string;
   updated_at: string;
   message_count: number;
+  pinned?: boolean;
 };
 
 export type ConversationMessage = {
@@ -150,6 +151,40 @@ export async function fetchConversationFeedback({
   if (!response.ok) return {};
   const data = await response.json();
   return data.ratings ?? {};
+}
+
+export async function updateConversation(
+  conversationId: string,
+  updates: { title?: string; pinned?: boolean },
+  {
+    accessToken,
+    apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+  }: ApiRequestOptions
+): Promise<void> {
+  const response = await fetch(`${apiBaseUrl}/api/conversations/${conversationId}`, {
+    method: "PATCH",
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(updates)
+  });
+  if (!response.ok) {
+    throw new Error("Failed to update conversation");
+  }
+}
+
+export async function deleteConversation(
+  conversationId: string,
+  {
+    accessToken,
+    apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+  }: ApiRequestOptions
+): Promise<void> {
+  const response = await fetch(`${apiBaseUrl}/api/conversations/${conversationId}`, {
+    method: "DELETE",
+    headers: authHeaders(accessToken)
+  });
+  if (!response.ok) {
+    throw new Error("Failed to delete conversation");
+  }
 }
 
 export function authHeaders(accessToken: string): HeadersInit {

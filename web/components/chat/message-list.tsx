@@ -276,6 +276,26 @@ function MarkdownWithCitations({
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
+        table({ children }) {
+          return (
+            <div className="table-scroll-wrapper" style={{ overflow: "auto", maxHeight: 400 }}>
+              <table>{children}</table>
+            </div>
+          );
+        },
+        td({ children, style }) {
+          // Detect numeric content and apply right-alignment
+          const text = String(children ?? "").trim();
+          const isNumeric = /^[\d,.\-%+()]+$/.test(text) && text.length > 0;
+          return (
+            <td
+              className={isNumeric ? "num-cell" : undefined}
+              style={style}
+            >
+              {children}
+            </td>
+          );
+        },
         code({ children, className }) {
           const text = String(children);
           const citeMatch = /^cite:(\d+)$/.exec(text);
