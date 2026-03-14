@@ -23,6 +23,7 @@ def get_adapter_registry() -> dict[str, Type[BaseSiteAdapter]]:
     from polisi_scraper.adapters import (  # noqa: F401
         bheuu,
         data_gov_my,
+        dosm,
         dewan_johor,
         dewan_selangor,
         idfr,

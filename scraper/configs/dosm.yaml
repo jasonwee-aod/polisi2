@@ -1,0 +1,30 @@
+# Unified scraper config for DOSM (Department of Statistics Malaysia)
+# Source: open.dosm.gov.my — Next.js portal with S3 storage backend
+
+site_slug: dosm
+agency: "Jabatan Perangkaan Malaysia (DOSM)"
+base_url: "https://open.dosm.gov.my"
+
+allowed_hosts:
+  - "open.dosm.gov.my"
+  - "storage.dosm.gov.my"
+
+request_delay: 0.5
+estimated_pages: 2000
+
+sections:
+
+  # ── Publications (1,350+ PDFs and Excel files) ────────────────────────
+  - name: publications
+    label: "DOSM Publications"
+    doc_type: report
+    language: ms
+    source_type: publications
+    max_listing_pages: 100
+
+  # ── Data Catalogue (200+ datasets in CSV/Parquet) ─────────────────────
+  - name: data_catalogue
+    label: "DOSM Data Catalogue"
+    doc_type: report
+    language: ms
+    source_type: data_catalogue
