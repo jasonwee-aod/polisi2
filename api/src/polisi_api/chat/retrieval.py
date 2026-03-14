@@ -289,19 +289,60 @@ class PostgresRetriever:
 
 
 class HybridPostgresRetriever:
-    """Hybrid retriever combining vector similarity and full-text search via RRF."""
+    """Hybrid retriever combining vector similarity and full-text search via RRF.
+
+    When ``fts_only`` is True (or auto-detected because no vector index exists),
+    falls back to the fast ``fts_match_documents`` function that uses the GIN
+    index only.  Set ``RETRIEVAL_FTS_ONLY=true`` to force this mode.
+    """
 
     def __init__(
         self,
         settings: Settings,
         *,
         embedding_client: OpenAIEmbeddingClient | None = None,
+        fts_only: bool = False,
     ) -> None:
         self._settings = settings
         self._fts_floor = settings.retrieval_fts_min_similarity
+        self._fts_only = fts_only or getattr(settings, "retrieval_fts_only", False)
         self._embedding_client = embedding_client or OpenAIEmbeddingClient(
             settings.openai_api_key or ""
         )
+
+    async def _fts_retrieve(
+        self, question: str, *, limit: int, filters: RetrievalFilters | None = None,
+    ) -> list[RetrievedChunk]:
+        """Fast full-text-search-only retrieval using the GIN index."""
+        f = filters or RetrievalFilters()
+        with psycopg.connect(self._settings.supabase_db_url) as conn:
+            rows = conn.execute(
+                """
+                select id, title, source_url, agency,
+                       chunk_index, chunk_text, metadata,
+                       similarity, fts_rank, rrf_score,
+                       parent_chunk_text
+                from public.fts_match_documents(%s, %s, %s)
+                """,
+                (question, limit, f.agency),
+            ).fetchall()
+
+        return [
+            RetrievedChunk(
+                document_id=str(row[0]) if row[0] is not None else None,
+                title=row[1],
+                source_url=row[2],
+                agency=row[3],
+                chunk_index=row[4],
+                chunk_text=row[5],
+                metadata=row[6] if isinstance(row[6], dict) else {},
+                similarity=float(row[7]),
+                fts_rank=float(row[8]),
+                rrf_score=float(row[9]),
+                _fts_floor=self._fts_floor,
+            )
+            for row in rows
+        ]
 
     async def retrieve(
         self,
@@ -310,6 +351,9 @@ class HybridPostgresRetriever:
         limit: int,
         filters: RetrievalFilters | None = None,
     ) -> list[RetrievedChunk]:
+        if self._fts_only:
+            return await self._fts_retrieve(question, limit=limit, filters=filters)
+
         embedding = await self._embedding_client.embed(question)
         if not embedding:
             return []
@@ -349,9 +393,16 @@ class HybridPostgresRetriever:
         limit: int,
         filters: RetrievalFilters | None = None,
     ) -> list[RetrievedChunk]:
-        """Retrieve using multiple queries, embed concurrently, merge via RRF."""
+        """Retrieve using multiple queries, merge via RRF."""
         if not queries:
             return []
+
+        if self._fts_only:
+            result_lists: list[list[RetrievedChunk]] = []
+            for query_text in queries:
+                chunks = await self._fts_retrieve(query_text, limit=limit, filters=filters)
+                result_lists.append(chunks)
+            return _merge_rrf(result_lists)[:limit]
 
         # Embed all queries concurrently
         embeddings = await asyncio.gather(
@@ -360,7 +411,7 @@ class HybridPostgresRetriever:
 
         f = filters or RetrievalFilters()
 
-        result_lists: list[list[RetrievedChunk]] = []
+        result_lists = []
         for query_text, embedding in zip(queries, embeddings):
             if not embedding:
                 continue

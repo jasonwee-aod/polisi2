@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     retrieval_fts_min_similarity: float = Field(
         default=0.50, validation_alias=AliasChoices("RETRIEVAL_FTS_MIN_SIMILARITY")
     )
+    retrieval_fts_only: bool = Field(
+        default=False, validation_alias=AliasChoices("RETRIEVAL_FTS_ONLY")
+    )
     retrieval_similarity_dropoff: float = Field(
         default=0.60, validation_alias=AliasChoices("RETRIEVAL_SIMILARITY_DROPOFF")
     )
